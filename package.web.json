@@ -1,0 +1,25 @@
+{
+  "name": "sftp-ws-web",
+  "version": "0.8.0",
+  "description": "SFTP over WebSockets - web client only",
+  "main": "./sftp.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "author": {
+    "name": "Lukas Pokorny",
+    "email": "lukas@nuane.com",
+    "url": "http://lukas.pokorny.eu/"
+  },
+  "keywords": [
+    "sftp",
+    "server",
+    "client",
+    "ws"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lukaaash/sftp-ws.git"
+  }
+}

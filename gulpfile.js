@@ -107,7 +107,13 @@ gulp.task('web.js', ['web.ts'], function () {
 
 });
 
-gulp.task('web', ['web.js'], function () {
+gulp.task('copy-web-package.json', function () {
+    gulp.src('./package.web.json')
+      .pipe(rename('package.json'))
+      .pipe(gulp.dest(output.web));
+});
+
+gulp.task('web', ['copy-web-package.json', 'web.js'], function () {
     var uglifyOptions = {
         mangle: {
             except: ['SftpItem'],

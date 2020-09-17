@@ -3,7 +3,7 @@
   "version": "0.8.1",
   "description": "Sample code for sftp-ws package",
   "dependencies": {
-    "@inveniem/sftp-ws": "~0.8.0",
+    "@inveniem/sftp-ws": "../build/package",
     "minish": "^0.5.2",
     "express": "4.10.x"
   },

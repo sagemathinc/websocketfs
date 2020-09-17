@@ -51,5 +51,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/inveniem/sftp-ws.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

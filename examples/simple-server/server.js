@@ -1,4 +1,4 @@
-var SFTP = require("sftp-ws");
+var SFTP = require("@inveniem/sftp-ws");
 
 // prepare host and port
 var host = 'localhost';

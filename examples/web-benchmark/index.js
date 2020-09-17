@@ -1,6 +1,6 @@
 ﻿var http = require('http');
 var express = require('express');
-var SFTP = require("sftp-ws");
+var SFTP = require("@inveniem/sftp-ws");
 
 // initialize an express app
 var app = express();

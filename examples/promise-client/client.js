@@ -1,4 +1,4 @@
-var SFTP = require("sftp-ws");
+var SFTP = require("@inveniem/sftp-ws");
 
 // url, credentials and options
 var url = "ws://nuane.com/sftp";

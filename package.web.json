@@ -1,6 +1,6 @@
 {
-  "name": "sftp-ws-web",
-  "version": "0.8.0",
+  "name": "@inveniem/sftp-ws-web",
+  "version": "0.8.1",
   "description": "SFTP over WebSockets - web client only",
   "main": "./sftp.js",
   "engines": {
@@ -11,6 +11,12 @@
     "email": "lukas@nuane.com",
     "url": "http://lukas.pokorny.eu/"
   },
+  "contributors": [
+    {
+      "name": "Guy Elsmore-Paddock",
+      "email": "guy@inveniem.com"
+    }
+  ],
   "keywords": [
     "sftp",
     "server",
@@ -20,6 +26,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lukaaash/sftp-ws.git"
+    "url": "https://github.com/inveniem/sftp-ws.git"
   }
 }

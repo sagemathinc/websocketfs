@@ -1,4 +1,4 @@
-﻿var SFTP = require("sftp-ws");
+﻿var SFTP = require("@inveniem/sftp-ws");
 var shell = require("minish");
 
 // remote SFTP and current path

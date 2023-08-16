@@ -1,10 +1,11 @@
-var SFTP = require("../..");
+const SFTP = require("../..");
 
 // url, credentials and options
-var url = "ws://localhost:4001";
+const url = "ws://localhost:4001";
 
 // connect to the server
-var client = new SFTP.Client();
+const client = new SFTP.Client();
+
 client.connect(url, {}, function (err) {
   if (err) {
     // handle error

@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/piranna/fs-fuse#readme",
   "dependencies": {
+    "debug": "^4.3.4",
     "get-stream": "^5.1.0",
     "node-fuse-bindings": "^2.12.4",
     "parse-mount-argv": "^0.0.1"

@@ -1,5 +1,6 @@
 const fuse = require("node-fuse-bindings");
 const getStream = require("get-stream").buffer;
+const debug = require("debug")("wsfuse");
 
 const ENOSYS = fuse.ENOSYS;
 const errno = fuse.errno;
@@ -38,7 +39,7 @@ function fsCallback(error, ...args) {
   this(error && errno(error.code), ...args);
 }
 
-/** Do the file truncation by writting at the new file size position
+/** Do the file truncation by writing at the new file size position
  *
  * Only valid for file size increases
  */
@@ -67,6 +68,7 @@ function FsFuse(fs) {
   if (!(this instanceof FsFuse)) return new FsFuse(fs);
 
   function wrapFd(path, func, cb, ...args) {
+    debug("wrapFd", path, args);
     fs.open(path, function (error, fd) {
       if (error) return cb(errno(error.code));
 
@@ -85,14 +87,22 @@ function FsFuse(fs) {
   //
 
   this.getattr = function (path, cb) {
-    if (fs.lstat) return fs.lstat(path, fsCallback.bind(cb));
-    if (fs.stat) return fs.stat(path, fsCallback.bind(cb));
-    if (fs.fstat) return wrapFd(path, fs.fstat, cb);
+    debug("getattr", path);
+    if (fs.lstat) {
+      return fs.lstat(path, fsCallback.bind(cb));
+    }
+    if (fs.stat) {
+      return fs.stat(path, fsCallback.bind(cb));
+    }
+    if (fs.fstat) {
+      return wrapFd(path, fs.fstat, cb);
+    }
 
     cb(ENOSYS);
   };
 
   this.fgetattr = function (path, fd, cb) {
+    debug("fgetattr", path);
     if (fs.fstat) return fs.fstat(fd, fsCallback.bind(cb));
     if (fs.lstat) return fs.lstat(path, fsCallback.bind(cb));
     if (fs.stat) return fs.stat(path, fsCallback.bind(cb));
@@ -101,6 +111,7 @@ function FsFuse(fs) {
   };
 
   this.fsync = function (path, fd, datasync, cb) {
+    debug("fsync", path, fd);
     if (!fs.fsync) return cb(ENOSYS);
 
     if (fd != null) return fs.fsync(fd, fsCallback.bind(cb));
@@ -109,6 +120,7 @@ function FsFuse(fs) {
   };
 
   this.truncate = function (path, size, cb) {
+    debug("truncate", path, size);
     if (fs.truncate) return fs.truncate(path, size, fsCallback.bind(cb));
     if (fs.ftruncate) return wrapFd(path, fs.ftruncate, cb, size);
 
@@ -118,6 +130,7 @@ function FsFuse(fs) {
   };
 
   this.ftruncate = function (path, fd, size, cb) {
+    debug("ftruncate", path, fd, size);
     if (fs.ftruncate) return fs.ftruncate(fd, size, fsCallback.bind(cb));
     if (fs.truncate) return fs.truncate(path, size, fsCallback.bind(cb));
 
@@ -127,10 +140,13 @@ function FsFuse(fs) {
   };
 
   this.read = function (path, fd, buffer, length, position, cb) {
-    if (fs.read)
+    debug("read", path, fd, length, position);
+    if (fs.read) {
       return fs.read(fd, buffer, 0, length, position, fsCallback.bind(cb));
-
-    if (!fs.createReadStream) return cb(ENOSYS);
+    }
+    if (!fs.createReadStream) {
+      return cb(ENOSYS);
+    }
 
     const options = { start: position, end: position + length };
 
@@ -147,8 +163,10 @@ function FsFuse(fs) {
   };
 
   this.write = function (path, fd, buffer, length, position, cb) {
-    if (fs.write)
+    debug("write", path, fd, length, position);
+    if (fs.write) {
       return fs.write(fd, buffer, 0, length, position, fsCallback.bind(cb));
+    }
 
     if (!fs.createWriteStream) return cb(ENOSYS);
 
@@ -165,12 +183,14 @@ function FsFuse(fs) {
   };
 
   this.release = function (path, fd, cb) {
+    debug("release", path, fd);
     if (!fs.close) return cb(ENOSYS);
 
     fs.close(fd, fsCallback.bind(cb));
   };
 
   this.utimens = function (path, atime, mtime, cb) {
+    debug("utimens", path, atime, mtime);
     // Use higher precission `futimes` if available
     if (fs.futimes) return wrapFd(path, fs.futimes, cb, atime, mtime);
 
@@ -185,6 +205,7 @@ function FsFuse(fs) {
   };
 
   this.opendir = function (path, flags, cb) {
+    debug("opendir", path, flags);
     fs.open(path, flags, cb);
   };
 
@@ -194,14 +215,19 @@ function FsFuse(fs) {
   //
 
   direct_mapping.concat(non_standard).forEach(function (name) {
-    let func = fs[name];
-    if (!func) return;
+    let func = fs[name]?.bind(fs);
+    if (!func) {
+      debug(name, " NOT implemented");
+      return;
+    }
 
-    if (name.startsWith("fuse_")) name = name.slice(5);
+    if (name.startsWith("fuse_")) {
+      name = name.slice(5);
+    }
 
     this[name] = function (...args) {
+      debug(name, args);
       let cb = args.pop();
-      // console.log(name, { args });
       func(...args, fsCallback.bind(cb));
     };
   }, this);

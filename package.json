@@ -1,9 +1,10 @@
 {
-  "name": "@inveniem/sftp-ws",
-  "version": "0.8.1",
-  "description": "SFTP over WebSockets - client and server library",
+  "name": "@cocalc/sftp-ws",
+  "version": "0.9.0",
+  "description": "SFTP over a WebSocket - client and server library",
   "main": "./lib/sftp.js",
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "install": "gulp lib",
     "build": "gulp build",
     "test": "mocha tests"
@@ -12,11 +13,16 @@
     "node": ">=0.10.0"
   },
   "author": {
-    "name": "Lukas Pokorny",
-    "email": "lukas@nuane.com",
-    "url": "http://lukas.pokorny.eu/"
+    "name": "William Stein",
+    "email": "wstein@sagemath.com",
+    "url": "https://wstein.org"
   },
   "contributors": [
+    {
+      "name": "Lukas Pokorny",
+      "email": "lukas@nuane.com",
+      "url": "http://lukas.pokorny.eu/"
+    },
     {
       "name": "Guy Elsmore-Paddock",
       "email": "guy@inveniem.com"
@@ -41,16 +47,11 @@
   "resolutions": {
     "graceful-fs": "4.2.2"
   },
-  "keywords": [
-    "sftp",
-    "server",
-    "client",
-    "ws"
-  ],
+  "keywords": ["sftp", "server", "client", "ws"],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/inveniem/sftp-ws.git"
+    "url": "https://github.com/sagemathinc/sftp-ws.git"
   },
   "publishConfig": {
     "access": "public"

@@ -1,209 +1,227 @@
-<!DOCTYPE html>
+<!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-<head>
+  <head>
     <title>SFTP over WebSockets - Sample Client</title>
     <link rel="stylesheet" href="style.css" type="text/css" media="all" />
     <script type="text/javascript" src="./scripts/sftp.js"></script>
-</head>
-<body>
-
-    <div id="list">
-    </div>
+  </head>
+  <body>
+    <div id="list"></div>
 
     <div id="info">
-        <div id="details"></div>
-        
-        <label>
-            <input type="file" id="files" name="files[]" multiple />
-            <span id="upload">Click to upload...</span>
-        </label>
+      <div id="details"></div>
 
-        <a id="preview" href="download">
-            <img id="image" width="320" height="240" />
-        </a>
+      <label>
+        <input type="file" id="files" name="files[]" multiple />
+        <span id="upload">Click to upload...</span>
+      </label>
+
+      <a id="preview" href="download">
+        <img id="image" width="320" height="240" />
+      </a>
     </div>
 
     <script type="text/javascript">
+      var client = new SFTP.Client();
+      var currentPath = "/";
+      var list = document.getElementById("list");
 
-        var client = new SFTP.Client();
-        var currentPath = '/';
-        var list = document.getElementById('list');
+      var address = window.location.protocol == "https" ? "wss" : "ws";
+      address +=
+        "://" + window.location.hostname + ":" + window.location.port + "/sftp";
 
-        var address = (window.location.protocol == "https") ? "wss" : "ws";
-        address += "://" + window.location.hostname + ":" + window.location.port + "/sftp";
-        
-        client.connect(address);
-        client.on("ready", onConnected);
-        client.on("close", onError);
+      client.connect(address);
+      client.on("ready", onConnected);
+      client.on("close", onError);
 
-        function onError(error) {
-            alert("SFTP.WS error: " + error.message + " (" + error.type + ")");
+      function onError(error) {
+        alert("SFTP.WS error: " + error.message + " (" + error.type + ")");
+      }
+
+      function onConnected() {
+        getList("/");
+      }
+
+      function getList(path) {
+        showInfo(null);
+
+        list.innerHTML = "";
+
+        if (path[path.length - 1] == "/")
+          path = path.substr(path, path.length - 1);
+
+        var p = path.lastIndexOf("/");
+        if (path.length > 0 && p >= 0) {
+          var parentPath = path.substr(0, p);
+          if (parentPath.length == 0) parentPath = "/";
+
+          var parent = createItem("..");
+          parent.onclick = function () {
+            getList(parentPath);
+          };
+          list.appendChild(parent);
         }
 
-        function onConnected() {
-            getList('/');
-        }
+        path += "/";
+        currentPath = path;
 
-        function getList(path) {
-            showInfo(null);
+        client
+          .list(path)
+          //.on("error", onError)
+          .on("item", onItem);
 
-            list.innerHTML = "";
+        function onItem(item) {
+          var div = createItem(item);
 
-            if (path[path.length - 1] == '/')
-                path = path.substr(path, path.length - 1);
-
-            var p = path.lastIndexOf('/');
-            if (path.length > 0 && p >= 0) {
-
-                var parentPath = path.substr(0, p);
-                if (parentPath.length == 0)
-                    parentPath = '/';
-
-                var parent = createItem('..');
-                parent.onclick = function () { getList(parentPath); }
-                list.appendChild(parent);
-            }
-
-            path += '/';
-            currentPath = path;
-
-            client.list(path)
-                //.on("error", onError)
-                .on("item", onItem);
-            
-            function onItem(item) {
-                var div = createItem(item);
-
-                if (item.stats.isDirectory()) {
-                    div.onclick = function () { getList(path + item.filename); }
-                }
-
-                if (item.stats.isFile()) {
-                    div.onclick = function () { downloadImage(path, item.filename); }
-                }
-
-                list.appendChild(div);
+          if (item.stats.isDirectory()) {
+            div.onclick = function () {
+              getList(path + item.filename);
             };
+          }
+
+          if (item.stats.isFile()) {
+            div.onclick = function () {
+              downloadImage(path, item.filename);
+            };
+          }
+
+          list.appendChild(div);
+        }
+      }
+
+      function downloadImage(path, name) {
+        path += name;
+        client
+          .readFile(path, { mimeType: "image/jpeg", type: "Blob" })
+          .on("error", onError)
+          .on("success", function (blob) {
+            var image = document.getElementById("image");
+            var preview = document.getElementById("preview");
+
+            var url = URL.createObjectURL(blob);
+
+            image.src = url;
+            preview.href = url;
+            //preview.href = '#' + path;
+            preview.draggable = "true";
+            preview.download = name;
+          });
+      }
+
+      function showInfo(item) {
+        var info = document.getElementById("details");
+        if (item == null) {
+          info.innerHTML = "";
+        } else {
+          info.innerHTML =
+            "Name: " +
+            item.filename +
+            "<br/>" +
+            "Length: " +
+            ((item.stats.size / 1024) | 0) +
+            " KB<br/>" +
+            "Modified: " +
+            item.stats.mtime.toLocaleString();
+        }
+      }
+
+      function createItem(item) {
+        var name;
+        var info;
+        if (typeof item === "string") {
+          name = item;
+          info = false;
+        } else {
+          name = item.filename;
+          if (name.length > 18) name = name.substr(0, 16) + "...";
+          info = true;
         }
 
-        function downloadImage(path, name) {
-            path += name;
-        	client.readFile(path, { mimeType: "image/jpeg", type: "Blob" })
-                .on("error", onError)
-                .on("success", function (blob) {
-                    var image = document.getElementById('image');
-                    var preview = document.getElementById('preview');
+        var div = document.createElement("div");
+        div.textContent = name;
+        div.className = "item";
 
-                    var url = URL.createObjectURL(blob);
-
-                    image.src = url;
-                    preview.href = url;
-                    //preview.href = '#' + path;
-                    preview.draggable = "true";
-                    preview.download = name;
-                });
+        if (info) {
+          div.onmouseover = function () {
+            showInfo(item);
+          };
         }
 
-        function showInfo(item) {
-            var info = document.getElementById('details');
-            if (item == null) {
-                info.innerHTML = "";
-            } else {
-                info.innerHTML = "Name: " + item.filename + "<br/>"
-                    + "Length: " + ((item.stats.size / 1024) | 0) + " KB<br/>"
-                    + "Modified: " + item.stats.mtime.toLocaleString();
-            }
+        return div;
+      }
+
+      document
+        .getElementById("files")
+        .addEventListener("change", onUploadFiles, false);
+
+      var uploadQueue = [];
+      var uploading = false;
+
+      function onUploadFiles(e) {
+        var files = e.target.files;
+
+        for (var i = 0, file; (file = files[i]); i++) {
+          uploadQueue.push(file);
         }
 
-        function createItem(item) {
-            var name;
-            var info;
-            if (typeof item === 'string') {
-                name = item;
-                info = false;
-            } else {
-                name = item.filename;
-                if (name.length > 18)
-                    name = name.substr(0, 16) + "...";
-                info = true;
-            }
+        uploadFile();
+      }
 
-            var div = document.createElement("div");
-            div.textContent = name;
-            div.className = 'item';
+      function uploadFile() {
+        if (uploading) return;
 
-            if (info) {
-                div.onmouseover = function () {
-                    showInfo(item);
-                };
-            }
+        var file = uploadQueue.shift();
+        if (typeof file === "undefined") return;
 
-            return div;
+        console.log(
+          "uploading " +
+            currentPath +
+            file.name +
+            " (" +
+            file.size +
+            " " +
+            file.lastModifiedDate +
+            ")",
+        );
+        uploading = true;
+        var itemDiv = null;
+        var progress = null;
+
+        client
+          .upload(file, currentPath)
+          .on("error", function (error) {
+            uploading = false;
+            uploadQueue.length = 0;
+            onError(error);
+          })
+          .on("success", onSuccess)
+          .on("progress", onProgress);
+
+        function onSuccess() {
+          if (progress != null) itemDiv.removeChild(progress);
+
+          uploading = false;
+          uploadFile();
         }
 
-        document.getElementById('files').addEventListener('change', onUploadFiles, false);
+        function onProgress(path, current, length) {
+          if (itemDiv == null) {
+            itemDiv = createItem({
+              filename: file.name,
+              length: file.size,
+              modified: file.lastModifiedDate,
+            });
+            list.appendChild(itemDiv);
 
-        var uploadQueue = [];
-        var uploading = false;
+            progress = document.createElement("div");
+            progress.className = "progress";
+            progress.style.width = "0%";
+            itemDiv.appendChild(progress);
+          }
 
-        function onUploadFiles(e) {
-            var files = e.target.files;
-
-            for (var i = 0, file; file = files[i]; i++) {
-                uploadQueue.push(file);
-            }
-
-            uploadFile();
+          progress.style.width = (((100 * current) / length) | 0) + "%";
         }
-
-        function uploadFile() {
-            if (uploading)
-                return;
-
-            var file = uploadQueue.shift();
-            if (typeof file === 'undefined')
-                return;
-
-            console.log('uploading ' + currentPath + file.name + ' (' + file.size + ' ' + file.lastModifiedDate + ')');
-            uploading = true;
-            var itemDiv = null;
-            var progress = null;
-
-            client.upload(file, currentPath)
-				.on("error", function (error) {
-					uploading = false;
-					uploadQueue.length = 0;
-					onError(error);
-				})
-				.on("success", onSuccess)
-				.on("progress", onProgress);
-
-            function onSuccess() {
-                if (progress != null)
-                    itemDiv.removeChild(progress);
-
-                uploading = false;
-                uploadFile();
-            }
-            
-            function onProgress(path, current, length) {
-                if (itemDiv == null) {
-                    itemDiv = createItem({ filename: file.name, length: file.size, modified: file.lastModifiedDate });
-                    list.appendChild(itemDiv);
-
-                    progress = document.createElement("div");
-                    progress.className = 'progress';
-                    progress.style.width = '0%';
-                    itemDiv.appendChild(progress);
-                }
-
-                progress.style.width = ((100 * current / length) | 0) + '%';
-            }
-        }
-
-
+      }
     </script>
-
-
-</body>
+  </body>
 </html>

@@ -11,7 +11,7 @@ class FS extends SFTP.Client {
     super.readdir(handle, (err, items) => {
       cb(
         err,
-        items?.map((item) => item.filename)
+        items?.map((item) => item.filename),
       );
     });
   }

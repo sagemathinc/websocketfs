@@ -2,7 +2,6 @@
 
 // mkdir -p /tmp/mnt;   ./run.js ws://localhost:4001 /tmp/mnt
 
-
 var spawn = require("child_process").spawn;
 var Url = require("url");
 var shell = require("minish");
@@ -54,7 +53,7 @@ factory.connect(Url.format(url), options, function (err, remote) {
     child = spawn(
       "sshfs",
       [url.hostname + ":" + path, mountpoint, "-o", "slave"],
-      { stdio: ["pipe", "pipe", process.stderr] }
+      { stdio: ["pipe", "pipe", process.stderr] },
     );
   } catch (err) {
     return error(err);

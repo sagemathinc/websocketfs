@@ -20,7 +20,7 @@ fuse.mount(path, FsFuse(fs), function (error) {
 });
 
 process.on("SIGINT", function () {
-  console.log("unmounting")
+  console.log("unmounting");
   fuse.unmount(path, function (error) {
     if (error) {
       console.log(error);

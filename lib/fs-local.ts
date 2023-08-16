@@ -79,7 +79,7 @@ export class LocalFilesystem implements IFilesystem {
     var totalBytes = 0;
 
     if (!buffer) {
-      buffer = new Buffer(length);
+      buffer = Buffer.alloc(length);
       offset = 0;
     }
 

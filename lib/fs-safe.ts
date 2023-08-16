@@ -42,7 +42,7 @@ export class SafeFilesystem implements IFilesystem {
   constructor(
     fs: IFilesystem,
     virtualRootPath: string,
-    options: { readOnly?: boolean; hideUidGid?: boolean },
+    options: { readOnly?: boolean; hideUidGid?: boolean }
   ) {
     options = options || {};
     this.isSafe = true;
@@ -118,7 +118,7 @@ export class SafeFilesystem implements IFilesystem {
   private processCallbackPath(
     err: Error,
     path: string,
-    callback: (err: Error, path: string) => any,
+    callback: (err: Error, path: string) => any
   ) {
     if (typeof err !== "undefined" && err != null) {
       path = undefined;
@@ -134,7 +134,7 @@ export class SafeFilesystem implements IFilesystem {
     err: Error,
     handleInfo: HandleInfo,
     realHandle: any,
-    callback: (err: Error, safeHandle: number) => any,
+    callback: (err: Error, safeHandle: number) => any
   ) {
     var safeHandle = handleInfo.safe;
     if (err) {
@@ -149,7 +149,7 @@ export class SafeFilesystem implements IFilesystem {
   private processCallbackAttrs(
     err: Error,
     attrs: IStats,
-    callback: (err: Error, attrs: IStats) => any,
+    callback: (err: Error, attrs: IStats) => any
   ) {
     if (attrs && this.hideUidGid) {
       attrs.uid = null;
@@ -188,7 +188,7 @@ export class SafeFilesystem implements IFilesystem {
   private _execute(
     safeHandle: number,
     action: (handle: any, callback: (err: Error, ...args) => any) => void,
-    callback: (err: Error, ...args) => any,
+    callback: (err: Error, ...args) => any
   ): void {
     var handleInfo = this.toHandleInfo(safeHandle);
 
@@ -254,7 +254,7 @@ export class SafeFilesystem implements IFilesystem {
     path: string,
     flags: string,
     attrs: IStats,
-    callback: (err: Error, handle: number) => any,
+    callback: (err: Error, handle: number) => any
   ): void {
     if (this.isReadOnly() && flags != "r")
       return FileUtil.fail("EROFS", callback);
@@ -265,7 +265,7 @@ export class SafeFilesystem implements IFilesystem {
     try {
       path = this.toRealPath(path);
       this.fs.open(path, flags, attrs, (err, realHandle) =>
-        this.processCallbackHandle(err, handleInfo, realHandle, callback),
+        this.processCallbackHandle(err, handleInfo, realHandle, callback)
       );
     } catch (err) {
       callback(err, null);
@@ -279,7 +279,7 @@ export class SafeFilesystem implements IFilesystem {
         delete this._handles[handle];
         this.fs.close(realHandle, callback);
       },
-      callback,
+      callback
     );
   }
 
@@ -289,13 +289,13 @@ export class SafeFilesystem implements IFilesystem {
     offset,
     length,
     position,
-    callback: (err: Error, buffer: Buffer, bytesRead: number) => any,
+    callback: (err: Error, buffer: Buffer, bytesRead: number) => any
   ): void {
     this._execute(
       handle,
       (handle, callback) =>
         this.fs.read(handle, buffer, offset, length, position, callback),
-      callback,
+      callback
     );
   }
 
@@ -305,7 +305,7 @@ export class SafeFilesystem implements IFilesystem {
     offset,
     length,
     position,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
@@ -313,7 +313,7 @@ export class SafeFilesystem implements IFilesystem {
       handle,
       (handle, callback) =>
         this.fs.write(handle, buffer, offset, length, position, callback),
-      callback,
+      callback
     );
   }
 
@@ -325,7 +325,7 @@ export class SafeFilesystem implements IFilesystem {
         this.fs.lstat(path, callback);
       } else {
         this.fs.lstat(path, (err, attrs) =>
-          this.processCallbackAttrs(err, attrs, callback),
+          this.processCallbackAttrs(err, attrs, callback)
         );
       }
     } catch (err) {
@@ -341,7 +341,7 @@ export class SafeFilesystem implements IFilesystem {
         if (this.hideUidGid)
           return this.processCallbackAttrs(err, attrs, callback);
         callback(err, attrs);
-      },
+      }
     );
   }
 
@@ -372,7 +372,7 @@ export class SafeFilesystem implements IFilesystem {
     this._execute(
       handle,
       (handle, callback) => this.fs.fsetstat(handle, attrs, callback),
-      callback,
+      callback
     );
   }
 
@@ -384,7 +384,7 @@ export class SafeFilesystem implements IFilesystem {
 
     try {
       this.fs.opendir(path, (err, realHandle) =>
-        this.processCallbackHandle(err, handleInfo, realHandle, callback),
+        this.processCallbackHandle(err, handleInfo, realHandle, callback)
       );
     } catch (err) {
       callback(err, null);
@@ -393,7 +393,7 @@ export class SafeFilesystem implements IFilesystem {
 
   readdir(
     handle: number,
-    callback: (err: Error, items: IItem[] | boolean) => any,
+    callback: (err: Error, items: IItem[] | boolean) => any
   ): void {
     this._execute(
       handle,
@@ -407,7 +407,7 @@ export class SafeFilesystem implements IFilesystem {
             });
         }
         callback(err, items);
-      },
+      }
     );
   }
 
@@ -449,13 +449,13 @@ export class SafeFilesystem implements IFilesystem {
 
   realpath(
     path: string,
-    callback: (err: Error, resolvedPath: string) => any,
+    callback: (err: Error, resolvedPath: string) => any
   ): void {
     path = this.toRealPath(path);
 
     try {
       this.fs.realpath(path, (err, resolvedPath) =>
-        this.processCallbackPath(err, resolvedPath, callback),
+        this.processCallbackPath(err, resolvedPath, callback)
       );
     } catch (err) {
       callback(err, null);
@@ -470,7 +470,7 @@ export class SafeFilesystem implements IFilesystem {
         this.fs.stat(path, callback);
       } else {
         this.fs.stat(path, (err, attrs) =>
-          this.processCallbackAttrs(err, attrs, callback),
+          this.processCallbackAttrs(err, attrs, callback)
         );
       }
     } catch (err) {
@@ -482,7 +482,7 @@ export class SafeFilesystem implements IFilesystem {
     oldPath: string,
     newPath: string,
     flags: RenameFlags,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
@@ -498,13 +498,13 @@ export class SafeFilesystem implements IFilesystem {
 
   readlink(
     path: string,
-    callback: (err: Error, linkString: string) => any,
+    callback: (err: Error, linkString: string) => any
   ): void {
     path = this.toRealPath(path);
 
     try {
       this.fs.readlink(path, (err, linkString) =>
-        this.processCallbackPath(err, linkString, callback),
+        this.processCallbackPath(err, linkString, callback)
       );
     } catch (err) {
       callback(err, null);
@@ -514,7 +514,7 @@ export class SafeFilesystem implements IFilesystem {
   symlink(
     oldPath: string,
     newPath: string,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
@@ -547,7 +547,7 @@ export class SafeFilesystem implements IFilesystem {
     length: number,
     toHandle: number,
     toPosition: number,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
@@ -581,7 +581,7 @@ export class SafeFilesystem implements IFilesystem {
 
         if (tr) start();
       },
-      null,
+      null
     );
 
     if (!same) {
@@ -593,7 +593,7 @@ export class SafeFilesystem implements IFilesystem {
           tr = true;
           if (fr) start();
         },
-        null,
+        null
       );
     }
 
@@ -639,7 +639,7 @@ export class SafeFilesystem implements IFilesystem {
             toPosition += bytesRead;
             copy();
           });
-        },
+        }
       );
     }
   }
@@ -650,7 +650,7 @@ export class SafeFilesystem implements IFilesystem {
     position: number,
     length: number,
     blockSize: number,
-    callback: (err: Error, hashes: Buffer, alg: string) => any,
+    callback: (err: Error, hashes: Buffer, alg: string) => any
   ): void {
     //TODO: add argument checks
     //TODO: make sure the behavior (such as optional length or multiple algs) follows the spec
@@ -702,8 +702,8 @@ export class SafeFilesystem implements IFilesystem {
     var count = ((length + blockSize - 1) / blockSize) | 0;
 
     // prepare buffers
-    var block = new Buffer(blockSize);
-    var hashes = new Buffer(count * hashSize);
+    var block = Buffer.alloc(blockSize);
+    var hashes = Buffer.alloc(count * hashSize);
     var hashesOffset = 0;
 
     var fs = this.fs;
@@ -748,11 +748,11 @@ export class SafeFilesystem implements IFilesystem {
               hashesOffset += hashSize;
 
               next();
-            },
+            }
           );
         }
       },
-      callback,
+      callback
     );
   }
 }

@@ -11,7 +11,7 @@ export class WebSocketChannelFactory {
   connect(
     address: string,
     options: any,
-    callback: (err: Error, channel: IChannel) => any,
+    callback: (err: Error, channel: IChannel) => any
   ): void {
     options = options || {};
 
@@ -30,7 +30,7 @@ export class WebSocketChannelFactory {
     address: string,
     options: any,
     credentials: string,
-    callback: (err: Error, channel: IChannel) => any,
+    callback: (err: Error, channel: IChannel) => any
   ): void {
     // WEB: // removed
     // #if NODE
@@ -113,12 +113,12 @@ export class WebSocketChannelFactory {
         if (information) err.info = information;
 
         channel._close(2, err);
-      },
+      }
     );
 
     function getBasicAuthHeader(username: string, password: string): string {
       return (
-        "Basic " + new Buffer(username + ":" + password).toString("base64")
+        "Basic " + Buffer.from(username + ":" + password).toString("base64")
       );
     }
     // #endif

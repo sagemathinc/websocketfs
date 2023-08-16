@@ -286,7 +286,7 @@ export class BufferDataTarget extends DataTarget {
   }
 
   protected _end(): void {
-    this._buffer = new Buffer(this._length);
+    this._buffer = Buffer.alloc(this._length);
     var offset = 0;
     for (var n = 0; n < this._chunks.length; n++) {
       var chunk = this._chunks[n];

@@ -14,7 +14,7 @@ export class StreamChannel
     this.stream = stream;
     this.closed = false;
 
-    var buffer = new Buffer(65 * 1024);
+    var buffer = Buffer.alloc(65 * 1024);
     var offset = 0;
     var packetLength = 0;
 

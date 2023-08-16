@@ -1002,7 +1002,7 @@ class SftpClientCore implements IFilesystem {
       var error = this.readStatus(response);
       if (error != null) {
         if (error["nativeCode"] == SftpStatusCode.EOF) {
-          buffer = buffer ? buffer.slice(offset, 0) : new Buffer(0);
+          buffer = buffer ? buffer.slice(offset, 0) : Buffer.alloc(0);
           callback(null, buffer, 0);
         } else {
           callback(error, null, 0);

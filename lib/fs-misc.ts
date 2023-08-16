@@ -542,7 +542,7 @@ export class FileUtil {
 
       if (targetError) return exit();
 
-      if (empty && target.acceptsEmptyBlocks) target.write(new Buffer(0));
+      if (empty && target.acceptsEmptyBlocks) target.write(Buffer.alloc(0));
       target.end();
     });
 

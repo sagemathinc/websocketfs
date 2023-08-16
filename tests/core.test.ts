@@ -154,8 +154,7 @@ describe("Basic Tests", function () {
   beforeAll((done) => {
     client = new SFTP.Client();
 
-    client.connect("ws://localhost:3022", {
-    });
+    client.connect("ws://localhost:3022", {});
 
     client.on("error", (err) => {
       if (err.message == "Simulated callback error") return;
@@ -461,7 +460,7 @@ describe("Basic Tests", function () {
 
     client.open(name, "r+", {}, (err, handle) =>
       check(err, done, () => {
-        var buffer = new Buffer(35);
+        var buffer = Buffer.alloc(35);
         buffer.fill(0);
 
         client.read(handle, buffer, 0, 30, 10, (err) =>
@@ -514,7 +513,7 @@ describe("Basic Tests", function () {
         assert.ok(stats.isFile, "Not a file");
         assert.equal(stats.size, 0, "Unexpected file size");
 
-        var buffer = new Buffer(
+        var buffer = Buffer.from(
           "0123456789" +
             "9876543210" +
             "00112233445566778899" +
@@ -550,7 +549,7 @@ describe("Basic Tests", function () {
 
   it("read(no-handle)", (done) => {
     try {
-      client.read(123, new Buffer(10), 0, 10, 0, done);
+      client.read(123, Buffer.alloc(10), 0, 10, 0, done);
       assert.fail("Call should have failed");
     } catch (error) {
       assert.equal(error.message, "Invalid handle");
@@ -560,7 +559,7 @@ describe("Basic Tests", function () {
 
   it("write(no-handle)", (done) => {
     try {
-      client.write(123, new Buffer(10), 0, 10, 0, done);
+      client.write(123, Buffer.alloc(10), 0, 10, 0, done);
       assert.fail("Call should have failed");
     } catch (error) {
       assert.equal(error.message, "Invalid handle");

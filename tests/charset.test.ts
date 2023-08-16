@@ -15,16 +15,16 @@ describe("Encoding Tests", function () {
   });
 
   // incomplete chunks
-  var chunk1 = new Buffer([
+  var chunk1 = Buffer.from([
     0xc5, 0xbd, 0x6c, 0x75, 0xc5, 0xa5, 0x6f, 0x75, 0xc4, 0x8d, 0x6b, 0xc3,
     0xbd, 0x20, 0x6b, 0xc5,
   ]); // "Žluťoučký k" + incomplete 'ů'
   var text1 = "Žluťoučký k";
-  var chunk2 = new Buffer([
+  var chunk2 = Buffer.from([
     0xaf, 0xc5, 0x88, 0x20, 0xc3, 0xba, 0x70, 0xc4, 0x9b, 0x6c, 0x20, 0xc4,
   ]); // incomplete 'ů' + "ň úpěl " + incomplete 'ď'
   var text2 = "ň úpěl ";
-  var chunk3 = new Buffer([
+  var chunk3 = Buffer.from([
     0x8f, 0xc3, 0xa1, 0x62, 0x65, 0x6c, 0x73, 0x6b, 0xc3, 0xa9, 0x20, 0xc3,
     0xb3, 0x64, 0x79,
   ]); // incomplete 'ď' + "ábelské ódy"
@@ -35,14 +35,14 @@ describe("Encoding Tests", function () {
   var text4 = "Žluťoučký kůň úpěl ďábelské ódy";
 
   // three-byte characters
-  var chunk5 = new Buffer([
+  var chunk5 = Buffer.from([
     0xe6, 0xad, 0xbb, 0xe9, 0xa9, 0xac, 0xe5, 0xbd, 0x93, 0xe6, 0xb4, 0xbb,
     0xe9, 0xa9, 0xac, 0xe5, 0x8c, 0xbb,
   ]);
   var text5 = "死马当活马医";
 
   // surrogate pairs
-  var chunk6 = new Buffer([
+  var chunk6 = Buffer.from([
     0xf0, 0xa0, 0x9c, 0x8e, 0xf0, 0xa0, 0x9d, 0xb9, 0xf0, 0xa0, 0xb3, 0x8f,
     0xf0, 0xa1, 0x81, 0xbb, 0xf0, 0xa9, 0xb6, 0x98,
   ]);
@@ -69,34 +69,34 @@ describe("Encoding Tests", function () {
   }
 
   it("encode2byte", () => {
-    var buffer = new Buffer(1024);
+    var buffer = Buffer.alloc(1024);
     var count = UTF8.encode(text4, buffer, 0);
     var actual = buffer.slice(0, count);
     assertEqualContents(actual, chunk4);
   });
 
   it("encode3byte", () => {
-    var buffer = new Buffer(1024);
+    var buffer = Buffer.alloc(1024);
     var count = UTF8.encode(text5, buffer, 0);
     var actual = buffer.slice(0, count);
     assertEqualContents(actual, chunk5);
   });
 
   it("encode4byte", () => {
-    var buffer = new Buffer(1024);
+    var buffer = Buffer.alloc(1024);
     var count = UTF8.encode(text6, buffer, 0);
     var actual = buffer.slice(0, count);
     assertEqualContents(actual, chunk6);
   });
 
   it("encodeTooLong", () => {
-    var buffer = new Buffer(1024);
+    var buffer = Buffer.alloc(1024);
     var count = UTF8.encode(text6, buffer, 0, 3);
     assert.equal(count, -1);
   });
 
   it("encodeChunked", () => {
-    var buffer = new Buffer(1024);
+    var buffer = Buffer.alloc(1024);
     var encoder = UTF8.getEncoder(text6);
     var offset = 0;
     [3, 6, 7, 4].forEach((bytes) => {
@@ -104,7 +104,7 @@ describe("Encoding Tests", function () {
       assert.equal(count, bytes);
       assertEqualContents(
         buffer.slice(offset, offset + count),
-        chunk6.slice(offset, offset + count),
+        chunk6.slice(offset, offset + count)
       );
       offset += count;
     });

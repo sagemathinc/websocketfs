@@ -26,7 +26,7 @@ export class SftpPacket {
 
   // #if FULL
   resize(size: number): void {
-    var buffer = new Buffer(size);
+    var buffer = Buffer.alloc(size);
     this.buffer.copy(buffer);
     this.buffer = buffer;
     this.length = buffer.length;
@@ -205,7 +205,7 @@ export class SftpPacketReader extends SftpPacket {
     this.position = end;
     //WEB: var view = this.buffer.subarray(start, end);
     if (clone) {
-      var buffer = new Buffer(length); //WEB: var buffer = new Uint8Array(length);
+      var buffer = Buffer.alloc(length); //WEB: var buffer = new Uint8Array(length);
       this.buffer.copy(buffer, 0, start, end); //WEB: buffer.set(view, 0);
       return buffer;
     } else {
@@ -223,7 +223,7 @@ export class SftpPacketWriter extends SftpPacket {
   constructor(length: number) {
     super();
 
-    this.buffer = new Buffer(length);
+    this.buffer = Buffer.alloc(length);
     this.position = 0;
     this.length = length;
   }

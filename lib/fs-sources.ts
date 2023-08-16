@@ -46,7 +46,7 @@ export class FileDataSource extends EventEmitter implements IDataSource {
     path: string,
     relativePath?: string,
     stats?: IStats,
-    position?: number,
+    position?: number
   ) {
     super();
     this.fs = fs;
@@ -183,7 +183,7 @@ export class FileDataSource extends EventEmitter implements IDataSource {
           } catch (err) {
             this._error(err);
           }
-        },
+        }
       );
     } catch (err) {
       this.requests--;
@@ -307,7 +307,7 @@ class BlobDataSource extends EventEmitter implements IDataSource {
       this.busy = false;
 
       if (!this.finished) {
-        var chunk = new Buffer(e.target.result);
+        var chunk = Buffer.alloc(e.target.result);
         if (chunk.length > 0) {
           this.queue.push(chunk);
           if (!this.readable) {
@@ -385,7 +385,7 @@ export function toDataSource(
   fs: IFilesystem,
   input: any,
   emitter: IEventEmitter,
-  callback: (err: Error, sources?: IDataSource[]) => void,
+  callback: (err: Error, sources?: IDataSource[]) => void
 ): void {
   try {
     toAnyDataSource(input, callback);
@@ -395,7 +395,7 @@ export function toDataSource(
 
   function toAnyDataSource(
     input: any,
-    callback: (err: Error, source?: IDataSource[]) => void,
+    callback: (err: Error, source?: IDataSource[]) => void
   ): void {
     // arrays
     if (isArray(input)) return toArrayDataSource(<any[]>input);
@@ -467,7 +467,7 @@ export function toDataSource(
 
   function toItemDataSource(
     path: string,
-    callback: (err: Error, source?: IDataSource[]) => void,
+    callback: (err: Error, source?: IDataSource[]) => void
   ): void {
     if (!fs) throw new Error("Source file system not available");
 
@@ -492,7 +492,7 @@ export function toDataSource(
           it.path,
           (<any>it).relativePath,
           it.stats,
-          0,
+          0
         );
         source.push(item);
       });

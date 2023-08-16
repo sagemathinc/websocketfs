@@ -1,19 +1,19 @@
 {
   "name": "websocketfs",
   "version": "0.1.0",
-  "description": "SSHFS like filesystem over a WebSocket",
+  "description": "Like sshfs, but over a WebSocket",
   "main": "./dist/lib/sftp.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "build": "pnpm exec tsc",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist node_modules",
     "test": "pnpm exec mocha dist/tests"
   },
   "engines": {
     "node": ">=0.16.0"
   },
   "author": {
-    "name": "William Stein",
+    "name": "William Stein (SageMath, Inc.)",
     "email": "wstein@sagemath.com",
     "url": "https://wstein.org"
   },
@@ -31,6 +31,7 @@
   "dependencies": {
     "@types/mocha": "^10.0.1",
     "@types/node": "^20.5.0",
+    "prettier": "^3.0.2",
     "typescript": "^5.1.6",
     "ws": "^1.0.0"
   },

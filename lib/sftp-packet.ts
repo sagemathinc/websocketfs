@@ -233,7 +233,7 @@ export class SftpPacketWriter extends SftpPacket {
 
     writeByte(value: number): void {
         this.check(1);
-        this.buffer.writeInt8(value, this.position++, true); //WEB: this.buffer[this.position++] = value & 0xFF;
+        this.buffer.writeUInt8(value, this.position++, true); //WEB: this.buffer[this.position++] = value & 0xFF;
     }
 
     writeInt32(value: number): void {

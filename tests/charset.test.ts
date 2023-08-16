@@ -6,11 +6,11 @@ import Encoding = util.Encoding;
 var UTF8 = Encoding.UTF8;
 
 describe("Encoding Tests", function () {
-  before((done) => {
+  beforeAll((done) => {
     done();
   });
 
-  after((done) => {
+  afterAll((done) => {
     done();
   });
 

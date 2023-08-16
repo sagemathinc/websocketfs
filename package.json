@@ -2,12 +2,12 @@
   "name": "websocketfs",
   "version": "0.1.0",
   "description": "SSHFS like filesystem over a WebSocket",
-  "main": "./lib/sftp.js",
+  "main": "./dist/lib/sftp.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "install": "gulp lib",
-    "build": "gulp build",
-    "test": "mocha tests"
+    "build": "pnpm exec tsc",
+    "clean": "rm -rf dist",
+    "test": "pnpm exec mocha dist/tests"
   },
   "engines": {
     "node": ">=0.16.0"
@@ -29,25 +29,21 @@
     }
   ],
   "dependencies": {
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^20.5.0",
+    "typescript": "^5.1.6",
     "ws": "^1.0.0"
   },
   "devDependencies": {
     "bunyan": "^1.4.0",
-    "gulp": "^3.9.1",
-    "gulp-concat": "^2.6.0",
-    "gulp-json-editor": "^2.1.1",
-    "gulp-rename": "^1.2.2",
-    "gulp-replace": "^0.5.4",
-    "gulp-sourcemaps": "^1.6.0",
-    "gulp-typescript": "^2.12.0",
-    "gulp-uglify": "^1.5.3",
-    "merge-stream": "^1.0.0",
     "mocha": "^2.1.0"
   },
-  "resolutions": {
-    "graceful-fs": "4.2.2"
-  },
-  "keywords": ["sftp", "server", "client", "ws"],
+  "keywords": [
+    "sftp",
+    "server",
+    "client",
+    "ws"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -29,6 +29,8 @@ client.connect(url, {}, function (err) {
     });
 
     // disconnect
-    client.end();
+    //client.end();
   });
 });
+
+exports.client = client;

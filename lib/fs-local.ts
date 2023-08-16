@@ -40,7 +40,7 @@ export class LocalFilesystem implements IFilesystem {
     path: string,
     flags: string,
     attrs: IStats,
-    callback: (err: Error, handle: any) => any,
+    callback: (err: Error, handle: any) => any
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -54,13 +54,19 @@ export class LocalFilesystem implements IFilesystem {
     this.checkCallback(callback);
 
     if (Array.isArray(handle)) {
-      if (handle.closed) return FileUtil.fail("Already closed", callback);
+      // @ts-ignore
+      if (handle.closed) {
+        return FileUtil.fail("Already closed", callback);
+      }
+      // @ts-ignore
       handle.closed = true;
       process.nextTick(() => callback(null));
       return;
     }
 
-    if (isNaN(handle)) return FileUtil.fail("Invalid handle", callback);
+    if (isNaN(handle)) {
+      return FileUtil.fail("Invalid handle", callback);
+    }
 
     fs.close(handle, callback);
   }
@@ -71,7 +77,7 @@ export class LocalFilesystem implements IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback: (err: Error, buffer: Buffer, bytesRead: number) => any,
+    callback: (err: Error, buffer: Buffer, bytesRead: number) => any
   ): void {
     this.checkCallback(callback);
 
@@ -106,7 +112,7 @@ export class LocalFilesystem implements IFilesystem {
           }
 
           callback(err, buffer.slice(offset, offset + totalBytes), totalBytes);
-        },
+        }
       );
     };
 
@@ -119,7 +125,7 @@ export class LocalFilesystem implements IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     this.checkCallback(callback);
 
@@ -143,7 +149,7 @@ export class LocalFilesystem implements IFilesystem {
           }
 
           callback(err);
-        },
+        }
       );
     };
 
@@ -278,19 +284,22 @@ export class LocalFilesystem implements IFilesystem {
 
   readdir(
     handle: any,
-    callback: (err: Error, items: IItem[] | boolean) => any,
+    callback: (err: Error, items: IItem[] | boolean) => any
   ): void {
     this.checkCallback(callback);
     if (
       !Array.isArray(handle) ||
+      // @ts-ignore
       handle.closed ||
+      // @ts-ignore
       typeof handle.path !== "object"
-    )
+    ) {
       return FileUtil.fail("Invalid handle", callback);
-
+    }
     var windows = this.isWindows;
     var items = [];
 
+    // @ts-ignore
     var path = <Path>handle.path;
     var paths = (<string[]>handle).splice(0, 64);
 
@@ -352,7 +361,7 @@ export class LocalFilesystem implements IFilesystem {
 
   realpath(
     path: string,
-    callback: (err: Error, resolvedPath: string) => any,
+    callback: (err: Error, resolvedPath: string) => any
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -371,7 +380,7 @@ export class LocalFilesystem implements IFilesystem {
     oldPath: string,
     newPath: string,
     flags: RenameFlags,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");
@@ -396,7 +405,7 @@ export class LocalFilesystem implements IFilesystem {
 
   readlink(
     path: string,
-    callback: (err: Error, linkString: string) => any,
+    callback: (err: Error, linkString: string) => any
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -407,7 +416,7 @@ export class LocalFilesystem implements IFilesystem {
   symlink(
     oldPath: string,
     newPath: string,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");

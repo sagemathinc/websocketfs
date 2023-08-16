@@ -46,7 +46,7 @@ export class StreamChannel
             }
 
             // determine packet length and check it
-            packetLength = <number>data.readInt32BE(0, true) + 4;
+            packetLength = <number>data.readInt32BE(0) + 4;
             if (packetLength > buffer.length || packetLength <= 4) {
               throw new Error("Bad packet length");
             }
@@ -84,7 +84,7 @@ export class StreamChannel
           // if receiving the header, parse its length and wait for the rest of data
           if (packetLength == 4) {
             // determine the packet length and check it
-            packetLength = buffer.readInt32BE(0, true) + 4;
+            packetLength = buffer.readInt32BE(0) + 4;
             if (packetLength > buffer.length || packetLength <= 4) {
               throw new Error("Bad packet length");
             }
@@ -107,9 +107,12 @@ export class StreamChannel
     });
   }
 
-  on(event: string, listener: Function): StreamChannel {
-    if (event == "ready") process.nextTick(listener);
-    else super.on(event, listener);
+  on(event: string, listener: (...args: any[]) => void) {
+    if (event == "ready") {
+      process.nextTick(listener);
+    } else {
+      super.on(event, listener);
+    }
     return this;
   }
 

@@ -133,20 +133,20 @@ export class SftpPacketReader extends SftpPacket {
 
   readByte(): number {
     this.check(1);
-    var value = this.buffer.readUInt8(this.position++, true); //WEB: var value = this.buffer[this.position++] & 0xFF;
+    var value = this.buffer.readUInt8(this.position++); //WEB: var value = this.buffer[this.position++] & 0xFF;
     return value;
   }
 
   readInt16(): number {
     this.check(2); //WEB: var value = this.readUint16();
-    var value = this.buffer.readInt16BE(this.position, true); //WEB: if (value & 0x8000) value -= 0x10000;
+    var value = this.buffer.readInt16BE(this.position); //WEB: if (value & 0x8000) value -= 0x10000;
     this.position += 2; //WEB: // removed
     return value;
   }
 
   readUint16(): number {
     this.check(2);
-    var value = this.buffer.readUInt16BE(this.position, true); //WEB: // removed
+    var value = this.buffer.readUInt16BE(this.position); //WEB: // removed
     this.position += 2; //WEB: var value = 0;
     //WEB: value |= (this.buffer[this.position++] & 0xFF) << 8;
     //WEB: value |= (this.buffer[this.position++] & 0xFF);
@@ -155,14 +155,14 @@ export class SftpPacketReader extends SftpPacket {
 
   readInt32(): number {
     this.check(4); //WEB: var value = this.readUint32();
-    var value = this.buffer.readInt32BE(this.position, true); //WEB: if (value & 0x80000000) value -= 0x100000000;
+    var value = this.buffer.readInt32BE(this.position); //WEB: if (value & 0x80000000) value -= 0x100000000;
     this.position += 4; //WEB: // removed
     return value;
   }
 
   readUint32(): number {
     this.check(4);
-    var value = this.buffer.readUInt32BE(this.position, true); //WEB: // removed
+    var value = this.buffer.readUInt32BE(this.position); //WEB: // removed
     this.position += 4; //WEB: var value = 0;
     //WEB: value |= (this.buffer[this.position++] & 0xFF) << 24;
     //WEB: value |= (this.buffer[this.position++] & 0xFF) << 16;
@@ -255,18 +255,18 @@ export class SftpPacketWriter extends SftpPacket {
   finish(): Buffer {
     var length = this.position;
     this.position = 0;
-    this.buffer.writeInt32BE(length - 4, 0, true); //WEB: this.writeInt32(length - 4);
+    this.buffer.writeInt32BE(length - 4, 0); //WEB: this.writeInt32(length - 4);
     return this.buffer.slice(0, length); //WEB: return this.buffer.subarray(0, length);
   }
 
   writeByte(value: number): void {
     this.check(1);
-    this.buffer.writeUInt8(value, this.position++, true); //WEB: this.buffer[this.position++] = value & 0xFF;
+    this.buffer.writeUInt8(value, this.position++); //WEB: this.buffer[this.position++] = value & 0xFF;
   }
 
   writeInt32(value: number): void {
     this.check(4);
-    this.buffer.writeInt32BE(value, this.position, true); //WEB: // removed
+    this.buffer.writeInt32BE(value, this.position); //WEB: // removed
     this.position += 4; //WEB: // removed
     //WEB: this.buffer[this.position++] = (value >> 24) & 0xFF;
     //WEB: this.buffer[this.position++] = (value >> 16) & 0xFF;

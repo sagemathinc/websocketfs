@@ -75,12 +75,12 @@ export class FileDataSource extends EventEmitter implements IDataSource {
     this.failed = false;
   }
 
-  on(event: string, listener: Function): NodeJS.EventEmitter {
+  on(event: string, listener) {
     this._flush();
     return super.on(event, listener);
   }
 
-  once(event: string, listener: Function): NodeJS.EventEmitter {
+  once(event: string, listener) {
     this._flush();
     return super.once(event, listener);
   }
@@ -323,12 +323,12 @@ class BlobDataSource extends EventEmitter implements IDataSource {
     };
   }
 
-  on(event: string, listener: Function): NodeJS.EventEmitter {
+  on(event: string, listener) {
     this.flush();
     return super.on(event, listener);
   }
 
-  once(event: string, listener: Function): NodeJS.EventEmitter {
+  once(event: string, listener) {
     this.flush();
     return super.once(event, listener);
   }

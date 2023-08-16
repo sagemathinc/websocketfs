@@ -616,7 +616,7 @@ class SftpClientCore implements IFilesystem {
   rename(
     oldPath: string,
     newPath: string,
-    flags: RenameFlags,
+    flags: number,
     callback: (err: Error) => any,
   ): void {
     this.checkCallback(callback);

@@ -13,8 +13,8 @@
 // #endif
 class APromise {
   private State: number;
-  private OnError: Array<Function>;
-  private OnSuccess: Array<Function>;
+  private OnError: Array<Function> | null;
+  private OnSuccess: Array<Function> | null;
   private Result: any;
   private Finished: boolean;
 
@@ -167,8 +167,8 @@ class APromise {
     if (typeof Iterable === "undefined")
       throw new Error("Promise.all expects parameter one to be an iteratable");
     let Instance = new APromise(null, true);
-    let Promises = [];
-    let ToReturn = [];
+    let Promises: any[] = [];
+    let ToReturn: any[] = [];
     let Number = 0;
     for (var Index in Iterable) {
       let Val = Iterable[Index];

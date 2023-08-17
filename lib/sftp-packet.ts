@@ -5,8 +5,8 @@ import SftpPacketType = enums.SftpPacketType;
 import encodeUTF8 = charsets.encodeUTF8;
 
 export class SftpPacket {
-  type: SftpPacketType | string;
-  id: number;
+  type: SftpPacketType | string | null = null;
+  id: number | null = null;
 
   buffer: Buffer;
   position: number;
@@ -244,7 +244,7 @@ export class SftpPacketWriter extends SftpPacket {
     ) {
       // these packets don't have an id
     } else {
-      this.writeInt32(this.id | 0);
+      this.writeInt32(this.id ?? 0);
 
       if (typeof this.type !== "number") {
         this.writeString(<string>this.type);

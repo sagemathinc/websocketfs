@@ -29,7 +29,9 @@ export const enum LogLevel {
 export class LogHelper {
   static getLevel(log: ILogWriter): LogLevel {
     var value = log.level();
-    if (typeof value === "number") return value;
+    if (typeof value === "number") {
+      return value;
+    }
     switch (("" + value).toLowerCase()) {
       case "trace":
         return 10;
@@ -46,13 +48,15 @@ export class LogHelper {
     }
 
     var level = (<any>value) | 0;
-    if (level <= 0 || level >= 100) level = 60;
+    if (level <= 0 || level >= 100) {
+      level = 60;
+    }
     return level;
   }
 
   static isTrace(log: ILogWriter): boolean {
     var level = log.level();
-    return level <= 10 || level === "trace";
+    return (typeof level == "number" && level <= 10) || level === "trace";
   }
 
   static toLogWriter(writer?: ILogWriter): ILogWriter {
@@ -184,26 +188,29 @@ export class Options {
   }
 
   merge(options: any): any {
-    var result = {};
+    const result: any = {};
 
-    for (var propertyName in this) {
-      if (this.hasOwnProperty(propertyName))
+    for (const propertyName in this) {
+      if (this.hasOwnProperty(propertyName)) {
         result[propertyName] = this[propertyName];
+      }
     }
 
-    if (options)
-      for (var propertyName in options) {
-        if (options.hasOwnProperty(propertyName))
+    if (options) {
+      for (const propertyName in options) {
+        if (options.hasOwnProperty(propertyName)) {
           result[propertyName] = options[propertyName];
+        }
       }
+    }
 
     return result;
   }
 
   intersect(options: any): any {
-    var result = {};
+    const result: any = {};
 
-    for (var propertyName in this) {
+    for (const propertyName in this) {
       if (!this.hasOwnProperty(propertyName)) continue;
 
       if (options && options.hasOwnProperty(propertyName)) {

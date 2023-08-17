@@ -56,14 +56,18 @@ class EventEmitter {
   }
 
   removeListener(event: string, listener: Function): EventEmitter {
-    var list = <Function[]>this._events[event];
+    const list: Function[] | Function = this._events[event];
     if (typeof list === "function") {
       if (<any>list === listener) {
         delete this._events[event];
-      } else if (Array.isArray(list)) {
-        var n = list.indexOf(listener);
-        if (n >= 0) list.splice(n, 1);
-        if (list.length == 0) delete this._events[event];
+      }
+    } else if (Array.isArray(list)) {
+      var n = list.indexOf(listener);
+      if (n >= 0) {
+        list.splice(n, 1);
+      }
+      if (list.length == 0) {
+        delete this._events[event];
       }
     }
 

@@ -1,4 +1,4 @@
-- [ ] fix all typescript errors
+- [x] fix all typescript errors
 
 - [ ] enable noUnusedLocals and fix errors
 

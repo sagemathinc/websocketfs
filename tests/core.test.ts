@@ -41,7 +41,7 @@ if (!fs.existsSync(tmp)) {
         return assertion.call(this);
       });
     } else if (assertion.length == 1) {
-      (<Function>iti)(expectation, function (done: MochaDone) {
+      (<Function>iti)(expectation, function (done) {
         return assertion.call(this, done);
       });
     } else {
@@ -54,9 +54,6 @@ if (!fs.existsSync(tmp)) {
   };
   it.skip = <any>function () {
     return iti.skip.apply(this, arguments);
-  };
-  it.timeout = <any>function () {
-    return iti.timeout.apply(this, arguments);
   };
 })();
 
@@ -225,12 +222,12 @@ describe("Basic Tests", function () {
 
   it("mkdir(no-path)", (done) => {
     var name = "dir000/subdir";
-    client.mkdir(name, (err) => error(err, done, "ENOENT", wrongPath));
+    client.mkdir(name, {}, (err) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("mkdir(path)", (done) => {
     var name = "dir001";
-    client.mkdir(name, (err) =>
+    client.mkdir(name, {}, (err) =>
       check(err, done, () => {
         var stats = fs.statSync(Path.join(tmp, name));
         assert.ok(stats.isDirectory, "Directory expected");
@@ -442,7 +439,7 @@ describe("Basic Tests", function () {
   it("open(no-path, 'r+')", (done) => {
     var name = getFileName();
 
-    client.open(name, "r+", (err, handle) =>
+    client.open(name, "r+", {}, (err, handle) =>
       error(err, done, "ENOENT", wrongPath)
     );
   });

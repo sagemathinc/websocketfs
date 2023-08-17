@@ -603,7 +603,7 @@ export class SftpServerSession {
             if (count == 0) {
               this.sendStatus(response, SftpStatusCode.EOF, "EOF");
             } else {
-              response.buffer.writeInt32BE(count, offset, true);
+              response.buffer.writeInt32BE(count, offset);
               this.send(response);
             }
           };

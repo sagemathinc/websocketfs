@@ -5,11 +5,13 @@
   "main": "./dist/lib/sftp.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
+    "prepublishOnly": "pnpm test",
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules tmp",
     "test": "pnpm exec jest dist/tests",
     "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
+  "files": ["dist/**", "LICENSE", "README.md", "package.json", "index.js"],
   "engines": {
     "node": ">=0.16.0"
   },
@@ -37,12 +39,7 @@
     "typescript": "^5.1.6",
     "ws": "^1.1.5"
   },
-  "keywords": [
-    "sftp",
-    "server",
-    "client",
-    "ws"
-  ],
+  "keywords": ["sftp", "server", "client", "ws"],
   "license": "MIT",
   "repository": {
     "type": "git",

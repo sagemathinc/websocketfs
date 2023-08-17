@@ -412,7 +412,7 @@ export class FileUtil {
   static listPath(
     fs: IFilesystem,
     path: string,
-    emitter: IEventEmitter | null,
+    emitter: IEventEmitter | undefined,
     process: (item: IItem) => any,
     callback: (err: Error | null) => any
   ): void {
@@ -447,7 +447,7 @@ export class FileUtil {
   ): void {
     var items = <IItem[]>[];
 
-    FileUtil.listPath(fs, path, null, process, (err) => {
+    FileUtil.listPath(fs, path, undefined, process, (err) => {
       if (err) return callback(err);
       callback(null, items);
     });

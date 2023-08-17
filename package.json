@@ -11,7 +11,13 @@
     "test": "pnpm exec jest dist/tests",
     "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
-  "files": ["dist/**", "LICENSE", "README.md", "package.json", "index.js"],
+  "files": [
+    "dist/**",
+    "LICENSE",
+    "README.md",
+    "package.json",
+    "index.js"
+  ],
   "engines": {
     "node": ">=0.16.0"
   },
@@ -34,12 +40,18 @@
   "dependencies": {
     "@types/jest": "^29.5.3",
     "@types/node": "^20.5.0",
+    "get-port": "^5.1.1",
     "jest": "^29.6.2",
     "prettier": "^2.6.2",
     "typescript": "^5.1.6",
     "ws": "^1.1.5"
   },
-  "keywords": ["sftp", "server", "client", "ws"],
+  "keywords": [
+    "sftp",
+    "server",
+    "client",
+    "ws"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -124,10 +124,11 @@ export function search(
   } else {
     // no wildcards -> determine whether this is a file or directory
     fs.stat(path, (err, stats) => {
-      if (err) return callback(err);
-
+      if (err) {
+        return callback(err);
+      }
       try {
-        if (!options.oneitem) {
+        if (!options?.oneitem) {
           if (FileUtil.isDirectory(stats)) {
             // if it's a directory, start matching
             if (expandDir) return start(path, "*");
@@ -164,7 +165,7 @@ export function search(
           relativePath: name,
         };
         results.push(item);
-        emitter.emit("item", item);
+        emitter?.emit("item", item);
         return callback(null, results);
       } catch (err) {
         return callback(err);
@@ -226,7 +227,7 @@ export function search(
     // if no more to process, we are done
     if (!current) {
       // sort the results if requested
-      if (!options.nosort) {
+      if (!options?.nosort) {
         results.sort((a, b) => {
           if (a.relativePath < b.relativePath) return -1;
           if (a.relativePath > b.relativePath) return 1;
@@ -317,7 +318,7 @@ export function search(
       item.path = basePath.join(relative).path;
       item.relativePath = relative.path;
       results.push(item);
-      emitter.emit("item", item);
+      emitter?.emit("item", item);
     }
   }
 

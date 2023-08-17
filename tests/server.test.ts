@@ -1,9 +1,13 @@
 import assert = require("assert");
 import SFTP = require("../lib/sftp");
+import getPort = require("get-port");
 
-function startServer(): SFTP.Server {
+let port;
+
+async function startServer(): Promise<SFTP.Server> {
+  port = await getPort();
   var server = new SFTP.Server({
-    port: 3022,
+    port,
     virtualRoot: "/this-directory-should-not-exist/another-one",
   });
 
@@ -12,13 +16,17 @@ function startServer(): SFTP.Server {
 
 function startClient(): SFTP.Client {
   var client = new SFTP.Client();
-  client.connect("ws://localhost:3022");
+  client.connect(`sws://localhost:${port}`);
   return client;
 }
 
-describe("Server Tests", function () {
+let server;
+beforeAll(async () => {
+  server = await startServer();
+});
+
+describe("Server Tests", () => {
   it("bad_root", (done) => {
-    var server = startServer();
     var client = startClient();
 
     client.on("ready", () => {

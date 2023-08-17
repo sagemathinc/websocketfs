@@ -3,6 +3,7 @@ import Path = require("path");
 import fs = require("fs");
 import SFTP = require("../lib/sftp");
 import misc = require("../lib/sftp-misc");
+import getPort = require("get-port");
 
 import IItem = SFTP.IItem;
 
@@ -77,9 +78,13 @@ for (var n = 0; n < 200; n++) {
   );
 }
 
-var server = new SFTP.Server({
-  port: 3022,
-  virtualRoot: tmp,
+let server, port;
+beforeAll(async () => {
+  port = await getPort();
+  server = new SFTP.Server({
+    port,
+    virtualRoot: tmp,
+  });
 });
 
 function check(err: Error, done: Function, cb: Function) {
@@ -125,11 +130,17 @@ function error(
 
 function equalStats(attrs: SFTP.IStats, stats: fs.Stats): void {
   assert.equal(attrs.size, stats.size, "size mismatch");
+  if (attrs.mtime == null) {
+    throw Error("bug");
+  }
   assert.equal(
     (attrs.mtime.getTime() / 1000) | 0,
     (stats.mtime.getTime() / 1000) | 0,
     "mtime mismatch"
   );
+  if (attrs.atime == null) {
+    throw Error("bug");
+  }
   assert.equal(
     (attrs.atime.getTime() / 1000) | 0,
     (stats.atime.getTime() / 1000) | 0,
@@ -150,12 +161,12 @@ var getFileName = (function () {
 })();
 
 describe("Basic Tests", function () {
-  var client = <SFTP.Client>null;
+  let client;
 
   beforeAll((done) => {
     client = new SFTP.Client();
 
-    client.connect("ws://localhost:3022", {});
+    client.connect(`ws://localhost:${port}`, {});
 
     client.on("error", (err) => {
       if (err.message == "Simulated callback error") {

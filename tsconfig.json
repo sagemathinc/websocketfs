@@ -3,7 +3,7 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "allowJs": true,
     "declaration": true,
     "downlevelIteration": true,

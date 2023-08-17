@@ -355,7 +355,7 @@ export class LocalFilesystem implements IFilesystem {
 
   mkdir(
     path: string,
-    attrs: IStats,
+    attrs: IStats | null,
     callback: (err: Error | null) => any
   ): void {
     this.checkCallback(callback);

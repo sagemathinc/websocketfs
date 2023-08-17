@@ -89,7 +89,7 @@ export interface IFilesystem {
   unlink(path: string, callback: (err: Error | null) => any): void;
   mkdir(
     path: string,
-    attrs: IStats,
+    attrs: IStats | null,
     callback: (err: Error | null) => any
   ): void;
   rmdir(path: string, callback: (err: Error | null) => any): void;

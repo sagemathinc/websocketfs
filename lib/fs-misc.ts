@@ -41,12 +41,12 @@ export interface IDataSource {
 
 export class Path {
   path: string;
-  fs: IFilesystem;
+  fs?: IFilesystem;
 
   constructor(path: string, fs?: IFilesystem) {
     if (typeof path !== "string") path = "" + path;
     this.path = <string>path;
-    this.fs = fs || null;
+    this.fs = fs;
   }
 
   private _windows(): boolean {
@@ -212,22 +212,28 @@ export class Path {
 
 export class FileUtil {
   static isDirectory(stats: IStats): boolean {
-    return stats ? (stats.mode & FileType.ALL) == FileType.DIRECTORY : false; // directory
+    return stats
+      ? ((stats.mode ?? 0) & FileType.ALL) == FileType.DIRECTORY
+      : false; // directory
   }
 
   static isFile(stats: IStats): boolean {
-    return stats ? (stats.mode & FileType.ALL) == FileType.REGULAR_FILE : false; // regular file
+    return stats
+      ? ((stats.mode ?? 0) & FileType.ALL) == FileType.REGULAR_FILE
+      : false; // regular file
   }
 
   static isSymbolicLink(stats: IStats): boolean {
-    return stats ? (stats.mode & FileType.ALL) == FileType.SYMLINK : false; // symlink
+    return stats
+      ? ((stats.mode ?? 0) & FileType.ALL) == FileType.SYMLINK
+      : false; // symlink
   }
 
   static toString(filename: string, stats: IStats): string {
-    var attrs = stats.mode;
+    let attrs = stats.mode ?? 0;
 
-    var perms;
-    switch (attrs & FileType.ALL) {
+    let perms;
+    switch ((attrs ?? 0) & FileType.ALL) {
       case FileType.CHARACTER_DEVICE:
         perms = "c";
         break;
@@ -263,11 +269,11 @@ export class FileUtil {
       perms += mask & 1 ? "x" : "-";
     }
 
-    var len = stats.size.toString();
+    var len = (stats.size ?? 0).toString();
     if (len.length < 9) len = "         ".slice(len.length - 9) + len;
     else len = " " + len;
 
-    var modified = stats.mtime;
+    var modified = stats.mtime ?? new Date(0);
     var diff = (new Date().getTime() - modified.getTime()) / (3600 * 24);
     var date = [
       "Jan",
@@ -373,16 +379,18 @@ export class FileUtil {
     callback: (err: Error) => any
   ): void {
     // send first read request
-    var error = null;
-    var requests = 1;
+    let error: Error | null = null;
+    let requests = 1;
     fs.readdir(handle, read);
 
     function read(err: Error, items: IItem[] | boolean): void {
       try {
         requests--;
-        error = error || err;
+        error = error ?? err;
         if (error || !items) {
-          if (requests == 0) callback(error);
+          if (requests == 0) {
+            callback(error);
+          }
           return;
         }
 
@@ -395,8 +403,8 @@ export class FileUtil {
           requests++;
         }
       } catch (err) {
-        error = error || err;
-        return callback(error);
+        error = error ?? err;
+        return callback(error as Error);
       }
     }
   }
@@ -404,9 +412,9 @@ export class FileUtil {
   static listPath(
     fs: IFilesystem,
     path: string,
-    emitter: IEventEmitter,
+    emitter: IEventEmitter | null,
     process: (item: IItem) => any,
-    callback: (err: Error) => any
+    callback: (err: Error | null) => any
   ): void {
     // list directory and process its items
     fs.opendir(path, (err, handle) => {
@@ -418,10 +426,12 @@ export class FileUtil {
         // when done, close the handle
         fs.close(handle, (err) => {
           error = error || err;
-          if (err) return callback(error);
-
-          if (emitter) emitter.emit("traversed", path);
-
+          if (err) {
+            return callback(error);
+          }
+          if (emitter) {
+            emitter.emit("traversed", path);
+          }
           // done
           callback(null);
         });
@@ -433,7 +443,7 @@ export class FileUtil {
     fs: IFilesystem,
     path: string,
     dotdirs: boolean,
-    callback: (err: Error, items?: IItem[]) => any
+    callback: (err: Error | null, items?: IItem[]) => any
   ): void {
     var items = <IItem[]>[];
 
@@ -451,19 +461,20 @@ export class FileUtil {
   static purge(
     fs: IFilesystem,
     path: string,
-    callback: (err: Error) => any
+    callback: (err: Error | null) => any
   ): void {
     FileUtil.list(fs, path, false, (err, items) => {
       if (err) {
         if (err["code"] === "ENOENT") err = null;
         return callback(err);
       }
-
       next(null);
 
-      function next(err: Error): void {
+      function next(err: Error | null): void {
         if (err && err["code"] !== "ENOENT") return callback(err);
-
+        if (items == null) {
+          throw Error("bug"); // can't happen since only happens when there is an err.
+        }
         var item = items.shift();
         if (!item) {
           fs.rmdir(path, (err) => {
@@ -487,7 +498,7 @@ export class FileUtil {
     fs: IFilesystem,
     path: string,
     overwrite: boolean,
-    callback: (err: Error, created: boolean) => any
+    callback: (err: Error | null, created: boolean) => any
   ): void {
     fs.stat(path, (err, stats) => {
       if (!err) {
@@ -515,17 +526,17 @@ export class FileUtil {
     source: IDataSource,
     target: IDataTarget,
     emitter: IEventEmitter,
-    callback?: (err: Error) => any
+    callback?: (err: Error | null) => any
   ): void {
-    var empty = true;
-    var writable = true;
-    var eof = false;
-    var done = false;
-    var error = <Error>null;
-    var sourceError = <Error>null;
-    var targetError = <Error>null;
-    var total = 0;
-    var item = <IItem>null;
+    let empty = true;
+    let writable = true;
+    let eof = false;
+    let done = false;
+    let error: Error | null = null;
+    let sourceError: Error | null = null;
+    let targetError: Error | null = null;
+    let total = 0;
+    let item: IItem | null = null;
 
     source.on("readable", () => {
       //console.log("readable");

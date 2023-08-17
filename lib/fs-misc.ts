@@ -310,15 +310,15 @@ export class FileUtil {
 
   static fail(
     message: string,
-    callback: (err: Error, ...args: any[]) => any
+    callback?: (err: Error|null, ...args: any[]) => any
   ): void;
   static fail(
     code: string,
-    callback: (err: Error, ...args: any[]) => any
+    callback?: (err: Error|null, ...args: any[]) => any
   ): void;
   static fail(
     code: string,
-    callback: (err: Error, ...args: any[]) => any
+    callback?: (err: Error|null, ...args: any[]) => any
   ): void {
     var message;
     var errno;
@@ -502,7 +502,12 @@ export class FileUtil {
   ): void {
     fs.stat(path, (err, stats) => {
       if (!err) {
-        if (FileUtil.isDirectory(stats)) return callback(null, false);
+        if (stats == null) {
+          throw Error("bug");
+        }
+        if (FileUtil.isDirectory(stats)) {
+          return callback(null, false);
+        }
 
         if (overwrite) {
           // delete non-directory item

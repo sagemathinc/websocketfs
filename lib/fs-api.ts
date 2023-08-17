@@ -49,7 +49,7 @@ export interface IFilesystem {
   close(handle: any, callback: (err: Error | null) => any): void;
   read(
     handle: any,
-    buffer: Buffer,
+    buffer: Buffer | null,
     offset: number,
     length: number,
     position: number,

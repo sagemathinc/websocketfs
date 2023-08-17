@@ -193,8 +193,11 @@ export class SafeFilesystem implements IFilesystem {
 
   private _execute(
     safeHandle: number,
-    action: (handle: any, callback: (err: Error, ...args) => any) => void,
-    callback?: (err: Error, ...args) => any
+    action: (
+      handle: any,
+      callback: (err: Error | null, ...args) => any
+    ) => void,
+    callback?: (err: Error | null, ...args) => any
   ): void {
     var handleInfo = this.toHandleInfo(safeHandle);
 
@@ -579,7 +582,7 @@ export class SafeFilesystem implements IFilesystem {
     length: number,
     toHandle: number,
     toPosition: number,
-    callback: (err: Error) => any
+    callback: (err: Error | null) => any
   ): void {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
@@ -598,36 +601,30 @@ export class SafeFilesystem implements IFilesystem {
     //TODO: add argument checks
     //TODO: fail on overlapping ranges in a single file
 
-    this._execute(
-      fromHandle,
-      (handle, callback) => {
-        fh = handle;
-        fc = callback;
-        fr = true;
+    this._execute(fromHandle, (handle, callback) => {
+      fh = handle;
+      fc = callback;
+      fr = true;
 
-        if (same) {
-          th = handle;
-          tc = null;
-          tr = true;
-        }
-
-        if (tr) start();
+      if (same) {
+        th = handle;
+        tc = null;
+        tr = true;
       }
-    );
+
+      if (tr) start();
+    });
 
     if (!same) {
-      this._execute(
-        toHandle,
-        (handle, callback) => {
-          th = handle;
-          tc = callback;
-          tr = true;
-          if (fr) start();
-        }
-      );
+      this._execute(toHandle, (handle, callback) => {
+        th = handle;
+        tc = callback;
+        tr = true;
+        if (fr) start();
+      });
     }
 
-    function done(err: Error) {
+    function done(err: Error | null) {
       fc();
       if (tc) tc();
       callback(err);
@@ -644,7 +641,9 @@ export class SafeFilesystem implements IFilesystem {
 
     function copy() {
       var bytesToRead = length >= 0 ? Math.min(blockSize, length) : blockSize;
-      if (bytesToRead == 0) {return done(); }
+      if (bytesToRead == 0) {
+        return done(null);
+      }
 
       fs.read(
         fh,
@@ -702,7 +701,7 @@ export class SafeFilesystem implements IFilesystem {
           break;
         default:
           // unknown algorithm
-          alg = null;
+          alg = "";
           break;
       }
     }

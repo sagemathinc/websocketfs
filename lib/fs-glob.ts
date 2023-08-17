@@ -127,6 +127,9 @@ export function search(
       if (err) {
         return callback(err);
       }
+      if (stats == null) {
+        throw Error("bug");
+      }
       try {
         if (!options?.oneitem) {
           if (FileUtil.isDirectory(stats)) {

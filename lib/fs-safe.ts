@@ -171,10 +171,10 @@ export class SafeFilesystem implements IFilesystem {
       var handleInfo = this.toHandleInfo(handle);
       if (handleInfo && handleInfo.real !== null) {
         try {
-          this.fs.close(handleInfo.real, (err) => {
+          this.fs.close(handleInfo.real, (_err) => {
             //TODO: report this
           });
-        } catch (err) {
+        } catch (_err) {
           //TODO: report this
         }
       }
@@ -725,15 +725,18 @@ export class SafeFilesystem implements IFilesystem {
             0,
             bytesToRead,
             position,
-            (err, b, bytesRead) => {
-              if (err) return callback(err, null, alg);
+            (err, _b, bytesRead) => {
+              if (err) {
+                return callback(err, null, alg);
+              }
 
               //TODO: when we got incomplete data, read again (the functionality is already in fs-local and should be moved to fs-safe)
 
               // make sure we got the requested data
-              if (bytesRead != bytesToRead)
+              if (bytesRead != bytesToRead) {
                 return callback(new Error("Unable to read data"), null, alg);
-
+              }
+              
               position += bytesRead;
               length -= bytesRead;
 

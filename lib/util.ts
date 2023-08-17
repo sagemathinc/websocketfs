@@ -77,9 +77,9 @@ export class LogHelper {
 
       levels.forEach((level) => {
         proxy[level] = (
-          obj?: Object,
-          format?: any,
-          ...params: any[]
+          _obj?: Object,
+          _format?: any,
+          ..._params: any[]
         ): void => {};
       });
 

@@ -97,7 +97,7 @@ export class LocalFilesystem implements IFilesystem {
         offset2,
         length,
         position,
-        (err, bytesRead, b) => {
+        (err, bytesRead) => {
           if (typeof err === "undefined" || err == null) {
             length -= bytesRead;
             totalBytes += bytesRead;
@@ -135,7 +135,7 @@ export class LocalFilesystem implements IFilesystem {
         offset,
         length,
         position,
-        (err, bytesWritten, b) => {
+        (err, bytesWritten) => {
           if (typeof err === "undefined" || err == null) {
             length -= bytesWritten;
 

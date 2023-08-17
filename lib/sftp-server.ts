@@ -523,7 +523,7 @@ export class SftpServerSession {
             offset,
             count,
             position,
-            (err, b, bytesRead) => {
+            (err, _b, bytesRead) => {
               if (this.sendIfError(response, err)) return;
 
               if (bytesRead == 0) {

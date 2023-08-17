@@ -309,7 +309,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     });
   }
 
-  join(...paths: string[]): string {
+  join(..._paths: string[]): string {
     var path = new Path("", this._fs);
     return path.join.apply(path, arguments).normalize().path;
   }
@@ -538,7 +538,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     from: any,
     fromFs: IFilesystem,
     toPath: Path,
-    options: any,
+    _options: any,
     emitter: IEventEmitter,
     callback: (err: Error, ...args: any[]) => any
   ): void {
@@ -563,7 +563,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
           try {
             sources = src;
-            sources.forEach((source) => {
+            sources.forEach((_source) => {
               //TODO: calculate total size
               //TODO: make sure that source.name is valid on target fs
             });
@@ -598,7 +598,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
         if (err) return callback(err);
 
         if (FileUtil.isDirectory(source.stats)) {
-          FileUtil.mkdir(toFs, targetPath, false, (err, created) =>
+          FileUtil.mkdir(toFs, targetPath, false, (err, _created) =>
             transferred(err)
           );
         } else {
@@ -630,7 +630,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
         var targetPath = toPath.join(parent).path;
 
         try {
-          FileUtil.mkdir(toFs, targetPath, false, (err, created) => {
+          FileUtil.mkdir(toFs, targetPath, false, (err, _created) => {
             if (err) return callback(err);
             directories[targetPath] = true;
             callback(null);

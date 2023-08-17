@@ -2,7 +2,7 @@
   "compilerOptions": {
     "noImplicitThis": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": false,
+    "noUnusedParameters": true,
     "strictNullChecks": false,
     "allowJs": true,
     "declaration": true,

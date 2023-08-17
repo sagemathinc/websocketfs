@@ -134,7 +134,7 @@ export class StreamChannel
     process.nextTick(() => super.emit("close", err));
   }
 
-  close(reason?: number, description?: string): void {
+  close(_reason?: number, _description?: string): void {
     if (this.closed) return;
     this.closed = true;
 

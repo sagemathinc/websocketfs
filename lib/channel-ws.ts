@@ -331,7 +331,7 @@ class WebSocketChannel implements IChannel {
     this.established = true;
   }
 
-  _close(kind: number, err: Error | any): void {
+  _close(_kind: number, err: Error | any): void {
     if (this.closed) return;
     var onclose = this.onclose;
     this.close();

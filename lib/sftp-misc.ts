@@ -248,7 +248,7 @@ export class SftpStatus {
   static write(
     response: SftpPacketWriter,
     code: SftpStatusCode,
-    message: string,
+    message: string
   ) {
     response.type = SftpPacketType.STATUS;
     response.start();
@@ -278,7 +278,7 @@ interface IMetadata {
   [key: string]: any;
 }
 
-function writeMetadata(writer: SftpPacketWriter, metadata: IMetadata): void {
+function writeMetadata(_writer: SftpPacketWriter, metadata: IMetadata): void {
   var data = new SftpPacketWriter(0x4000);
   for (var key in metadata) {
     var value = metadata[key];

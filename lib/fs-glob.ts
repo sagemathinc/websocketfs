@@ -46,7 +46,7 @@ export function search(
   // use dummy emitter if not specified
   if (!emitter)
     emitter = {
-      emit: function (event) {
+      emit: function (_event) {
         return false;
       },
     };

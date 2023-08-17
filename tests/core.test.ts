@@ -191,7 +191,7 @@ describe("Basic Tests", function () {
       done();
     });
 
-    client.realpath(".", (err, resolvedPath) => {
+    client.realpath(".", (_err, _resolvedPath) => {
       throw new Error(message);
     });
   });
@@ -263,7 +263,7 @@ describe("Basic Tests", function () {
   it("opendir(no-path)", (done) => {
     var name = "dir000";
 
-    client.opendir(name, (err, handle) =>
+    client.opendir(name, (err, _handle) =>
       error(err, done, "ENOENT", wrongPath)
     );
   });
@@ -444,7 +444,7 @@ describe("Basic Tests", function () {
   it("open(no-path, 'r+')", (done) => {
     var name = getFileName();
 
-    client.open(name, "r+", {}, (err, handle) =>
+    client.open(name, "r+", {}, (err, _handle) =>
       error(err, done, "ENOENT", wrongPath)
     );
   });
@@ -592,7 +592,7 @@ describe("Basic Tests", function () {
   it("stat(no-path)", (done) => {
     var name = "dir000/file.txt";
 
-    client.stat(name, (err, attrs) => error(err, done, "ENOENT", wrongPath));
+    client.stat(name, (err, _attrs) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("stat(path)", (done) => {
@@ -613,7 +613,7 @@ describe("Basic Tests", function () {
   it("lstat(no-path)", (done) => {
     var name = "dir000/file.txt";
 
-    client.lstat(name, (err, attrs) => error(err, done, "ENOENT", wrongPath));
+    client.lstat(name, (err, _attrs) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("lstat(path)", (done) => {
@@ -638,7 +638,7 @@ describe("Basic Tests", function () {
       check(err, done, () => {
         client.close(handle, (err) =>
           check(err, done, () => {
-            client.fstat(handle, (err, attrs) =>
+            client.fstat(handle, (err, _attrs) =>
               error(err, done, "EFAILURE", "Invalid handle")
             );
           })

@@ -256,8 +256,10 @@ module SFTP {
       if (!noServer) {
         this._wss = new WebSocketServer(serverOptions);
         this._wss.on("connection", (ws) =>
-          this.accept(ws, (err, session) => {
-            if (err) this._log.fatal(err, "Error while accepting connection");
+          this.accept(ws, (err, _session) => {
+            if (err) {
+              this._log.fatal(err, "Error while accepting connection");
+            }
           })
         );
 

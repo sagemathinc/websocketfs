@@ -230,7 +230,7 @@ class SftpClientCore implements IFilesystem {
     this.execute(
       request,
       callback,
-      (response, cb) => {
+      (response, _cb) => {
         if (response.type != SftpPacketType.VERSION) {
           host.close(3002);
           var error = this.createError(
@@ -427,7 +427,7 @@ class SftpClientCore implements IFilesystem {
     this.execute(
       request,
       callback,
-      (response, cb) =>
+      (response, _cb) =>
         this.parseData(
           response,
           callback,
@@ -1036,7 +1036,7 @@ class SftpClientCore implements IFilesystem {
       this.execute(
         request,
         callback,
-        (response, cb) =>
+        (response, _cb) =>
           this.parseData(
             response,
             callback,

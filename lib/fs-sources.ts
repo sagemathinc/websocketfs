@@ -391,16 +391,22 @@ export function toDataSource(
 
   function toAnyDataSource(
     input: any,
-    callback: (err: Error, source?: IDataSource[]) => void
+    _callback: (err: Error, source?: IDataSource[]) => void
   ): void {
     // arrays
-    if (isArray(input)) return toArrayDataSource(<any[]>input);
+    if (isArray(input)) {
+      return toArrayDataSource(<any[]>input);
+    }
 
     // string paths
-    if (isString(input)) return toPatternDataSource(<string>input);
+    if (isString(input)) {
+      return toPatternDataSource(<string>input);
+    }
 
     // Blob objects
-    if (isFileBlob(input)) return openBlobDataSource(input);
+    if (isFileBlob(input)) {
+      return openBlobDataSource(input);
+    }
 
     throw new Error("Unsupported source");
   }

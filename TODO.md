@@ -15,3 +15,5 @@
 - [ ] eliminate all use of `var`
 
 - [ ] promote the node-fuse stuff to be part of the main library instead of an example
+
+- [ ] there are a bunch of TODO's in the code still!

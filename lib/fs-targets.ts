@@ -158,7 +158,7 @@ export class FileDataTarget extends EventEmitter implements IDataTarget {
 
     this.started = true;
     try {
-      this.fs.open(this.path, "w", null, (err, handle) => {
+      this.fs.open(this.path, "w", undefined, (err, handle) => {
         if (err) return this._error(err);
 
         this.handle = handle;
@@ -242,7 +242,7 @@ export class BlobDataTarget extends DataTarget {
   private _blob: Blob;
   private _mimeType: string;
 
-  constructor(mimeType?: string) {
+  constructor(mimeType: string) {
     super();
     this._chunks = [];
     this._mimeType = mimeType;

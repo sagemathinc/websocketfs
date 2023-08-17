@@ -46,17 +46,17 @@ export class FileDataSource extends EventEmitter implements IDataSource {
   ) {
     super();
     this.fs = fs;
-    this.path = "" + path;
-    this.name = new Path(path, fs).getName();
+    this.path = `${path}`;
+    this.name = new Path(this.path, fs).getName();
     if (relativePath !== null && typeof relativePath !== "undefined")
       this.relativePath = "" + relativePath;
 
     if (stats) {
-      this.length = stats.size;
+      this.length = stats.size ?? 0;
       this.stats = stats;
     } else {
-      this.length = null;
-      this.stats = null;
+      this.length = 0;
+      this.stats = {};
     }
 
     this.handle = null;
@@ -187,9 +187,9 @@ export class FileDataSource extends EventEmitter implements IDataSource {
     }
   }
 
-  read(): Buffer {
-    var chunk = this.queue[0];
-    if (chunk && chunk.position == this.expectedPosition) {
+  read(): Buffer | null {
+    let chunk: IChunk | null = this.queue[0];
+    if (chunk != null && chunk.position == this.expectedPosition) {
       this.expectedPosition += chunk.length;
       this.queue.shift();
       if (
@@ -219,7 +219,7 @@ export class FileDataSource extends EventEmitter implements IDataSource {
 
     this.started = true;
     try {
-      this.fs.open(this.path, "r", null, (err, handle) => {
+      this.fs.open(this.path, "r", undefined, (err, handle) => {
         if (err) return this._error(err);
 
         if (this.stats) {
@@ -231,11 +231,14 @@ export class FileDataSource extends EventEmitter implements IDataSource {
         // determine stats if not available yet
         try {
           this.fs.fstat(handle, (err, stats) => {
-            if (err) return this._error(err);
+            if (err) {
+              return this._error(err);
+            }
+            if (stats == null) throw Error("bug");
 
             this.handle = handle;
             this.stats = stats;
-            this.length = stats.size;
+            this.length = stats.size ?? 0;
             this._flush();
             return;
           });
@@ -356,11 +359,13 @@ class BlobDataSource extends EventEmitter implements IDataSource {
     }
   }
 
-  read(): Buffer {
+  read(): Buffer | null {
     this.flush();
 
     // if not readable, don't return anything
-    if (!this.readable) return null;
+    if (!this.readable) {
+      return null;
+    }
 
     // get next chunk
     var chunk = this.queue.shift();
@@ -368,7 +373,7 @@ class BlobDataSource extends EventEmitter implements IDataSource {
     // if no more chunks are available, become unreadable
     if (this.queue.length == 0) this.readable = false;
 
-    return chunk;
+    return chunk ?? null;
   }
 
   close(): void {
@@ -461,7 +466,7 @@ export function toDataSource(
     }
 
     function add(err: Error, src: IDataSource[]): void {
-      if (err) return callback(err, null);
+      if (err) return callback(err);
       Array.prototype.push.apply(source, src);
       next();
     }
@@ -469,14 +474,14 @@ export function toDataSource(
 
   function toItemDataSource(
     path: string,
-    callback: (err: Error, source?: IDataSource[]) => void
+    callback: (err: Error | null, source?: IDataSource[]) => void
   ): void {
     if (!fs) throw new Error("Source file system not available");
 
     fs.stat(path, (err, stats) => {
-      if (err) return callback(err, null);
+      if (err) return callback(err);
 
-      var item = new FileDataSource(fs, path, null, stats, 0);
+      var item = new FileDataSource(fs, path, undefined, stats, 0);
       callback(null, [item]);
     });
   }
@@ -485,13 +490,16 @@ export function toDataSource(
     if (!fs) throw new Error("Source file system not available");
 
     search(fs, path, emitter, { noexpand: true }, (err, items) => {
-      if (err) return callback(err, null);
+      if (err) {
+        return callback(err);
+      }
+      if (items == null) throw Error("bug");
 
       var source = <IDataSource[]>[];
       items.forEach((it) => {
-        var item = new FileDataSource(
+        const item = new FileDataSource(
           fs,
-          it.path,
+          it.path ?? "",
           (<any>it).relativePath,
           it.stats,
           0

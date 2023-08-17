@@ -35,7 +35,7 @@ export interface IDataSource {
   on(event: "end", listener: () => void): NodeJS.EventEmitter;
   on(event: string, listener: Function): NodeJS.EventEmitter;
 
-  read(): Buffer;
+  read(): Buffer | null;
   close(): void;
 }
 
@@ -607,7 +607,7 @@ export class FileUtil {
 
       empty = false;
       writable = target.write(chunk, () => {
-        if (emitter != null) {
+        if (emitter != null && chunk != null) {
           // The fact that write requests might in theory be completed in different order
           // doesn't concern us much because a transferred byte is still a transferred byte
           // and it will all add up to proper number in the end.

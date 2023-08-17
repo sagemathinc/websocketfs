@@ -4,14 +4,10 @@ import charsets = require("./charsets");
 import events = require("events");
 
 import IFilesystem = api.IFilesystem;
-import IStats = api.IStats;
-import IItem = api.IItem;
-import FileUtil = misc.FileUtil;
 import IDataTarget = misc.IDataTarget;
 import Path = misc.Path;
 import Encoding = charsets.Encoding;
 import IStringDecoder = charsets.IStringDecoder;
-import IStringEncoder = charsets.IStringEncoder;
 import EventEmitter = events.EventEmitter;
 
 interface IChunk extends Buffer {
@@ -34,7 +30,6 @@ export class FileDataTarget extends EventEmitter implements IDataTarget {
   private ready: boolean;
   private ended: boolean;
   private finished: boolean;
-  private failed: boolean;
 
   acceptsEmptyBlocks: boolean;
 

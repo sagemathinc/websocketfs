@@ -1,17 +1,13 @@
 import api = require("./fs-api");
 import misc = require("./fs-misc");
 import glob = require("./fs-glob");
-import util = require("./util");
 import events = require("events");
 
 import IFilesystem = api.IFilesystem;
 import IStats = api.IStats;
-import IItem = api.IItem;
-import FileUtil = misc.FileUtil;
 import Path = misc.Path;
 import IEventEmitter = misc.IEventEmitter;
 import IDataSource = misc.IDataSource;
-import IDataTarget = misc.IDataTarget;
 import search = glob.search;
 import EventEmitter = events.EventEmitter;
 

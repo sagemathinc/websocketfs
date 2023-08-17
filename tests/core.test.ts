@@ -158,10 +158,11 @@ describe("Basic Tests", function () {
     client.connect("ws://localhost:3022", {});
 
     client.on("error", (err) => {
-      if (err.message == "Simulated callback error") return;
-
-      // mocha seems to swallow uncought errors
-      console.error("Uncought error:", err);
+      if (err.message == "Simulated callback error") {
+        return;
+      }
+      // jest seems to swallow uncaught errors, so we make them very explicit!
+      console.error("Uncaught error:", err);
       process.exit(255);
     });
 

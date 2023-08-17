@@ -67,8 +67,6 @@ export class WebSocketChannelFactory {
     (<Function>ws.on)(
       "unexpected-response",
       (req: http.ClientRequest, res: http.IncomingMessage) => {
-        var msg = <http.IncomingMessage>(<any>req);
-
         // abort the request
         req.abort();
 
@@ -303,7 +301,6 @@ class WebSocketChannel implements IChannel {
       //WEB: this.failed = true;
 
       // #if NODE
-      var message = err.message;
       var code = (<any>err).code;
 
       switch (code) {

@@ -5,8 +5,10 @@ export interface IStringDecoder extends StringDecoder {}
 export class Encoding {
   constructor(name: string) {
     var encoding = (name + "").toLowerCase().replace("-", "");
-    if (encoding != "utf8") throw new Error("Encoding not supported: " + name);
-    //TODO: support ASCII and other encodings in addition to UTF-8
+    if (encoding != "utf8") {
+      throw Error("Encoding not supported: " + name);
+      //TODO: support ASCII and other encodings in addition to UTF-8
+    }
   }
 
   static UTF8 = new Encoding("utf8");
@@ -35,9 +37,6 @@ const enum UnicodeChars {
 
 export class StringEncoder {
   private _value: string;
-  private _code: number;
-  private _length: number;
-  private _position: number;
   private _done: boolean;
 
   //TODO: add write():bool, change finish() to end():void, then expect read()
@@ -60,7 +59,7 @@ export function encodeUTF8(
   buffer: Buffer,
   offset: number,
   end?: number,
-  state?: { _code: number; _length: number; _position: number; _done: boolean },
+  state?: { _code: number; _length: number; _position: number; _done: boolean }
 ): number {
   end = end || buffer.length;
 
@@ -178,11 +177,8 @@ export function encodeUTF8(
   return offset - start;
 }
 
-export class StringDecoder {
+class StringDecoder {
   private _text: string;
-  private _code: number;
-  private _length: number;
-  private _position: number;
   private _removeBom: boolean;
 
   text(): string {
@@ -190,11 +186,14 @@ export class StringDecoder {
   }
 
   write(buffer: Buffer, offset: number, end: number): void {
-    var bytes = decodeUTF8(buffer, offset, end, <any>this);
+    // I think decodeUTF8 mutates this:
+    decodeUTF8(buffer, offset, end, <any>this);
     var text = this._text;
 
     if (this._removeBom && text.length > 0) {
-      if (text.charCodeAt(0) == UnicodeChars.BOM) this._text = text.substr(1);
+      if (text.charCodeAt(0) == UnicodeChars.BOM) {
+        this._text = text.substr(1);
+      }
       this._removeBom = false;
     }
   }
@@ -204,7 +203,7 @@ export function decodeUTF8(
   buffer: Buffer,
   offset: number,
   end?: number,
-  state?: { _text?: string; _code?: number; _length?: number },
+  state?: { _text?: string; _code?: number; _length?: number }
 ): string {
   end = end || buffer.length;
 

@@ -2,13 +2,11 @@ import packet = require("./sftp-packet");
 import api = require("./fs-api");
 import enums = require("./sftp-enums");
 
-import SftpPacket = packet.SftpPacket;
 import SftpPacketWriter = packet.SftpPacketWriter;
 import SftpPacketReader = packet.SftpPacketReader;
 import SftpPacketType = enums.SftpPacketType;
 import SftpStatusCode = enums.SftpStatusCode;
 import SftpOpenFlags = enums.SftpOpenFlags;
-import IItem = api.IItem;
 import IStats = api.IStats;
 import FileType = api.FileType;
 
@@ -154,14 +152,6 @@ export class SftpExtensions {
   public static SYMLINK_ORDER = "symlink-order@rjk.greenend.org.uk";
   public static LINK_ORDER = "link-order@rjk.greenend.org.uk";
   // #endif
-
-  private static _constructor = (() => {
-    for (var name in SftpExtensions) {
-      if (SftpExtensions.hasOwnProperty(name)) {
-        SftpExtensions["_" + SftpExtensions[name]] = true;
-      }
-    }
-  })();
 
   static isKnown(name: string): boolean {
     return SftpExtensions.hasOwnProperty("_" + name);

@@ -425,7 +425,7 @@ export class SftpServerSession {
     var response = new SftpResponse();
 
     if (request.type == SftpPacketType.INIT) {
-      var version = request.readInt32();
+      // var version = request.readInt32();
 
       response.type = SftpPacketType.VERSION;
       response.start();

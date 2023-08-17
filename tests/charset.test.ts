@@ -28,7 +28,6 @@ describe("Encoding Tests", function () {
     0x8f, 0xc3, 0xa1, 0x62, 0x65, 0x6c, 0x73, 0x6b, 0xc3, 0xa9, 0x20, 0xc3,
     0xb3, 0x64, 0x79,
   ]); // incomplete 'ď' + "ábelské ódy"
-  var text3 = "ábelské ódy";
 
   // mix of two-byte and one-byte characters
   var chunk4 = Buffer.concat([chunk1, chunk2, chunk3]);

@@ -2,7 +2,6 @@ import api = require("./fs-api");
 import misc = require("./fs-misc");
 
 import IFilesystem = api.IFilesystem;
-import IStats = api.IStats;
 import IItem = api.IItem;
 import FileUtil = misc.FileUtil;
 import Path = misc.Path;

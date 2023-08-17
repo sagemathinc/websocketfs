@@ -81,7 +81,6 @@ export class LocalFilesystem implements IFilesystem {
   ): void {
     this.checkCallback(callback);
 
-    var initialOffset = offset;
     var totalBytes = 0;
 
     if (!buffer) {
@@ -296,7 +295,6 @@ export class LocalFilesystem implements IFilesystem {
     ) {
       return FileUtil.fail("Invalid handle", callback);
     }
-    var windows = this.isWindows;
     var items = [];
 
     // @ts-ignore

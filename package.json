@@ -7,7 +7,8 @@
     "preinstall": "npx only-allow pnpm",
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules tmp",
-    "test": "pnpm exec jest dist/tests"
+    "test": "pnpm exec jest dist/tests",
+    "fulltest": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
   "engines": {
     "node": ">=0.16.0"
@@ -36,12 +37,7 @@
     "typescript": "^5.1.6",
     "ws": "^1.1.5"
   },
-  "keywords": [
-    "sftp",
-    "server",
-    "client",
-    "ws"
-  ],
+  "keywords": ["sftp", "server", "client", "ws"],
   "license": "MIT",
   "repository": {
     "type": "git",

@@ -23,7 +23,6 @@ import SftpPacketReader = packet.SftpPacketReader;
 import SftpPacketType = enums.SftpPacketType;
 import SftpStatusCode = enums.SftpStatusCode;
 import SftpFlags = misc.SftpFlags;
-import SftpStatus = misc.SftpStatus;
 import SftpAttributes = misc.SftpAttributes;
 import SftpExtensions = misc.SftpExtensions;
 import Path = fsmisc.Path;
@@ -93,7 +92,6 @@ class SftpClientCore implements IFilesystem {
   private _host: IChannel;
   private _id: number;
   private _requests: SftpRequest[];
-  private _ready: boolean;
   private _extensions: Object;
   private _features: Object;
 
@@ -134,7 +132,6 @@ class SftpClientCore implements IFilesystem {
     this._sessionId = SftpClientCore._nextSessionId++;
     this._host = null;
     this._id = null;
-    this._ready = false;
     this._requests = [];
     this._extensions = {};
     this._features = {};
@@ -306,7 +303,6 @@ class SftpClientCore implements IFilesystem {
         this._features[SftpFeature.COPY_DATA] = SftpExtensions.COPY_DATA;
         // #endif
 
-        this._ready = true;
         callback(null);
       },
       info,

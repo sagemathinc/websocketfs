@@ -2,7 +2,6 @@ import api = require("./fs-api");
 import misc = require("./fs-misc");
 import sources = require("./fs-sources");
 import targets = require("./fs-targets");
-import util = require("./util");
 import glob = require("./fs-glob");
 import APromise = require("./promise");
 import events = require("events");
@@ -17,7 +16,6 @@ import FileUtil = misc.FileUtil;
 import Path = misc.Path;
 import IEventEmitter = misc.IEventEmitter;
 import FileDataTarget = targets.FileDataTarget;
-import BlobDataTarget = targets.BlobDataTarget;
 import StringDataTarget = targets.StringDataTarget;
 import BufferDataTarget = targets.BufferDataTarget;
 import FileDataSource = sources.FileDataSource;
@@ -586,11 +584,9 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
       var relativePath: Path;
       var targetPath: string;
-      var name: string;
       if (typeof source.relativePath === "string") {
         relativePath = new Path(source.relativePath, fromFs);
         targetPath = toPath.join(relativePath).normalize().path;
-        name = relativePath.getName();
         checkParent(relativePath, transfer);
       } else {
         relativePath = null;

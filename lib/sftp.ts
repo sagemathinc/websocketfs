@@ -17,7 +17,6 @@ import util = require("./util");
 import SafeFilesystem = safe.SafeFilesystem;
 import WebSocketServer = WebSocket.Server;
 import WebSocketChannelFactory = channel_ws.WebSocketChannelFactory;
-import StreamChannel = channel_stream.StreamChannel;
 import CloseReason = channel.CloseReason;
 import SftpServerSession = server.SftpServerSession;
 import FileUtil = misc.FileUtil;

@@ -1,4 +1,3 @@
-import events = require("events");
 import util = require("util");
 
 export interface ILogWriter {

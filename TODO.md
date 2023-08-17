@@ -1,6 +1,14 @@
 - [x] fix all typescript errors
 
-- [ ] enable noUnusedLocals and fix errors
+- [ ] get rid of all the #if macro preprocess comments (maybe grunt used them). We can solve these problems for the web later, e.g., using polyfills or better code.
+
+- [ ] enable noUnusedLocals
+
+- [ ] enable noUnusedParameters
+
+- [ ] enable strictNullChecks
+
+- [ ] require require's to use static import syntax instead
 
 - [ ] upgrade to newest ws module.
 

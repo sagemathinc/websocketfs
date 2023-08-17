@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "noImplicitThis": true,
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
     "noUnusedParameters": false,
     "strictNullChecks": false,
     "allowJs": true,

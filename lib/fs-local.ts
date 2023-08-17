@@ -40,7 +40,7 @@ export class LocalFilesystem implements IFilesystem {
     path: string,
     flags: string,
     attrs: IStats,
-    callback: (err: Error, handle: any) => any
+    callback: (err: Error | null, handle: any) => any
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -50,7 +50,7 @@ export class LocalFilesystem implements IFilesystem {
     //LATER: pay attemtion to attrs other than mode (low priority - many SFTP servers ignore these as well)
   }
 
-  close(handle: any, callback: (err: Error) => any): void {
+  close(handle: any, callback: (err: Error | null) => any): void {
     this.checkCallback(callback);
 
     if (Array.isArray(handle)) {
@@ -77,7 +77,7 @@ export class LocalFilesystem implements IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback: (err: Error, buffer: Buffer, bytesRead: number) => any
+    callback: (err: Error | null, buffer: Buffer, bytesRead: number) => any
   ): void {
     this.checkCallback(callback);
 
@@ -91,28 +91,21 @@ export class LocalFilesystem implements IFilesystem {
     var offset2 = offset;
 
     var read = () => {
-      fs.read(
-        handle,
-        buffer,
-        offset2,
-        length,
-        position,
-        (err, bytesRead) => {
-          if (typeof err === "undefined" || err == null) {
-            length -= bytesRead;
-            totalBytes += bytesRead;
+      fs.read(handle, buffer, offset2, length, position, (err, bytesRead) => {
+        if (typeof err === "undefined" || err == null) {
+          length -= bytesRead;
+          totalBytes += bytesRead;
 
-            if (length > 0 && bytesRead > 0) {
-              offset2 += bytesRead;
-              position += bytesRead;
-              read();
-              return;
-            }
+          if (length > 0 && bytesRead > 0) {
+            offset2 += bytesRead;
+            position += bytesRead;
+            read();
+            return;
           }
-
-          callback(err, buffer.slice(offset, offset + totalBytes), totalBytes);
         }
-      );
+
+        callback(err, buffer.slice(offset, offset + totalBytes), totalBytes);
+      });
     };
 
     read();
@@ -124,7 +117,7 @@ export class LocalFilesystem implements IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback: (err: Error) => any
+    callback: (err: Error | null) => any
   ): void {
     this.checkCallback(callback);
 
@@ -155,20 +148,26 @@ export class LocalFilesystem implements IFilesystem {
     write();
   }
 
-  lstat(path: string, callback: (err: Error, attrs: IStats) => any): void {
+  lstat(
+    path: string,
+    callback: (err: Error | null, attrs: IStats) => any
+  ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
     fs.lstat(path, callback);
   }
 
-  fstat(handle: any, callback: (err: Error, attrs: IStats) => any): void {
+  fstat(
+    handle: any,
+    callback: (err: Error | null, attrs: IStats) => any
+  ): void {
     this.checkCallback(callback);
 
     fs.fstat(handle, callback);
   }
 
-  private run(actions: Function[], callback: (err: Error) => any) {
+  private run(actions: Function[], callback: (err: Error | null) => any) {
     if (actions.length == 0) {
       process.nextTick(() => callback(null));
       return;
@@ -188,31 +187,35 @@ export class LocalFilesystem implements IFilesystem {
       }
 
       action = actions.shift();
-      action(next);
+      action?.(next);
     };
 
-    action(next);
+    action?.(next);
   }
 
-  setstat(path: string, attrs: IStats, callback: (err: Error) => any): void {
+  setstat(
+    path: string,
+    attrs: IStats,
+    callback: (err: Error | null) => any
+  ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
     var actions = new Array<Function>();
 
-    if (!isNaN(attrs.uid) || !isNaN(attrs.gid))
+    if (!isNaN(attrs.uid ?? NaN) || !isNaN(attrs.gid ?? NaN))
       actions.push(function (next: Function) {
-        fs.chown(path, attrs.uid, attrs.gid, (err) => next(err));
+        fs.chown(path, attrs.uid ?? 0, attrs.gid ?? 0, (err) => next(err));
       });
 
-    if (!isNaN(attrs.mode))
+    if (!isNaN(attrs.mode ?? NaN))
       actions.push(function (next: Function) {
-        fs.chmod(path, attrs.mode, (err) => next(err));
+        fs.chmod(path, attrs.mode ?? 0, (err) => next(err));
       });
 
-    if (!isNaN(attrs.size))
+    if (!isNaN(attrs.size ?? NaN))
       actions.push(function (next: Function) {
-        fs.truncate(path, attrs.size, (err) => next(err));
+        fs.truncate(path, attrs.size ?? 0, (err) => next(err));
       });
 
     if (typeof attrs.atime === "object" || typeof attrs.mtime === "object") {
@@ -228,24 +231,28 @@ export class LocalFilesystem implements IFilesystem {
     this.run(actions, callback);
   }
 
-  fsetstat(handle: any, attrs: IStats, callback: (err: Error) => any): void {
+  fsetstat(
+    handle: any,
+    attrs: IStats,
+    callback: (err: Error | null) => any
+  ): void {
     this.checkCallback(callback);
 
     var actions = new Array<Function>();
 
-    if (!isNaN(attrs.uid) || !isNaN(attrs.gid))
+    if (!isNaN(attrs.uid ?? NaN) || !isNaN(attrs.gid ?? NaN))
       actions.push(function (next: Function) {
-        fs.fchown(handle, attrs.uid, attrs.gid, (err) => next(err));
+        fs.fchown(handle, attrs.uid ?? 0, attrs.gid ?? 0, (err) => next(err));
       });
 
-    if (!isNaN(attrs.mode))
+    if (!isNaN(attrs.mode ?? NaN))
       actions.push(function (next: Function) {
-        fs.fchmod(handle, attrs.mode, (err) => next(err));
+        fs.fchmod(handle, attrs.mode ?? 0, (err) => next(err));
       });
 
-    if (!isNaN(attrs.size))
+    if (!isNaN(attrs.size ?? NaN))
       actions.push(function (next: Function) {
-        fs.ftruncate(handle, attrs.size, (err) => next(err));
+        fs.ftruncate(handle, attrs.size ?? 0, (err) => next(err));
       });
 
     if (typeof attrs.atime === "object" || typeof attrs.mtime === "object") {
@@ -261,12 +268,17 @@ export class LocalFilesystem implements IFilesystem {
     this.run(actions, callback);
   }
 
-  opendir(path: string, callback: (err: Error, handle: any) => any): void {
+  opendir(
+    path: string,
+    callback: (err: Error | null, handle: any) => any
+  ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
-    fs.readdir(path, (err, files) => {
-      if (files) files.splice(0, 0, ".", "..");
+    fs.readdir(path, (err, files: any) => {
+      if (files) {
+        files.splice(0, 0, ".", "..");
+      }
 
       if (typeof err !== "undefined" && err != null) {
         files = null;
@@ -283,7 +295,7 @@ export class LocalFilesystem implements IFilesystem {
 
   readdir(
     handle: any,
-    callback: (err: Error, items: IItem[] | boolean) => any
+    callback: (err: Error | null, items: IItem[] | boolean) => any
   ): void {
     this.checkCallback(callback);
     if (
@@ -295,7 +307,7 @@ export class LocalFilesystem implements IFilesystem {
     ) {
       return FileUtil.fail("Invalid handle", callback);
     }
-    var items = [];
+    const items: IItem[] = [];
 
     // @ts-ignore
     var path = <Path>handle.path;
@@ -322,8 +334,8 @@ export class LocalFilesystem implements IFilesystem {
         } else {
           //
           items.push({
-            filename: name,
-            longname: FileUtil.toString(name, stats),
+            filename: name ?? "", // name will be defined because of check above
+            longname: FileUtil.toString(name ?? "", stats),
             stats: stats,
           });
         }
@@ -334,14 +346,18 @@ export class LocalFilesystem implements IFilesystem {
     next();
   }
 
-  unlink(path: string, callback: (err: Error) => any): void {
+  unlink(path: string, callback: (err: Error | null) => any): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
     fs.unlink(path, callback);
   }
 
-  mkdir(path: string, attrs: IStats, callback: (err: Error) => any): void {
+  mkdir(
+    path: string,
+    attrs: IStats,
+    callback: (err: Error | null) => any
+  ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
@@ -350,7 +366,7 @@ export class LocalFilesystem implements IFilesystem {
     //LATER: pay attemtion to attrs other than mode (low priority - many SFTP servers ignore these as well)
   }
 
-  rmdir(path: string, callback: (err: Error) => any): void {
+  rmdir(path: string, callback: (err: Error | null) => any): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
@@ -359,7 +375,7 @@ export class LocalFilesystem implements IFilesystem {
 
   realpath(
     path: string,
-    callback: (err: Error, resolvedPath: string) => any
+    callback: (err: Error | null, resolvedPath: string) => any
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -367,7 +383,10 @@ export class LocalFilesystem implements IFilesystem {
     fs.realpath(path, callback);
   }
 
-  stat(path: string, callback: (err: Error, attrs: IStats) => any): void {
+  stat(
+    path: string,
+    callback: (err: Error | null, attrs: IStats) => any
+  ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
@@ -378,7 +397,7 @@ export class LocalFilesystem implements IFilesystem {
     oldPath: string,
     newPath: string,
     flags: RenameFlags,
-    callback: (err: Error) => any
+    callback: (err: Error | null) => any
   ): void {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");
@@ -403,7 +422,7 @@ export class LocalFilesystem implements IFilesystem {
 
   readlink(
     path: string,
-    callback: (err: Error, linkString: string) => any
+    callback: (err: Error | null, linkString: string) => any
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -414,7 +433,7 @@ export class LocalFilesystem implements IFilesystem {
   symlink(
     oldPath: string,
     newPath: string,
-    callback: (err: Error) => any
+    callback: (err: Error | null) => any
   ): void {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");
@@ -425,7 +444,11 @@ export class LocalFilesystem implements IFilesystem {
     fs.symlink(newPath, oldPath, "file", callback);
   }
 
-  link(oldPath: string, newPath: string, callback: (err: Error) => any): void {
+  link(
+    oldPath: string,
+    newPath: string,
+    callback: (err: Error | null) => any
+  ): void {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");
     newPath = this.checkPath(newPath, "newPath");

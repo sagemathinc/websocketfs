@@ -160,7 +160,7 @@ interface IFilesystem {
     path: string,
     flags: string,
     attrs: IStats,
-    callback: (err: Error, handle: any) => any,
+    callback: (err: Error, handle: any) => any
   ): void;
   close(handle: any, callback: (err: Error) => any): void;
   read(
@@ -169,7 +169,7 @@ interface IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback: (err: Error, buffer: Buffer, bytesRead: number) => any,
+    callback: (err: Error, buffer: Buffer, bytesRead: number) => any
   ): void;
   write(
     handle: any,
@@ -177,7 +177,7 @@ interface IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void;
   lstat(path: string, callback: (err: Error, attrs: IStats) => any): void;
   fstat(handle: any, callback: (err: Error, attrs: IStats) => any): void;
@@ -186,30 +186,30 @@ interface IFilesystem {
   opendir(path: string, callback: (err: Error, handle: any) => any): void;
   readdir(
     handle: any,
-    callback: (err: Error, items: IItem[] | boolean) => any,
+    callback: (err: Error, items: IItem[] | boolean) => any
   ): void;
   unlink(path: string, callback: (err: Error) => any): void;
   mkdir(path: string, attrs: IStats, callback: (err: Error) => any): void;
   rmdir(path: string, callback: (err: Error) => any): void;
   realpath(
     path: string,
-    callback: (err: Error, resolvedPath: string) => any,
+    callback: (err: Error, resolvedPath: string) => any
   ): void;
   stat(path: string, callback: (err: Error, attrs: IStats) => any): void;
   rename(
     oldPath: string,
     newPath: string,
     flags: RenameFlags,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void;
   readlink(
     path: string,
-    callback: (err: Error, linkString: string) => any,
+    callback: (err: Error, linkString: string) => any
   ): void;
   symlink(
     oldPath: string,
     newPath: string,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void;
   link(oldPath: string, newPath: string, callback: (err: Error) => any): void;
 }

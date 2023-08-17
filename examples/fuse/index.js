@@ -158,7 +158,7 @@ function FsFuse(fs) {
         // https://github.com/mafintosh/fuse-bindings/issues/10
         cb(data.length);
       },
-      fsCallback.bind(cb),
+      fsCallback.bind(cb)
     );
   };
 
@@ -200,7 +200,7 @@ function FsFuse(fs) {
       path,
       atime / 1000000000,
       mtime / 1000000000,
-      fsCallback.bind(cb),
+      fsCallback.bind(cb)
     );
   };
 

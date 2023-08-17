@@ -11,7 +11,7 @@ directly controlling a subprocess. It makes it possible to mount remote filesyst
 1. Setup an [SFTP over WebSockets server](https://www.npmjs.com/package/sftp-ws/) at the remote machine (or skip this step and try `wss://nuane.com/sftp`).
 2. Install `sshfs` at the client (in Debian/Ubuntu, run `apt-get install sshfs` as root).
 3. Type `pnpm install` here to install deps.
-4. Mount a remote filesystem to a local directory by running `mkdir -p /tmp/mnt;   ./run.js ws://localhost:4001 /tmp/mnt`. Optionally, add `--path=path_name` to specify a remote path if you only wish to mount a part of the remote filesystem.
+4. Mount a remote filesystem to a local directory by running `mkdir -p /tmp/mnt; ./run.js ws://localhost:4001 /tmp/mnt`. Optionally, add `--path=path_name` to specify a remote path if you only wish to mount a part of the remote filesystem.
 5. Enjoy the remote filesystem! :-)
 
 ## Upstream

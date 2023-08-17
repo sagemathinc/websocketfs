@@ -39,7 +39,7 @@ shell.command(
       remote = null;
       remotePath = "/";
     });
-  },
+  }
 );
 
 // cd command
@@ -51,7 +51,7 @@ shell.command(
 
     var path = remote.join(
       remotePath,
-      typeof context.args[0] !== "undefined" ? context.args[0] : "~",
+      typeof context.args[0] !== "undefined" ? context.args[0] : "~"
     );
 
     remote.realpath(path, function (err, path) {
@@ -59,7 +59,7 @@ shell.command(
       remotePath = path;
       context.execute("pwd");
     });
-  },
+  }
 );
 
 // pwd command
@@ -71,7 +71,7 @@ shell.command(
 
     shell.write("Remote directory is", remotePath);
     context.end();
-  },
+  }
 );
 
 // ls command
@@ -99,7 +99,7 @@ shell.command(
     remote.search(path, function (err, items) {
       list(context, err, items, true);
     });
-  },
+  }
 );
 
 // lcd command
@@ -109,7 +109,7 @@ shell.command(
   function (context) {
     var path = local.join(
       localPath,
-      typeof context.args[0] !== "undefined" ? context.args[0] : "~",
+      typeof context.args[0] !== "undefined" ? context.args[0] : "~"
     );
 
     local.realpath(path, function (err, path) {
@@ -117,7 +117,7 @@ shell.command(
       localPath = path;
       context.execute("lpwd");
     });
-  },
+  }
 );
 
 // lpwd command
@@ -127,7 +127,7 @@ shell.command(
   function (context) {
     shell.write("Local directory is", localPath);
     context.end();
-  },
+  }
 );
 
 // lls command
@@ -151,7 +151,7 @@ shell.command(
     local.search(path, function (err, items) {
       list(context, err, items, true);
     });
-  },
+  }
 );
 
 // mget command
@@ -288,7 +288,7 @@ shell.command(
   function (context) {
     shell.write("Exiting...");
     shell.exit();
-  },
+  }
 );
 
 // log command
@@ -299,7 +299,7 @@ shell.command(
     log = log ? null : console;
     shell.write("Logging is", log ? "on" : "off");
     context.end();
-  },
+  }
 );
 
 // help command
@@ -310,7 +310,7 @@ shell.command(
     shell.write("Supported commands:");
     context.help();
     context.end();
-  },
+  }
 );
 
 // execute a simple action on a remote path
@@ -402,7 +402,7 @@ function fail(context, err) {
 shell.write("Welcome to SFTP over WebSockets client!");
 shell.write("Type 'help' to see a list of commands.");
 shell.write(
-  "Use 'open url' to connect to a server (eg. 'open wss://nuane.com/sftp').",
+  "Use 'open url' to connect to a server (eg. 'open wss://nuane.com/sftp')."
 );
 
 // on Windows, treat backspace as ordinary character

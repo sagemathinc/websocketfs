@@ -304,15 +304,15 @@ export class FileUtil {
 
   static fail(
     message: string,
-    callback: (err: Error, ...args: any[]) => any,
+    callback: (err: Error, ...args: any[]) => any
   ): void;
   static fail(
     code: string,
-    callback: (err: Error, ...args: any[]) => any,
+    callback: (err: Error, ...args: any[]) => any
   ): void;
   static fail(
     code: string,
-    callback: (err: Error, ...args: any[]) => any,
+    callback: (err: Error, ...args: any[]) => any
   ): void {
     var message;
     var errno;
@@ -370,7 +370,7 @@ export class FileUtil {
     fs: IFilesystem,
     handle: any,
     process: (item: IItem) => any,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     // send first read request
     var error = null;
@@ -406,7 +406,7 @@ export class FileUtil {
     path: string,
     emitter: IEventEmitter,
     process: (item: IItem) => any,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     // list directory and process its items
     fs.opendir(path, (err, handle) => {
@@ -433,7 +433,7 @@ export class FileUtil {
     fs: IFilesystem,
     path: string,
     dotdirs: boolean,
-    callback: (err: Error, items?: IItem[]) => any,
+    callback: (err: Error, items?: IItem[]) => any
   ): void {
     var items = <IItem[]>[];
 
@@ -451,7 +451,7 @@ export class FileUtil {
   static purge(
     fs: IFilesystem,
     path: string,
-    callback: (err: Error) => any,
+    callback: (err: Error) => any
   ): void {
     FileUtil.list(fs, path, false, (err, items) => {
       if (err) {
@@ -487,7 +487,7 @@ export class FileUtil {
     fs: IFilesystem,
     path: string,
     overwrite: boolean,
-    callback: (err: Error, created: boolean) => any,
+    callback: (err: Error, created: boolean) => any
   ): void {
     fs.stat(path, (err, stats) => {
       if (!err) {
@@ -515,7 +515,7 @@ export class FileUtil {
     source: IDataSource,
     target: IDataTarget,
     emitter: IEventEmitter,
-    callback?: (err: Error) => any,
+    callback?: (err: Error) => any
   ): void {
     var empty = true;
     var writable = true;

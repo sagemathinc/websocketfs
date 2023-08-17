@@ -27,7 +27,7 @@ class APromise {
     if (!Skip) {
       if (typeof Callback !== "function")
         throw new TypeError(
-          "Promise resolver " + Callback + " is not a function",
+          "Promise resolver " + Callback + " is not a function"
         );
       let Me = this;
       Callback(
@@ -42,7 +42,7 @@ class APromise {
             Me.Finished = true;
             Me.reject(Result);
           }
-        },
+        }
       );
     }
   }
@@ -84,7 +84,7 @@ class APromise {
           },
           function (Value) {
             Me.reject(Value);
-          },
+          }
         );
       } else {
         this.State = 1;
@@ -114,7 +114,7 @@ class APromise {
           },
           function (Value) {
             Me.reject(Value);
-          },
+          }
         );
       } else {
         this.State = 2;

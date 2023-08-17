@@ -736,7 +736,7 @@ export class SafeFilesystem implements IFilesystem {
               if (bytesRead != bytesToRead) {
                 return callback(new Error("Unable to read data"), null, alg);
               }
-              
+
               position += bytesRead;
               length -= bytesRead;
 

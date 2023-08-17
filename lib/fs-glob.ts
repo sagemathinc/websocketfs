@@ -217,7 +217,7 @@ export function search(
   }
 
   // process next directory in the queue
-  function next(err: Error) {
+  function next(err: Error | null) {
     if (err) return callback(err);
 
     // get next directory to traverse
@@ -239,7 +239,7 @@ export function search(
 
     var relativePath: Path;
     var index: number;
-    var regex: RegExp;
+    var regex: RegExp | null;
     var depth: number;
 
     var nextIndex;
@@ -277,7 +277,7 @@ export function search(
       // list items and proceed to directory
       FileUtil.listPath(fs, fullPath, emitter, process, next);
     } catch (err) {
-      return callback(err, null);
+      return callback(err);
     }
 
     // process a single item

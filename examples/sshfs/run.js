@@ -53,7 +53,7 @@ factory.connect(Url.format(url), options, function (err, remote) {
     child = spawn(
       "sshfs",
       [url.hostname + ":" + path, mountpoint, "-o", "slave"],
-      { stdio: ["pipe", "pipe", process.stderr] },
+      { stdio: ["pipe", "pipe", process.stderr] }
     );
   } catch (err) {
     return error(err);

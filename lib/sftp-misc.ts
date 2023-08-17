@@ -482,7 +482,7 @@ export class SftpAttributes implements IStats {
 
       if (typeof stats.mode !== "undefined") {
         flags |= SftpAttributeFlags.PERMISSIONS;
-        this.mode = stats.mode | 0;
+        this.mode = stats.mode ?? 0;
       }
 
       if (

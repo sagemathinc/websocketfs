@@ -46,7 +46,7 @@ export class LogHelper {
         return 60;
     }
 
-    var level = (<any>value) | 0;
+    var level = (<any>value) ?? 0;
     if (level <= 0 || level >= 100) {
       level = 60;
     }

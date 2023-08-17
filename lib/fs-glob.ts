@@ -39,9 +39,11 @@ export function search(
   path: string,
   emitter: IEventEmitter,
   options: ISearchOptionsExt,
-  callback: (err: Error, items?: IItem[]) => void,
+  callback: (err: Error | null, items?: IItem[]) => void
 ): void {
-  if (path.length == 0) throw new Error("Empty path");
+  if (path.length == 0) {
+    throw new Error("Empty path");
+  }
 
   // use dummy emitter if not specified
   if (!emitter)
@@ -56,7 +58,7 @@ export function search(
   var matchFiles = !(options.onlydir || false);
   var matchDirectories = !(options.nodir || false);
   var ignoreGlobstars = options.noglobstar || false;
-  var maxDepth = options.depth | 0;
+  var maxDepth = options.depth ?? 0;
   var matchDotDirs = options.dotdirs || false;
   var expectDir = options.onedir || false;
   var expandDir = !(options.noexpand || false);
@@ -68,7 +70,7 @@ export function search(
 
   // on windows, normalize backslashes
   var windows = (<any>fs).isWindows == true;
-  path = new Path(path, null).normalize().path;
+  path = new Path(path).normalize().path;
 
   // resulting item list
   var results = <IItemExt[]>[];
@@ -77,7 +79,7 @@ export function search(
   var basePath: Path;
   var glob: RegExp;
   var queue = <IDirInfo[]>[];
-  var patterns = <RegExp[]>[];
+  var patterns = <(RegExp | null)[]>[];
 
   if (path == "/") {
     if (expandDir) return start("", "*");
@@ -122,7 +124,7 @@ export function search(
   } else {
     // no wildcards -> determine whether this is a file or directory
     fs.stat(path, (err, stats) => {
-      if (err) return callback(err, null);
+      if (err) return callback(err);
 
       try {
         if (!options.oneitem) {
@@ -132,8 +134,7 @@ export function search(
           } else {
             if (expectDir)
               return callback(
-                new Error("The specified path is not a directory"),
-                null,
+                new Error("The specified path is not a directory")
               );
 
             if (!all && !FileUtil.isFile(stats)) {
@@ -166,7 +167,7 @@ export function search(
         emitter.emit("item", item);
         return callback(null, results);
       } catch (err) {
-        return callback(err, null);
+        return callback(err);
       }
     });
   }
@@ -182,7 +183,7 @@ export function search(
 
     mask = "/" + mask;
 
-    var globmask = null;
+    var globmask: null | string = null;
     if (!ignoreGlobstars) {
       // determine glob mask (if any)
       var gs = mask.indexOf("/**");
@@ -211,7 +212,7 @@ export function search(
     }
 
     // add path to queue and process it
-    queue.push({ path: new Path("", null), pattern: 0, depth: 0 });
+    queue.push({ path: new Path(""), pattern: 0, depth: 0 });
     next(null);
   }
 

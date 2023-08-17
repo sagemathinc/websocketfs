@@ -53,7 +53,7 @@ class SftpException {
   constructor(err: NodeJS.ErrnoException) {
     var message: string;
     var code = SftpStatusCode.FAILURE;
-    var errno = err.errno | 0;
+    var errno = err.errno ?? 0;
     // loosely based on the list from https://github.com/rvagg/node-errno/blob/master/errno.js
     // with updates besed on http://www-numi.fnal.gov/offline_software/srt_public_context/WebDocs/Errors/unix_system_errors.html
 

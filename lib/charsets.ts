@@ -67,9 +67,9 @@ export function encodeUTF8(
   var length: number;
   var position: number;
   if (state) {
-    code = state._code | 0;
-    length = state._length | 0;
-    position = state._position | 0;
+    code = state._code ?? 0;
+    length = state._length ?? 0;
+    position = state._position ?? 0;
   } else {
     code = 0;
     length = 0;
@@ -212,8 +212,8 @@ export function decodeUTF8(
   var length: number;
   if (state) {
     text = state._text || "";
-    code = state._code | 0;
-    length = state._length | 0;
+    code = state._code ?? 0;
+    length = state._length ?? 0;
   } else {
     text = "";
     code = 0;
@@ -275,9 +275,11 @@ export function decodeUTF8(
     state._code = code;
     state._length = length;
     state._text = text;
-    return null;
+    return text;
   } else {
-    if (length > 0) text += String.fromCharCode(UnicodeChars.REPLACEMENT_CHAR);
+    if (length > 0) {
+      text += String.fromCharCode(UnicodeChars.REPLACEMENT_CHAR);
+    }
     return text;
   }
 }

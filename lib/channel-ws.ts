@@ -11,7 +11,7 @@ export class WebSocketChannelFactory {
   connect(
     address: string,
     options: any,
-    callback: (err: Error, channel: IChannel) => any
+    callback: (err: Error, channel?: IChannel) => any
   ): void {
     options = options || {};
 
@@ -29,8 +29,8 @@ export class WebSocketChannelFactory {
   private _connect(
     address: string,
     options: any,
-    credentials: string,
-    callback: (err: Error, channel: IChannel) => any
+    credentials: string | null,
+    callback: (err: Error | null, channel?: IChannel) => any
   ): void {
     // WEB: // removed
     // #if NODE
@@ -46,15 +46,15 @@ export class WebSocketChannelFactory {
       options.headers["Authorization"] = credentials;
     }
 
-    var authenticate = null;
+    let authenticate: string | null = null;
     // #endif
 
     //WEB: var protocols;
     //WEB: if (options.protocol) protocols = [options.protocol];
-    var ws = new WebSocket(address, options); //WEB: var ws = new WebSocket(address, protocols);
+    const ws = new WebSocket(address, options); //WEB: var ws = new WebSocket(address, protocols);
     //WEB: ws.binaryType = "arraybuffer";
 
-    var channel = new WebSocketChannel(ws, true, false);
+    const channel = new WebSocketChannel(ws, true, false);
 
     ws.on("open", () => {
       //WEB: ws.onopen = () => {
@@ -131,7 +131,7 @@ export class WebSocketChannelFactory {
         typeof options.authenticate === "function"
       ) {
         // prepare queries
-        var queries = [];
+        var queries: { name: string; prompt: string; secret: boolean }[] = [];
         if (!username)
           queries.push({
             name: "username",
@@ -166,12 +166,12 @@ export class WebSocketChannelFactory {
           self._connect(address, options, credentials, callback);
         } else {
           // fail if no credentials supplied
-          callback(err, null);
+          callback(err);
         }
       }
       // #endif
 
-      callback(err, null);
+      callback(err);
     });
   }
 
@@ -191,7 +191,7 @@ class WebSocketChannel implements IChannel {
   private established: boolean;
   private closed: boolean;
   //WEB: private failed: boolean;
-  private onclose: (err: Error) => void;
+  private onclose: ((err: Error) => void) | null;
 
   on(event: string, listener: Function): IChannel {
     if (typeof listener !== "function")
@@ -342,7 +342,7 @@ class WebSocketChannel implements IChannel {
     }
 
     if (typeof onclose === "function") {
-      process.nextTick(() => onclose(err));
+      process.nextTick(() => onclose?.(err));
     } else {
       if (err) throw err;
     }
@@ -353,6 +353,7 @@ class WebSocketChannel implements IChannel {
     this.closed = true;
 
     this.onclose = null;
+    // @ts-ignore
     this.onmessage = null;
 
     if (!reason) reason = 1000;

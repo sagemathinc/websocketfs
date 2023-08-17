@@ -380,8 +380,8 @@ class BlobDataSource extends EventEmitter implements IDataSource {
 export function toDataSource(
   fs: IFilesystem,
   input: any,
-  emitter: IEventEmitter,
-  callback: (err: Error, sources?: IDataSource[]) => void
+  emitter: IEventEmitter | undefined,
+  callback: (err: Error | null, sources?: IDataSource[]) => void
 ): void {
   try {
     toAnyDataSource(input, callback);

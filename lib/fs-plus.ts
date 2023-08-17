@@ -50,7 +50,7 @@ export interface IFilesystemExt extends FilesystemPlus {}
 export class FilesystemPlus extends EventEmitter implements IFilesystem {
   protected _fs: IFilesystem;
   protected _local: IFilesystem;
-  protected _promise: Function;
+  protected _promise;
 
   constructor(fs: IFilesystem, local: IFilesystem) {
     super();
@@ -484,8 +484,8 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   private _copyFile(
     sourcePath: Path,
     targetPath: Path,
-    emitter: IEventEmitter,
-    callback: (err: Error, ...args: any[]) => any
+    emitter: IEventEmitter | undefined,
+    callback: (err: Error | null, ...args: any[]) => any
   ): void {
     // append filename if target path ens with slash
     if (targetPath.endsWithSlash()) {
@@ -494,8 +494,14 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     }
 
     // create source and target
-    var source = new FileDataSource(sourcePath.fs, sourcePath.path);
-    var target = new FileDataTarget(targetPath.fs, targetPath.path);
+    if (sourcePath.fs == null) {
+      throw Error("sourcePath.fs must be defined");
+    }
+    const source = new FileDataSource(sourcePath.fs, sourcePath.path);
+    if (targetPath.fs == null) {
+      throw Error("targetPath.fs must be defined");
+    }
+    const target = new FileDataTarget(targetPath.fs, targetPath.path);
 
     // copy file data
     FileUtil.copy(source, target, emitter, (err) => callback(err));
@@ -554,12 +560,15 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     fromFs: IFilesystem,
     toPath: Path,
     _options: any,
-    emitter: IEventEmitter,
-    callback: (err: Error, ...args: any[]) => any
+    emitter: IEventEmitter | undefined,
+    callback: (err: Error|null, ...args: any[]) => any
   ): void {
-    var sources = <IDataSource[]>null;
+    var sources: undefined | IDataSource[] = undefined;
 
     var toFs = toPath.fs;
+    if (toFs == null) {
+      throw Error("toPath.fs must not be null");
+    }
     toPath = toPath.removeTrailingSlash();
 
     toFs.stat(toPath.path, prepare);
@@ -578,7 +587,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
           try {
             sources = src;
-            sources.forEach((_source) => {
+            sources?.forEach((_source) => {
               //TODO: calculate total size
               //TODO: make sure that source.name is valid on target fs
             });
@@ -594,10 +603,12 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     }
 
     function next(): void {
-      var source = sources.shift();
-      if (!source) return finish();
+      var source = sources?.shift();
+      if (!source) {
+        return finish();
+      }
 
-      var relativePath: Path;
+      var relativePath: Path | null;
       var targetPath: string;
       if (typeof source.relativePath === "string") {
         relativePath = new Path(source.relativePath, fromFs);
@@ -609,10 +620,15 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
         transfer(null);
       }
 
-      function transfer(err: Error): void {
-        if (err) return callback(err);
+      function transfer(err: Error | null): void {
+        if (err) {
+          return callback(err);
+        }
+        if (source == null || toFs == null) {
+          throw Error("bug");
+        }
 
-        if (FileUtil.isDirectory(source.stats)) {
+        if (source.stats != null && FileUtil.isDirectory(source.stats)) {
           FileUtil.mkdir(toFs, targetPath, false, (err, _created) =>
             transferred(err)
           );
@@ -621,14 +637,16 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
           FileUtil.copy(source, target, emitter, transferred);
         }
 
-        function transferred(err: Error): void {
-          if (err) return callback(err);
+        function transferred(err: Error | null): void {
+          if (err) {
+            return callback(err);
+          }
           next();
         }
       }
     }
 
-    function checkParent(path: Path, callback: (err: Error) => void) {
+    function checkParent(path: Path, callback: (err: Error | null) => void) {
       var parent = path.getParent();
 
       var parentPath = parent.path;
@@ -640,9 +658,14 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       if (parent.isTop()) return callback(null);
 
       checkParent(parent, (err) => {
-        if (err) return callback(err);
+        if (err) {
+          return callback(err);
+        }
 
         var targetPath = toPath.join(parent).path;
+        if (toFs == null) {
+          throw Error("bug");
+        }
 
         try {
           FileUtil.mkdir(toFs, targetPath, false, (err, _created) => {
@@ -676,7 +699,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       return emitter;
     }
 
-    var promise = this._promise || Promise;
+    var promise = this._promise ?? Promise;
     var task = <any>new promise(executor);
 
     task.on = on;

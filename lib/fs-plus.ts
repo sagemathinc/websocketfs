@@ -682,6 +682,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       return task;
     }
 
+    const that = this;
     function executor(
       resolve: (result: T | Promise<T>) => void,
       reject: (error: Error) => void
@@ -740,7 +741,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
             resolve(<T>(<any>arguments[1]));
           }
         } catch (err) {
-          this.emit("error", err);
+          that.emit("error", err);
         }
       }
     }

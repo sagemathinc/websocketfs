@@ -38,10 +38,12 @@ if (!fs.existsSync(tmp)) {
   it = <any>function (expectation, assertion: Function) {
     if (assertion.length == 0) {
       (<Function>iti)(expectation, function () {
+        // @ts-ignore
         return assertion.call(this);
       });
     } else if (assertion.length == 1) {
       (<Function>iti)(expectation, function (done) {
+        // @ts-ignore
         return assertion.call(this, done);
       });
     } else {
@@ -50,9 +52,11 @@ if (!fs.existsSync(tmp)) {
   };
 
   it.only = <any>function () {
+    // @ts-ignore
     return iti.only.apply(this, arguments);
   };
   it.skip = <any>function () {
+    // @ts-ignore
     return iti.skip.apply(this, arguments);
   };
 })();

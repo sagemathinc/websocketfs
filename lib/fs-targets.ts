@@ -221,7 +221,7 @@ export class DataTarget extends EventEmitter implements IDataTarget {
 export class StringDataTarget extends DataTarget {
   private _decoder: IStringDecoder;
 
-  constructor(encoding: string) {
+  constructor(encoding?: string) {
     super();
     this._decoder = new Encoding(encoding).getDecoder();
   }

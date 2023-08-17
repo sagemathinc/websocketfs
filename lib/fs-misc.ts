@@ -508,7 +508,7 @@ export class FileUtil {
           // delete non-directory item
           fs.unlink(path, (err) => {
             if (err) return callback(err, false);
-            fs.mkdir(path, null, (err) => callback(err, !err));
+            fs.mkdir(path, undefined, (err) => callback(err, !err));
           });
           return;
         }
@@ -518,14 +518,14 @@ export class FileUtil {
 
       if ((<any>err).code != "ENOENT") return callback(err, false);
 
-      fs.mkdir(path, null, (err) => callback(err, !err));
+      fs.mkdir(path, undefined, (err) => callback(err, !err));
     });
   }
 
   static copy(
     source: IDataSource,
     target: IDataTarget,
-    emitter: IEventEmitter,
+    emitter: IEventEmitter | undefined,
     callback?: (err: Error | null) => any
   ): void {
     let empty = true;
@@ -574,20 +574,26 @@ export class FileUtil {
 
     target.on("finish", () => {
       //console.log("finished");
-      if (item) emitter.emit("transferred", item);
+      if (item && emitter != null) {
+        emitter.emit("transferred", item);
+      }
       exit();
     });
 
     target.on("error", (err) => {
       //console.log("write error", err);
-      targetError = targetError || err || new Error("Unspecified error");
-      if (!error) error = targetError;
+      targetError = targetError ?? err ?? new Error("Unspecified error");
+      if (!error) {
+        error = targetError;
+      }
       exit();
     });
 
     function transferring(): void {
-      item = FileUtil.toItemInfo(source, target);
-      emitter.emit("transferring", item);
+      if (emitter != null) {
+        item = FileUtil.toItemInfo(source, target);
+        emitter.emit("transferring", item);
+      }
     }
 
     function copy(): boolean {
@@ -596,11 +602,13 @@ export class FileUtil {
 
       empty = false;
       writable = target.write(chunk, () => {
-        // The fact that write requests might in theory be completed in different order
-        // doesn't concern us much because a transferred byte is still a transferred byte
-        // and it will all add up to proper number in the end.
-        total += chunk.length;
-        emitter.emit("progress", source.path, total, source.length);
+        if (emitter != null) {
+          // The fact that write requests might in theory be completed in different order
+          // doesn't concern us much because a transferred byte is still a transferred byte
+          // and it will all add up to proper number in the end.
+          total += chunk.length;
+          emitter.emit("progress", source.path, total, source.length);
+        }
       });
 
       return writable;
@@ -611,7 +619,7 @@ export class FileUtil {
 
       if (!done) {
         done = true;
-        callback(error);
+        callback?.(error);
       }
     }
   }

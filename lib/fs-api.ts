@@ -43,7 +43,7 @@ export interface IFilesystem {
   open(
     path: string,
     flags: string,
-    attrs: IStats,
+    attrs: IStats | undefined,
     callback: (err: Error | null, handle: any) => any
   ): void;
   close(handle: any, callback: (err: Error | null) => any): void;
@@ -89,7 +89,7 @@ export interface IFilesystem {
   unlink(path: string, callback: (err: Error | null) => any): void;
   mkdir(
     path: string,
-    attrs: IStats | null,
+    attrs: IStats | undefined,
     callback: (err: Error | null) => any
   ): void;
   rmdir(path: string, callback: (err: Error | null) => any): void;

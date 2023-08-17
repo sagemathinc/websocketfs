@@ -66,7 +66,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   ): Task<any> {
     if (typeof callback === "undefined" && typeof attrs === "function") {
       callback = <any>attrs;
-      attrs = null;
+      attrs = undefined;
     }
 
     return this._task(callback, (callback) => {
@@ -102,6 +102,10 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     callback?: (err: Error, hashes: Buffer, alg: string) => any
   ): Task<Buffer> {
     return this._task(callback, (callback) => {
+      if (this._fs.fhash == null) {
+        callback(Error("fhash not supported"));
+        return;
+      }
       this._fs.fhash(handle, alg, position, length, blockSize, callback);
     });
   }
@@ -115,6 +119,10 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     callback: (err: Error) => any
   ): Task<void> {
     return this._task(callback, (callback) => {
+      if (this._fs.fcopy == null) {
+        callback(Error("fcopy not supported"));
+        return;
+      }
       this._fs.fcopy(
         fromHandle,
         fromPosition,
@@ -223,7 +231,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   ): Task<void> {
     if (typeof callback === "undefined" && typeof attrs === "function") {
       callback = <any>attrs;
-      attrs = null;
+      attrs = undefined;
     }
 
     return this._task(callback, (callback) => {
@@ -352,7 +360,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   ): Task<IItem[]> {
     if (typeof callback === "undefined" && typeof options === "function") {
       callback = <any>options;
-      options = null;
+      options = undefined;
     }
 
     return this._task(callback, (callback, emitter) => {
@@ -364,7 +372,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   info(
     remotePath: string,
-    callback?: (err: Error, item: IItem) => any
+    callback?: (err: Error | null, item: IItem) => any
   ): Task<IItem> {
     return this._task(callback, (callback, emitter) => {
       remotePath = Path.check(remotePath, "remotePath");
@@ -374,7 +382,9 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       };
 
       search(this._fs, remotePath, emitter, options, (err, items) => {
-        if (err) return callback(err, null);
+        if (err) {
+          return callback(err, null);
+        }
         if (!items || items.length != 1)
           return callback(new Error("Unexpected result"), null);
         callback(null, items[0]);
@@ -394,19 +404,21 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   ): Task<any> {
     if (typeof callback === "undefined" && typeof options === "function") {
       callback = <any>options;
-      options = null;
+      options = undefined;
     }
 
     return this._task(callback, (callback, emitter) => {
       var remote = Path.create(remotePath, this._fs, "remotePath");
 
       // process options
-      options = options || {};
+      options = options ?? {};
       var type = options.type;
       var encoding = options.encoding;
       if (type) {
         type = (type + "").toLowerCase();
-        if (type == "string" || type == "text") encoding = encoding || "utf8";
+        if (type == "string" || type == "text") {
+          encoding = encoding ?? "utf8";
+        }
       } else {
         type = encoding ? "string" : "buffer";
       }
@@ -430,6 +442,9 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       }
 
       // create source
+      if (remote.fs == null) {
+        throw Error("bug");
+      }
       var source = new FileDataSource(remote.fs, remote.path);
 
       // copy file data
@@ -647,9 +662,9 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   }
 
   protected _task<T>(
-    callback: (err: Error, ...args: any[]) => void,
+    callback: undefined | ((err: Error | null, ...args: any[]) => void),
     action: (
-      callback: (err: Error, ...args: any[]) => void,
+      callback: (err: Error | null, ...args: any[]) => void,
       emitter?: IEventEmitter
     ) => void
   ): any {

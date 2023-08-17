@@ -3,7 +3,7 @@ export interface IStringEncoder extends StringEncoder {}
 export interface IStringDecoder extends StringDecoder {}
 
 export class Encoding {
-  constructor(name: string) {
+  constructor(name: string = "utf8") {
     var encoding = (name + "").toLowerCase().replace("-", "");
     if (encoding != "utf8") {
       throw Error("Encoding not supported: " + name);

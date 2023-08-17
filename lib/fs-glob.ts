@@ -37,8 +37,8 @@ export interface ISearchOptionsExt extends ISearchOptions {
 export function search(
   fs: IFilesystem,
   path: string,
-  emitter: IEventEmitter,
-  options: ISearchOptionsExt,
+  emitter: IEventEmitter | undefined,
+  options: ISearchOptionsExt | undefined,
   callback: (err: Error | null, items?: IItem[]) => void
 ): void {
   if (path.length == 0) {
@@ -54,7 +54,7 @@ export function search(
     };
 
   // prepare options
-  options = options || {};
+  options = options ?? {};
   var matchFiles = !(options.onlydir || false);
   var matchDirectories = !(options.nodir || false);
   var ignoreGlobstars = options.noglobstar || false;

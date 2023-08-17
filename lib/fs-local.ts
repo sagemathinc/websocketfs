@@ -39,13 +39,13 @@ export class LocalFilesystem implements IFilesystem {
   open(
     path: string,
     flags: string,
-    attrs: IStats,
+    attrs: IStats | undefined,
     callback: (err: Error | null, handle: any) => any
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
-    var mode = attrs && typeof attrs === "object" ? attrs.mode : undefined;
+    const mode = attrs?.mode;
     fs.open(path, flags, mode, (err, fd) => callback(err, fd));
     //LATER: pay attemtion to attrs other than mode (low priority - many SFTP servers ignore these as well)
   }

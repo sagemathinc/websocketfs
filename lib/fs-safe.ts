@@ -54,7 +54,7 @@ export class SafeFilesystem implements IFilesystem {
     this._nextHandle = 1;
   }
 
-  private createHandleInfo(): HandleInfo {
+  private createHandleInfo(): HandleInfo | null {
     var count = SafeFilesystem.MAX_HANDLE_COUNT;
     while (count-- > 0) {
       var safeHandle = this._nextHandle;
@@ -72,8 +72,10 @@ export class SafeFilesystem implements IFilesystem {
     return null;
   }
 
-  private toHandleInfo(safeHandle: number): HandleInfo {
-    if (typeof safeHandle !== "number") return null;
+  private toHandleInfo(safeHandle: number): HandleInfo | null {
+    if (typeof safeHandle !== "number") {
+      return null;
+    }
     return this._handles[safeHandle] || null;
   }
 
@@ -115,30 +117,34 @@ export class SafeFilesystem implements IFilesystem {
   }
 
   private processCallbackPath(
-    err: Error,
-    path: string,
-    callback: (err: Error, path: string) => any
+    err: Error | null,
+    path: string | undefined,
+    callback: (err: Error | null, path?: string) => any
   ) {
-    if (typeof err !== "undefined" && err != null) {
-      path = undefined;
-    } else {
-      if (typeof path !== "undefined" && path != null)
-        path = this.toVirtualPath(path);
+    if (err != null) {
+      return callback(err);
     }
-
+    if (path == null) {
+      return callback(Error("path must be set"));
+    }
+    path = this.toVirtualPath(path);
     callback(err, path);
   }
 
   private processCallbackHandle(
-    err: Error,
-    handleInfo: HandleInfo,
+    err: Error | null,
+    handleInfo: HandleInfo | undefined | null,
     realHandle: any,
-    callback: (err: Error, safeHandle: number) => any
+    callback: (err: Error | null, safeHandle?: number) => any
   ) {
+    if (handleInfo == null) {
+      callback(err ?? Error("bug -- handleInfo must be specified"));
+      return;
+    }
     var safeHandle = handleInfo.safe;
     if (err) {
       delete this._handles[safeHandle];
-      callback(err, null);
+      callback(err);
       return;
     }
     handleInfo.real = realHandle;
@@ -146,13 +152,13 @@ export class SafeFilesystem implements IFilesystem {
   }
 
   private processCallbackAttrs(
-    err: Error,
-    attrs: IStats,
-    callback: (err: Error, attrs: IStats) => any
+    err: Error | null,
+    attrs: IStats | undefined,
+    callback: (err: Error | null, attrs?: IStats) => any
   ) {
     if (attrs && this.hideUidGid) {
-      attrs.uid = null;
-      attrs.gid = null;
+      delete attrs.uid;
+      delete attrs.gid;
     }
 
     callback(err, attrs);
@@ -181,17 +187,20 @@ export class SafeFilesystem implements IFilesystem {
       delete this._handles[handle];
     }
 
+    // @ts-ignore
     delete this.fs;
   }
 
   private _execute(
     safeHandle: number,
     action: (handle: any, callback: (err: Error, ...args) => any) => void,
-    callback: (err: Error, ...args) => any
+    callback?: (err: Error, ...args) => any
   ): void {
     var handleInfo = this.toHandleInfo(safeHandle);
 
-    if (!handleInfo) return FileUtil.fail("Invalid handle", callback);
+    if (!handleInfo) {
+      return FileUtil.fail("Invalid handle", callback);
+    }
 
     var finished = false;
     var asynchronous = false;
@@ -209,6 +218,9 @@ export class SafeFilesystem implements IFilesystem {
     }
 
     function run() {
+      if (handleInfo == null) {
+        throw Error("bug");
+      }
       try {
         action(handleInfo.real, done);
       } catch (err) {
@@ -232,12 +244,17 @@ export class SafeFilesystem implements IFilesystem {
       }
 
       // trigger next action
+      if (handleInfo == null) {
+        throw Error("bug");
+      }
       var queue = handleInfo.actions;
       if (!queue || queue.length == 0) {
         handleInfo.busy = false;
       } else {
-        var next = queue.shift();
-        next();
+        const next = queue.shift();
+        if (next != null) {
+          next();
+        }
       }
 
       // invoke the callback
@@ -253,21 +270,26 @@ export class SafeFilesystem implements IFilesystem {
     path: string,
     flags: string,
     attrs: IStats,
-    callback: (err: Error, handle: number) => any
+    callback: (err: Error, handle?: number) => any
   ): void {
     if (this.isReadOnly() && flags != "r")
       return FileUtil.fail("EROFS", callback);
 
     var handleInfo = this.createHandleInfo();
-    if (!handleInfo) return FileUtil.fail("ENFILE", callback);
+    if (!handleInfo) {
+      return FileUtil.fail("ENFILE", callback);
+    }
 
     try {
       path = this.toRealPath(path);
-      this.fs.open(path, flags, attrs, (err, realHandle) =>
-        this.processCallbackHandle(err, handleInfo, realHandle, callback)
-      );
+      this.fs.open(path, flags, attrs, (err, realHandle) => {
+        if (handleInfo == null) {
+          throw Error("bug");
+        }
+        this.processCallbackHandle(err, handleInfo, realHandle, callback);
+      });
     } catch (err) {
-      callback(err, null);
+      callback(err);
     }
   }
 
@@ -316,7 +338,10 @@ export class SafeFilesystem implements IFilesystem {
     );
   }
 
-  lstat(path: string, callback: (err: Error, attrs: IStats) => any): void {
+  lstat(
+    path: string,
+    callback: (err: Error | null, attrs?: IStats) => any
+  ): void {
     path = this.toRealPath(path);
 
     try {
@@ -328,7 +353,7 @@ export class SafeFilesystem implements IFilesystem {
         );
       }
     } catch (err) {
-      callback(err, null);
+      callback(err);
     }
   }
 
@@ -348,8 +373,8 @@ export class SafeFilesystem implements IFilesystem {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
     if (this.hideUidGid) {
-      attrs.uid = null;
-      attrs.gid = null;
+      delete attrs.uid;
+      delete attrs.gid;
     }
 
     path = this.toRealPath(path);
@@ -364,8 +389,8 @@ export class SafeFilesystem implements IFilesystem {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
     if (attrs && this.hideUidGid) {
-      attrs.uid = null;
-      attrs.gid = null;
+      delete attrs.uid;
+      delete attrs.gid;
     }
 
     this._execute(
@@ -375,18 +400,23 @@ export class SafeFilesystem implements IFilesystem {
     );
   }
 
-  opendir(path: string, callback: (err: Error, handle: number) => any): void {
+  opendir(
+    path: string,
+    callback: (err: Error | null, handle?: number) => any
+  ): void {
     path = this.toRealPath(path);
 
     var handleInfo = this.createHandleInfo();
-    if (!handleInfo) return FileUtil.fail("ENFILE", callback);
+    if (!handleInfo) {
+      return FileUtil.fail("ENFILE", callback);
+    }
 
     try {
       this.fs.opendir(path, (err, realHandle) =>
         this.processCallbackHandle(err, handleInfo, realHandle, callback)
       );
     } catch (err) {
-      callback(err, null);
+      callback(err);
     }
   }
 
@@ -401,8 +431,8 @@ export class SafeFilesystem implements IFilesystem {
         if (this.hideUidGid) {
           if (Array.isArray(items))
             (<IItem[]>items).forEach((item) => {
-              item.stats.uid = null;
-              item.stats.gid = null;
+              delete item.stats.uid;
+              delete item.stats.gid;
             });
         }
         callback(err, items);
@@ -448,7 +478,7 @@ export class SafeFilesystem implements IFilesystem {
 
   realpath(
     path: string,
-    callback: (err: Error, resolvedPath: string) => any
+    callback: (err: Error | null, resolvedPath?: string) => any
   ): void {
     path = this.toRealPath(path);
 
@@ -457,11 +487,14 @@ export class SafeFilesystem implements IFilesystem {
         this.processCallbackPath(err, resolvedPath, callback)
       );
     } catch (err) {
-      callback(err, null);
+      callback(err);
     }
   }
 
-  stat(path: string, callback: (err: Error, attrs: IStats) => any): void {
+  stat(
+    path: string,
+    callback: (err: Error | null, attrs?: IStats) => any
+  ): void {
     path = this.toRealPath(path);
 
     try {
@@ -473,7 +506,7 @@ export class SafeFilesystem implements IFilesystem {
         );
       }
     } catch (err) {
-      callback(err, null);
+      callback(err);
     }
   }
 
@@ -497,7 +530,7 @@ export class SafeFilesystem implements IFilesystem {
 
   readlink(
     path: string,
-    callback: (err: Error, linkString: string) => any
+    callback: (err: Error | null, linkString?: string) => any
   ): void {
     path = this.toRealPath(path);
 
@@ -506,14 +539,14 @@ export class SafeFilesystem implements IFilesystem {
         this.processCallbackPath(err, linkString, callback)
       );
     } catch (err) {
-      callback(err, null);
+      callback(err);
     }
   }
 
   symlink(
     oldPath: string,
     newPath: string,
-    callback: (err: Error) => any
+    callback: (err: Error | null) => any
   ): void {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
@@ -558,7 +591,7 @@ export class SafeFilesystem implements IFilesystem {
     var fh: any;
     var th: any;
     var fc: Function;
-    var tc: Function;
+    var tc: Function | null;
     var fr = false;
     var tr = false;
 
@@ -579,8 +612,7 @@ export class SafeFilesystem implements IFilesystem {
         }
 
         if (tr) start();
-      },
-      null
+      }
     );
 
     if (!same) {
@@ -591,8 +623,7 @@ export class SafeFilesystem implements IFilesystem {
           tc = callback;
           tr = true;
           if (fr) start();
-        },
-        null
+        }
       );
     }
 
@@ -613,7 +644,7 @@ export class SafeFilesystem implements IFilesystem {
 
     function copy() {
       var bytesToRead = length >= 0 ? Math.min(blockSize, length) : blockSize;
-      if (bytesToRead == 0) return done(null);
+      if (bytesToRead == 0) {return done(); }
 
       fs.read(
         fh,

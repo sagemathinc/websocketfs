@@ -65,9 +65,9 @@ export interface IFilesystem {
   ): void;
   lstat(
     path: string,
-    callback: (err: Error | null, attrs: IStats) => any
+    callback: (err: Error | null, attrs?: IStats) => any
   ): void;
-  fstat(handle: any, callback: (err: Error | null, attrs: IStats) => any): void;
+  fstat(handle: any, callback: (err: Error | null, attrs?: IStats) => any): void;
   setstat(
     path: string,
     attrs: IStats,
@@ -80,11 +80,11 @@ export interface IFilesystem {
   ): void;
   opendir(
     path: string,
-    callback: (err: Error | null, handle: any) => any
+    callback: (err: Error | null, handle?: any) => any
   ): void;
   readdir(
     handle: any,
-    callback: (err: Error | null, items: IItem[] | boolean) => any
+    callback: (err: Error | null, items?: IItem[] | boolean) => any
   ): void;
   unlink(path: string, callback: (err: Error | null) => any): void;
   mkdir(
@@ -95,9 +95,9 @@ export interface IFilesystem {
   rmdir(path: string, callback: (err: Error | null) => any): void;
   realpath(
     path: string,
-    callback: (err: Error | null, resolvedPath: string) => any
+    callback: (err: Error | null, resolvedPath?: string) => any
   ): void;
-  stat(path: string, callback: (err: Error | null, attrs: IStats) => any): void;
+  stat(path: string, callback: (err: Error | null, attrs?: IStats) => any): void;
   rename(
     oldPath: string,
     newPath: string,
@@ -106,7 +106,7 @@ export interface IFilesystem {
   ): void;
   readlink(
     path: string,
-    callback: (err: Error | null, linkString: string) => any
+    callback: (err: Error | null, linkString?: string) => any
   ): void;
   symlink(
     oldPath: string,
@@ -133,6 +133,6 @@ export interface IFilesystem {
     position: number,
     length: number,
     blockSize: number,
-    callback: (err: Error | null, hashes: Buffer, alg: string) => any
+    callback: (err: Error | null, hashes?: Buffer, alg?: string) => any
   ): void;
 }

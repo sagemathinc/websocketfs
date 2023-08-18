@@ -6,7 +6,7 @@ let port;
 
 async function startServer(): Promise<SFTP.Server> {
   port = await getPort();
-  var server = new SFTP.Server({
+  const server = new SFTP.Server({
     port,
     virtualRoot: "/this-directory-should-not-exist/another-one",
   });
@@ -15,8 +15,8 @@ async function startServer(): Promise<SFTP.Server> {
 }
 
 function startClient(): SFTP.Client {
-  var client = new SFTP.Client();
-  client.connect(`sws://localhost:${port}`);
+  const client = new SFTP.Client();
+  client.connect(`ws://localhost:${port}`);
   return client;
 }
 
@@ -27,7 +27,7 @@ beforeAll(async () => {
 
 describe("Server Tests", () => {
   it("bad_root", (done) => {
-    var client = startClient();
+    const client = startClient();
 
     client.on("ready", () => {
       done(new Error("Connection attempt should fail"));

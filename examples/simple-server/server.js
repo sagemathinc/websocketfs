@@ -9,7 +9,7 @@ var sftp = new SFTP.Server({
   host: host,
   port: port,
   virtualRoot: "/",
-  readOnly: true,
+  //readOnly: false,
   //verifyClient: verifyClientCallback, //TODO: add authentication, check origin, etc.
   // log: console, // log to console
 });

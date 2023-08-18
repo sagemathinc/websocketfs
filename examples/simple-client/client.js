@@ -34,4 +34,10 @@ client.connect(url, {}, function (err) {
   });
 });
 
+client.on("error", (err) => {
+  console.log("on error:", {err});
+});
+
+
+
 exports.client = client;

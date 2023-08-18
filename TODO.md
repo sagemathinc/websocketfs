@@ -1,3 +1,6 @@
+- [ ] implement reading contents from a file
+
+
 - [ ] delete the WEB comments
 - [ ] redo all logging to use the debug module
 

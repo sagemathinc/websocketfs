@@ -1,4 +1,3 @@
-import WebSocket = require("ws");
 import http = require("http");
 import path = require("path");
 import events = require("events");
@@ -15,7 +14,6 @@ import channel_stream = require("./channel-stream");
 import util = require("./util");
 
 import SafeFilesystem = safe.SafeFilesystem;
-import WebSocketServer = WebSocket.Server;
 import WebSocketChannelFactory = channel_ws.WebSocketChannelFactory;
 import CloseReason = channel.CloseReason;
 import SftpServerSession = server.SftpServerSession;
@@ -24,6 +22,12 @@ import Task = plus.Task;
 import Options = util.Options;
 import SftpClient = client.SftpClient;
 import ISftpClientEvents = client.ISftpClientEvents;
+
+import {
+  Server as WebSocketServer,
+  IServerOptions as WebSocketIServerOptions,
+} from "ws";
+import type { WebSocket } from "ws";
 
 // #if NODE
 module SFTP {
@@ -67,12 +71,12 @@ module SFTP {
     authenticate?:
       | ((
           instructions: string,
-          queries: IClientAuthenticationQuery[],
+          queries: IClientAuthenticationQuery[]
         ) => { [name: string]: string })
       | ((
           instructions: string,
           queries: IClientAuthenticationQuery[],
-          callback: (values: { [name: string]: string }) => void,
+          callback: (values: { [name: string]: string }) => void
         ) => void);
     // #endif
   }
@@ -94,7 +98,7 @@ module SFTP {
     connect(
       address: string,
       options?: IClientOptions,
-      callback?: (err: Error) => void,
+      callback?: (err: Error) => void
     ): Task<void> {
       if (typeof callback === "undefined" && typeof options === "function") {
         callback = <any>options;
@@ -174,8 +178,8 @@ module SFTP {
             result: boolean,
             statusCode?: number,
             statusMessage?: string,
-            headers?: string[],
-          ) => void,
+            headers?: string[]
+          ) => void
         ) => void)
       | ((info: RequestInfo, accept: (session: ISessionInfo) => void) => void);
   }
@@ -197,7 +201,7 @@ module SFTP {
       super();
 
       options = options || {};
-      var serverOptions: WebSocket.IServerOptions = {};
+      var serverOptions: WebSocketIServerOptions = {};
 
       var virtualRoot = options.virtualRoot;
       var filesystem = options.filesystem;
@@ -255,7 +259,7 @@ module SFTP {
             if (err) {
               this._log.fatal(err, "Error while accepting connection");
             }
-          }),
+          })
         );
 
         this._log.info("SFTP server started");
@@ -264,7 +268,7 @@ module SFTP {
 
     private verifyClient(
       info: RequestInfo,
-      accept: (result: boolean, code?: number, description?: string) => void,
+      accept: (result: boolean, code?: number, description?: string) => void
     ): void {
       var con = info.req.socket;
 
@@ -278,7 +282,7 @@ module SFTP {
           },
           "Incoming connection from %s:%d",
           con?.remoteAddress,
-          con?.remotePort,
+          con?.remotePort
         );
       }
 
@@ -288,7 +292,7 @@ module SFTP {
         result: any,
         code?: number,
         description?: string,
-        headers?: string[],
+        headers?: string[]
       ) => {
         if (!result) {
           if (code == null || code < 200 || code > 599) code = 500;
@@ -300,7 +304,7 @@ module SFTP {
             con?.remoteAddress,
             con?.remotePort,
             code,
-            description,
+            description
           );
 
           if (typeof headers !== "undefined")
@@ -312,7 +316,7 @@ module SFTP {
         this._log.debug(
           "Accepted connection from %s:%d",
           con?.remoteAddress,
-          con?.remotePort,
+          con?.remotePort
         );
         if (typeof result == "object")
           (<any>info.req)._sftpSessionInfo = result;
@@ -331,7 +335,7 @@ module SFTP {
 
     private handleProtocols(
       protocols: string[],
-      callback: (result: boolean, protocol?: string) => void,
+      callback: (result: boolean, protocol?: string) => void
     ): void {
       for (var i = 0; i < protocols.length; i++) {
         var protocol = protocols[i];
@@ -370,7 +374,7 @@ module SFTP {
 
     accept(
       ws: WebSocket,
-      callback?: (err: Error | null, session?: SftpServerSession) => void,
+      callback?: (err: Error | null, session?: SftpServerSession) => void
     ): void {
       try {
         //this._log.debug(ws.upgradeReq);
@@ -393,7 +397,7 @@ module SFTP {
         var fs = new SafeFilesystem(
           sessionInfo.filesystem,
           virtualRoot,
-          sessionInfo,
+          sessionInfo
         );
 
         fs.stat(".", (err, attrs) => {

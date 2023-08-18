@@ -1,7 +1,7 @@
-import channel = require("./channel");
-import http = require("http");
-import WebSocket = require("ws");
-import Url = require("url");
+import http from "http";
+import WebSocket from "ws";
+import Url from "url";
+import * as channel from "./channel";
 
 import IChannel = channel.IChannel;
 
@@ -11,7 +11,7 @@ export class WebSocketChannelFactory {
   connect(
     address: string,
     options: any,
-    callback: (err: Error, channel?: IChannel) => any,
+    callback: (err: Error, channel?: IChannel) => any
   ): void {
     options = options || {};
 
@@ -30,7 +30,7 @@ export class WebSocketChannelFactory {
     address: string,
     options: any,
     credentials: string | null,
-    callback: (err: Error | null, channel?: IChannel) => any,
+    callback: (err: Error | null, channel?: IChannel) => any
   ): void {
     // WEB: // removed
     // #if NODE
@@ -111,7 +111,7 @@ export class WebSocketChannelFactory {
         if (information) err.info = information;
 
         channel._close(2, err);
-      },
+      }
     );
 
     function getBasicAuthHeader(username: string, password: string): string {

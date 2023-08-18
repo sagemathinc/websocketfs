@@ -5,6 +5,7 @@ import targets = require("./fs-targets");
 import glob = require("./fs-glob");
 import APromise = require("./promise");
 import events = require("events");
+import type { SftpHandle } from "./sftp-client";
 
 import IFilesystem = api.IFilesystem;
 import IItem = api.IItem;
@@ -62,7 +63,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     path: string,
     flags: string,
     attrs?: IStats,
-    callback?: (err: Error, handle: any) => any,
+    callback?: (err: Error, handle: SftpHandle) => void,
   ): Task<any> {
     if (typeof callback === "undefined" && typeof attrs === "function") {
       callback = <any>attrs;

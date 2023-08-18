@@ -8,7 +8,7 @@ var port = process.env.port || 4001;
 var sftp = new SFTP.Server({
   host: host,
   port: port,
-  virtualRoot: "/",
+  virtualRoot: ".",
   //readOnly: false,
   //verifyClient: verifyClientCallback, //TODO: add authentication, check origin, etc.
   // log: console, // log to console

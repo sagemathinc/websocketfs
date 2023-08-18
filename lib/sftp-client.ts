@@ -58,7 +58,7 @@ class SftpItem implements IItem {
   stats: SftpAttributes;
 }
 
-class SftpHandle {
+export class SftpHandle {
   _handle: Buffer;
   _this: SftpClientCore;
 
@@ -786,7 +786,7 @@ class SftpClientCore implements IFilesystem {
       throw new Error("Invalid length");
 
     if (offset + length > buffer.length)
-      throw new Error("Offset or length is out of bands");
+      throw new Error("Offset or length is out of bounds");
   }
 
   private checkPath(path: string, name: string): string {

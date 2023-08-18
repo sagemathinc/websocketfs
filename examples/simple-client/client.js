@@ -28,16 +28,32 @@ client.connect(url, {}, function (err) {
     list.forEach(function (item) {
       console.log(item.longname);
     });
+  });
 
-    // disconnect
-    //client.end();
+  console.log("opening and reading README.md");
+  client.open("README.md", "r", (err, handle) => {
+    if (err) {
+      console.log("failed to open README.md");
+    } else {
+      console.log("open got handle ", handle._handle);
+      const buffer = Buffer.alloc(100);
+      client.read(handle, buffer, 0, 100, 0, (err, buffer2, bytesRead) => {
+        console.log("read got back", {
+          err,
+          buf: buffer.slice(0, bytesRead).toString(),
+
+          bytesRead,
+        });
+
+        // disconnect
+        client.end();
+      });
+    }
   });
 });
 
 client.on("error", (err) => {
-  console.log("on error:", {err});
+  console.log("on error:", { err });
 });
-
-
 
 exports.client = client;

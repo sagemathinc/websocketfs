@@ -39,6 +39,7 @@
   ],
   "dependencies": {
     "@types/node": "^20.5.0",
+    "awaiting": "^3.0.0",
     "debug": "^4.3.4",
     "get-stream": "^8.0.1",
     "node-fuse-bindings": "^2.12.4",

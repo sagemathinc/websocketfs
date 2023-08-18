@@ -1,4 +1,7 @@
+
 - [ ] implement reading contents from a file
+
+- [ ] github actions that does `pnpm test-all`...
 
 
 - [ ] delete the WEB comments

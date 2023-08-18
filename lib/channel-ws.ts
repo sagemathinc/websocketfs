@@ -2,8 +2,8 @@ import http from "http";
 import WebSocket from "ws";
 import Url from "url";
 import * as channel from "./channel";
+import { SftpError } from "./util";
 import debug from "debug";
-
 const log = debug("websocketfs:channel-ws");
 
 import IChannel = channel.IChannel;
@@ -204,21 +204,20 @@ class WebSocketChannel implements IChannel {
   }
 
   private onmessage(listener: (packet: Buffer) => void): void {
-    this.ws.on("message", (data, flags) => {
+    this.ws.on("message", (data, isBinary: boolean) => {
+      //log("received message", { data, isBinary });
       if (this.closed) {
         return;
       }
 
-      var packet: Buffer;
-      if (flags.binary) {
-        // TODO: handle text messages
+      let packet: Buffer;
+      if (isBinary) {
         packet = <Buffer>data;
       } else {
-        var err = <any>(
-          new Error("Connection failed due to unsupported packet type")
+        const err = new SftpError(
+          "Connection failed due to unsupported packet type -- all messages must be binary",
+          { code: "EFAILURE", errno: "EFAILURE", level: "ws" }
         );
-        err.code = err.errno = "EFAILURE";
-        err.level = "ws";
         this._close(1, err);
         return;
       }

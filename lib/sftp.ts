@@ -13,6 +13,9 @@ import channel_ws = require("./channel-ws");
 import channel_stream = require("./channel-stream");
 import util = require("./util");
 
+import debug from "debug";
+const log = debug("websocketfs:sftp");
+
 import SafeFilesystem = safe.SafeFilesystem;
 import WebSocketChannelFactory = channel_ws.WebSocketChannelFactory;
 import CloseReason = channel.CloseReason;
@@ -93,24 +96,32 @@ module SFTP {
       options?: IClientOptions,
       callback?: (err: Error | null) => void
     ): Task<void> {
+      log("Client.connect", address, options);
       if (typeof callback === "undefined" && typeof options === "function") {
         callback = <any>options;
         options = undefined;
       }
 
       return super._task(callback, (callback) => {
-        options = options || {};
+        options = options ?? {};
 
-        if (typeof options.protocol == "undefined") {
+        if (options.protocol == null) {
           options.protocol = "sftp";
         }
 
         this._promise = options.promise;
 
-        var factory = new WebSocketChannelFactory();
+        log("Client.connect: connect factory...");
+        const factory = new WebSocketChannelFactory();
         factory.connect(address, options, (err, channel) => {
-          if (err) return callback(err);
-          if (channel == null) throw Error("bug");
+          if (err) {
+            log("Client.connect WebSocketChannelFactory, failed ", err);
+            return callback(err);
+          }
+          if (channel == null) {
+            throw Error("bug");
+          }
+          log("Client.connect WebSocketChannelFactory, connected");
 
           super._bind(channel, options, callback);
         });
@@ -241,19 +252,23 @@ module SFTP {
         hideUidGid: true && options.hideUidGid,
       });
 
-      //TODO: when no _fs and no _virtualRoot is specified, serve a dummy filesystem as well
+      // TODO: when no _fs and no _virtualRoot is specified, serve a dummy filesystem as well
 
       if (!noServer) {
+        log("Creating WebSocketServer");
         this._wss = new WebSocketServer(serverOptions);
-        this._wss.on("connection", (ws) =>
+        this._wss.on("connection", (ws, upgradeReq) => {
+          log("WebSocketServer received a new connection");
+          ws.upgradeReq = upgradeReq;
           this.accept(ws, (err, _session) => {
             if (err) {
-              this._log.fatal(err, "Error while accepting connection");
+              log("WebSocketServer: error while accepting connection", err);
+            } else {
+              log("WebSocketServer: accept connection and created session");
             }
-          })
-        );
-
-        this._log.info("SFTP server started");
+          });
+        });
+        log("SFTP server started");
       }
     }
 
@@ -304,13 +319,14 @@ module SFTP {
           return;
         }
 
-        this._log.debug(
+        log(
           "Accepted connection from %s:%d",
           con?.remoteAddress,
           con?.remotePort
         );
-        if (typeof result == "object")
+        if (typeof result == "object") {
           (<any>info.req)._sftpSessionInfo = result;
+        }
         accept(true);
       };
 
@@ -368,16 +384,14 @@ module SFTP {
       callback?: (err: Error | null, session?: SftpServerSession) => void
     ): void {
       try {
-        //this._log.debug(ws.upgradeReq);
-
         // retrieve session info passed to verifyClient's accept callback
-        var sessionInfo = <ISessionInfo>(<any>ws.upgradeReq)._sftpSessionInfo;
+        let sessionInfo = <ISessionInfo>(<any>ws.upgradeReq)._sftpSessionInfo;
+        log("accept", sessionInfo);
 
         // merge session info with default session info
         sessionInfo = this._sessionInfo.intersect(sessionInfo);
 
-        var log = this._log;
-        var virtualRoot = sessionInfo.virtualRoot;
+        const virtualRoot = sessionInfo.virtualRoot;
         if (virtualRoot == null) {
           throw Error("virtualRoot must not be null");
         }
@@ -385,7 +399,7 @@ module SFTP {
           throw Error("sessionInfo.filesystem must not be null");
         }
 
-        var fs = new SafeFilesystem(
+        const fs = new SafeFilesystem(
           sessionInfo.filesystem,
           virtualRoot,
           sessionInfo
@@ -393,22 +407,23 @@ module SFTP {
 
         fs.stat(".", (err, attrs) => {
           try {
-            if (!err && !FileUtil.isDirectory(attrs ?? {}))
+            if (!err && !FileUtil.isDirectory(attrs ?? {})) {
               err = new Error("Not a directory");
+            }
 
             if (err) {
-              var message = "Unable to access file system";
-              log.error({ root: virtualRoot }, message);
+              const message = "Unable to access file system";
+              log(message, { root: virtualRoot });
               ws.close(CloseReason.UNEXPECTED_CONDITION, message);
               callback?.(err);
               return;
             }
 
-            var factory = new WebSocketChannelFactory();
-            var channel = factory.bind(ws);
+            const factory = new WebSocketChannelFactory();
+            const channel = factory.bind(ws);
 
-            var socket = ws.upgradeReq.connection;
-            var info = {
+            const socket = ws.upgradeReq.connection;
+            const info = {
               userName: sessionInfo.userName,
               clientAddress: socket.remoteAddress,
               clientPort: socket.remotePort,
@@ -417,9 +432,16 @@ module SFTP {
               serverPort: socket.localPort,
             };
 
-            var session = new SftpServerSession(channel, fs, this, log, info);
+            const session = new SftpServerSession(
+              channel,
+              fs,
+              this,
+              this._log,
+              info
+            );
             this.emit("startedSession", this);
             (<any>ws).session = session;
+            callback?.(null, session);
           } catch (err) {
             callback?.(err);
           }

@@ -222,3 +222,19 @@ export class Options {
     return result;
   }
 }
+
+export class SftpError extends Error {
+  public code?: string;
+  public errno?: string;
+  public level?: string;
+
+  constructor(
+    message?: string,
+    extra: { code?: string; errno?: string; level?: string } = {}
+  ) {
+    super(message);
+    this.code = extra.code;
+    this.errno = extra.errno;
+    this.level = extra.level;
+  }
+}

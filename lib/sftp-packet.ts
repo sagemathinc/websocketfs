@@ -222,7 +222,6 @@ export class SftpPacketReader extends SftpPacket {
 export class SftpPacketWriter extends SftpPacket {
   constructor(length: number) {
     super();
-
     this.buffer = Buffer.alloc(length);
     this.position = 0;
     this.length = length;
@@ -253,10 +252,10 @@ export class SftpPacketWriter extends SftpPacket {
   }
 
   finish(): Buffer {
-    var length = this.position;
+    const length = this.position;
     this.position = 0;
-    this.buffer.writeInt32BE(length - 4, 0); //WEB: this.writeInt32(length - 4);
-    return this.buffer.slice(0, length); //WEB: return this.buffer.subarray(0, length);
+    this.buffer.writeInt32BE(length - 4, 0);
+    return this.buffer.slice(0, length);
   }
 
   writeByte(value: number): void {

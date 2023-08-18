@@ -1,4 +1,4 @@
-var SFTP = require("../..");
+var SFTP = require("../..").sftp;
 
 // prepare host and port
 var host = "localhost";

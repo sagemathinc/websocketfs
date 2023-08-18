@@ -1,5 +1,5 @@
 import assert = require("assert");
-import util = require("../lib/charsets");
+import util = require("../charsets");
 
 import Encoding = util.Encoding;
 

@@ -1,4 +1,4 @@
-const SFTP = require("../..");
+const SFTP = require("../..").sftp;
 
 // url, credentials and options
 const url = "ws://localhost:4001";

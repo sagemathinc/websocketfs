@@ -1,8 +1,8 @@
 import assert = require("assert");
 import Path = require("path");
 import fs = require("fs");
-import SFTP = require("../lib/sftp");
-import misc = require("../lib/sftp-misc");
+import SFTP = require("../sftp");
+import misc = require("../sftp-misc");
 import getPort = require("port-get");
 
 import IItem = SFTP.IItem;

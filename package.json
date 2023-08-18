@@ -1,23 +1,22 @@
 {
   "name": "websocketfs",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Like sshfs, but over a WebSocket",
-  "main": "./dist/lib/sftp.js",
+  "main": "./dist/lib/index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "prepublishOnly": "pnpm test-all",
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules tmp",
     "prettier-all": "pnpm exec prettier -w .",
-    "test": "pnpm exec jest dist/tests",
+    "test": "pnpm exec jest dist",
     "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
   "files": [
     "dist/**",
     "LICENSE",
     "README.md",
-    "package.json",
-    "index.js"
+    "package.json"
   ],
   "engines": {
     "node": ">=0.16.0"
@@ -41,7 +40,9 @@
   "dependencies": {
     "@types/node": "^20.5.0",
     "debug": "^4.3.4",
+    "get-stream": "^8.0.1",
     "jest": "^29.6.2",
+    "node-fuse-bindings": "^2.12.4",
     "port-get": "^1.0.0",
     "ws": "^8.13.0"
   },

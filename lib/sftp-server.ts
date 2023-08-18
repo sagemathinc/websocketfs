@@ -178,7 +178,7 @@ export class SftpServerSession {
     fs: SafeFilesystem,
     emitter: NodeJS.EventEmitter,
     log: ILogWriter,
-    meta: any
+    meta: any,
   ) {
     this._id = SftpServerSession._nextSessionId++;
     this._fs = fs;
@@ -201,7 +201,7 @@ export class SftpServerSession {
         log.error(
           { err: err },
           "[%d] - Error while accepting request",
-          this._id
+          this._id,
         );
 
         emitter.emit("error", err, this);
@@ -253,7 +253,7 @@ export class SftpServerSession {
           meta,
           "[%d] #%d - Sending response",
           this._id,
-          response.id
+          response.id,
         );
       }
     }
@@ -264,7 +264,7 @@ export class SftpServerSession {
   private sendStatus(
     response: SftpResponse,
     code: number,
-    message: string
+    message: string,
   ): void {
     SftpStatus.write(response, code, message);
     this.send(response);
@@ -273,7 +273,7 @@ export class SftpServerSession {
   private sendError(
     response: SftpResponse,
     err: Error,
-    isFatal: boolean
+    isFatal: boolean,
   ): void {
     var message: string;
     var code: SftpStatusCode;
@@ -299,14 +299,14 @@ export class SftpServerSession {
           meta,
           "[%d] #%d - Request failed",
           this._id,
-          response.id
+          response.id,
         );
       } else {
         this._log.error(
           meta,
           "[%d] #%d - Error while processing request",
           this._id,
-          response.id
+          response.id,
         );
       }
     }
@@ -317,7 +317,7 @@ export class SftpServerSession {
 
   private sendIfError(
     response: SftpResponse,
-    err: NodeJS.ErrnoException | null
+    err: NodeJS.ErrnoException | null,
   ): boolean {
     if (err == null || typeof err === "undefined") return false;
 
@@ -327,7 +327,7 @@ export class SftpServerSession {
 
   private sendSuccess(
     response: SftpResponse,
-    err: NodeJS.ErrnoException | null
+    err: NodeJS.ErrnoException | null,
   ): void {
     if (this.sendIfError(response, err)) return;
 
@@ -338,7 +338,7 @@ export class SftpServerSession {
   private sendAttribs(
     response: SftpResponse,
     err: NodeJS.ErrnoException | null,
-    stats?: IStats
+    stats?: IStats,
   ): void {
     if (this.sendIfError(response, err)) return;
 
@@ -363,7 +363,7 @@ export class SftpServerSession {
   private sendPath(
     response: SftpResponse,
     err: NodeJS.ErrnoException | null,
-    path?: string
+    path?: string,
   ): void {
     if (this.sendIfError(response, err)) {
       return;
@@ -420,14 +420,14 @@ export class SftpServerSession {
         this._log.debug(
           meta,
           "[%d] - Received initialization request",
-          this._id
+          this._id,
         );
       } else {
         this._log.debug(
           meta,
           "[%d] #%d - Received request",
           this._id,
-          request.id
+          request.id,
         );
       }
     }
@@ -465,7 +465,7 @@ export class SftpServerSession {
         this.sendStatus(
           response,
           SftpStatusCode.BAD_MESSAGE,
-          "Packet too long"
+          "Packet too long",
         );
         return;
       }
@@ -482,7 +482,7 @@ export class SftpServerSession {
             this.sendStatus(
               response,
               SftpStatusCode.FAILURE,
-              "Unsupported flags"
+              "Unsupported flags",
             );
             return;
           }
@@ -557,7 +557,7 @@ export class SftpServerSession {
               response.writeInt32(bytesRead);
               response.skip(bytesRead);
               this.send(response);
-            }
+            },
           );
           return;
 
@@ -572,7 +572,7 @@ export class SftpServerSession {
           request.skip(count);
 
           fs.write(handle, request.buffer, offset, count, position, (err) =>
-            this.sendSuccess(response, err)
+            this.sendSuccess(response, err),
           );
           return;
 
@@ -580,7 +580,7 @@ export class SftpServerSession {
           var path = request.readString();
 
           fs.lstat(path, (err, stats) =>
-            this.sendAttribs(response, err, stats)
+            this.sendAttribs(response, err, stats),
           );
           return;
 
@@ -590,7 +590,7 @@ export class SftpServerSession {
             throw Error("handle must not be null");
           }
           fs.fstat(handle, (err, stats) =>
-            this.sendAttribs(response, err, stats)
+            this.sendAttribs(response, err, stats),
           );
           return;
 
@@ -720,7 +720,7 @@ export class SftpServerSession {
           var path = request.readString();
 
           fs.realpath(path, (err, resolvedPath) =>
-            this.sendPath(response, err, resolvedPath)
+            this.sendPath(response, err, resolvedPath),
           );
           return;
 
@@ -735,7 +735,7 @@ export class SftpServerSession {
           var newpath = request.readString();
 
           fs.rename(oldpath, newpath, 0, (err) =>
-            this.sendSuccess(response, err)
+            this.sendSuccess(response, err),
           );
           return;
 
@@ -743,7 +743,7 @@ export class SftpServerSession {
           var path = request.readString();
 
           fs.readlink(path, (err, linkString) =>
-            this.sendPath(response, err, linkString)
+            this.sendPath(response, err, linkString),
           );
           return;
 
@@ -752,7 +752,7 @@ export class SftpServerSession {
           var targetpath = request.readString();
 
           fs.symlink(targetpath, linkpath, (err) =>
-            this.sendSuccess(response, err)
+            this.sendSuccess(response, err),
           );
           return;
 
@@ -768,19 +768,19 @@ export class SftpServerSession {
           var newpath = request.readString();
 
           fs.rename(oldpath, newpath, RenameFlags.OVERWRITE, (err) =>
-            this.sendSuccess(response, err)
+            this.sendSuccess(response, err),
           );
           return;
 
         case SftpExtensions.COPY_DATA:
           var fromHandle = request.readHandle();
-          if(fromHandle == null) {
+          if (fromHandle == null) {
             throw Error("fromHandle must not be null");
           }
           var fromPosition = request.readInt64();
           var length = request.readInt64();
           var toHandle = request.readHandle();
-          if(toHandle == null) {
+          if (toHandle == null) {
             throw Error("toHandle must not be null");
           }
           var toPosition = request.readInt64();
@@ -791,13 +791,13 @@ export class SftpServerSession {
             length,
             toHandle,
             toPosition,
-            (err) => this.sendSuccess(response, err)
+            (err) => this.sendSuccess(response, err),
           );
           return;
 
         case SftpExtensions.CHECK_FILE_HANDLE:
           var handle = request.readHandle();
-          if(handle == null) {
+          if (handle == null) {
             throw Error("handle must not be null");
           }
           var alg = request.readString();
@@ -821,7 +821,7 @@ export class SftpServerSession {
               response.writeString(alg);
               response.writeData(hashes);
               this.send(response);
-            }
+            },
           );
           return;
 
@@ -829,7 +829,7 @@ export class SftpServerSession {
           this.sendStatus(
             response,
             SftpStatusCode.OP_UNSUPPORTED,
-            "Not supported"
+            "Not supported",
           );
       }
     } catch (err) {

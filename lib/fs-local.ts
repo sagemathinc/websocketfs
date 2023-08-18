@@ -40,7 +40,7 @@ export class LocalFilesystem implements IFilesystem {
     path: string,
     flags: string,
     attrs: IStats | undefined,
-    callback: (err: Error | null, handle: any) => any
+    callback: (err: Error | null, handle: any) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -77,13 +77,13 @@ export class LocalFilesystem implements IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback: (err: Error | null, buffer: Buffer, bytesRead: number) => any
+    callback: (err: Error | null, buffer: Buffer, bytesRead: number) => any,
   ): void {
     this.checkCallback(callback);
 
     let totalBytes = 0;
 
-    let buf : Buffer;
+    let buf: Buffer;
     if (buffer == null) {
       buf = Buffer.alloc(length);
       offset = 0;
@@ -94,7 +94,7 @@ export class LocalFilesystem implements IFilesystem {
     let offset2 = offset;
 
     const read = () => {
-    fs.read(handle, buf, offset2, length, position, (err, bytesRead) => {
+      fs.read(handle, buf, offset2, length, position, (err, bytesRead) => {
         if (err == null) {
           length -= bytesRead;
           totalBytes += bytesRead;
@@ -119,7 +119,7 @@ export class LocalFilesystem implements IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     this.checkCallback(callback);
 
@@ -143,7 +143,7 @@ export class LocalFilesystem implements IFilesystem {
           }
 
           callback(err);
-        }
+        },
       );
     };
 
@@ -152,7 +152,7 @@ export class LocalFilesystem implements IFilesystem {
 
   lstat(
     path: string,
-    callback: (err: Error | null, attrs: IStats) => any
+    callback: (err: Error | null, attrs: IStats) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -162,7 +162,7 @@ export class LocalFilesystem implements IFilesystem {
 
   fstat(
     handle: any,
-    callback: (err: Error | null, attrs: IStats) => any
+    callback: (err: Error | null, attrs: IStats) => any,
   ): void {
     this.checkCallback(callback);
 
@@ -198,7 +198,7 @@ export class LocalFilesystem implements IFilesystem {
   setstat(
     path: string,
     attrs: IStats,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -236,7 +236,7 @@ export class LocalFilesystem implements IFilesystem {
   fsetstat(
     handle: any,
     attrs: IStats,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     this.checkCallback(callback);
 
@@ -272,7 +272,7 @@ export class LocalFilesystem implements IFilesystem {
 
   opendir(
     path: string,
-    callback: (err: Error | null, handle: any) => any
+    callback: (err: Error | null, handle: any) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -297,7 +297,7 @@ export class LocalFilesystem implements IFilesystem {
 
   readdir(
     handle: any,
-    callback: (err: Error | null, items: IItem[] | boolean) => any
+    callback: (err: Error | null, items: IItem[] | boolean) => any,
   ): void {
     this.checkCallback(callback);
     if (
@@ -358,7 +358,7 @@ export class LocalFilesystem implements IFilesystem {
   mkdir(
     path: string,
     attrs: IStats | undefined,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -377,7 +377,7 @@ export class LocalFilesystem implements IFilesystem {
 
   realpath(
     path: string,
-    callback: (err: Error | null, resolvedPath: string) => any
+    callback: (err: Error | null, resolvedPath: string) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -387,7 +387,7 @@ export class LocalFilesystem implements IFilesystem {
 
   stat(
     path: string,
-    callback: (err: Error | null, attrs: IStats) => any
+    callback: (err: Error | null, attrs: IStats) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -399,7 +399,7 @@ export class LocalFilesystem implements IFilesystem {
     oldPath: string,
     newPath: string,
     flags: RenameFlags,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");
@@ -424,7 +424,7 @@ export class LocalFilesystem implements IFilesystem {
 
   readlink(
     path: string,
-    callback: (err: Error | null, linkString: string) => any
+    callback: (err: Error | null, linkString: string) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -435,7 +435,7 @@ export class LocalFilesystem implements IFilesystem {
   symlink(
     oldPath: string,
     newPath: string,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");
@@ -449,7 +449,7 @@ export class LocalFilesystem implements IFilesystem {
   link(
     oldPath: string,
     newPath: string,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");

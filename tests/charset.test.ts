@@ -103,7 +103,7 @@ describe("Encoding Tests", function () {
       assert.equal(count, bytes);
       assertEqualContents(
         buffer.slice(offset, offset + count),
-        chunk6.slice(offset, offset + count)
+        chunk6.slice(offset, offset + count),
       );
       offset += count;
     });

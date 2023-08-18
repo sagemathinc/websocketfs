@@ -249,7 +249,7 @@ export class SftpStatus {
   static write(
     response: SftpPacketWriter,
     code: SftpStatusCode,
-    message: string
+    message: string,
   ) {
     response.type = SftpPacketType.STATUS;
     response.start();

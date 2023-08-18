@@ -59,7 +59,7 @@ export function encodeUTF8(
   buffer: Buffer,
   offset: number,
   end?: number,
-  state?: { _code: number; _length: number; _position: number; _done: boolean }
+  state?: { _code: number; _length: number; _position: number; _done: boolean },
 ): number {
   end = end || buffer.length;
 
@@ -203,7 +203,7 @@ export function decodeUTF8(
   buffer: Buffer,
   offset: number,
   end?: number,
-  state?: { _text?: string; _code?: number; _length?: number }
+  state?: { _text?: string; _code?: number; _length?: number },
 ): string {
   end = end || buffer.length;
 

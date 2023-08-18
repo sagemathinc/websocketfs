@@ -42,7 +42,7 @@ export class FileDataSource extends EventEmitter implements IDataSource {
     path: string,
     relativePath?: string,
     stats?: IStats,
-    position?: number
+    position?: number,
   ) {
     super();
     this.fs = fs;
@@ -179,7 +179,7 @@ export class FileDataSource extends EventEmitter implements IDataSource {
           } catch (err) {
             this._error(err);
           }
-        }
+        },
       );
     } catch (err) {
       this.requests--;
@@ -386,7 +386,7 @@ export function toDataSource(
   fs: IFilesystem,
   input: any,
   emitter: IEventEmitter | undefined,
-  callback: (err: Error | null, sources?: IDataSource[]) => void
+  callback: (err: Error | null, sources?: IDataSource[]) => void,
 ): void {
   try {
     toAnyDataSource(input, callback);
@@ -396,7 +396,7 @@ export function toDataSource(
 
   function toAnyDataSource(
     input: any,
-    _callback: (err: Error, source?: IDataSource[]) => void
+    _callback: (err: Error, source?: IDataSource[]) => void,
   ): void {
     // arrays
     if (isArray(input)) {
@@ -474,7 +474,7 @@ export function toDataSource(
 
   function toItemDataSource(
     path: string,
-    callback: (err: Error | null, source?: IDataSource[]) => void
+    callback: (err: Error | null, source?: IDataSource[]) => void,
   ): void {
     if (!fs) throw new Error("Source file system not available");
 
@@ -502,7 +502,7 @@ export function toDataSource(
           it.path ?? "",
           (<any>it).relativePath,
           it.stats,
-          0
+          0,
         );
         source.push(item);
       });

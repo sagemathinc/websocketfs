@@ -39,7 +39,7 @@ export function search(
   path: string,
   emitter: IEventEmitter | undefined,
   options: ISearchOptionsExt | undefined,
-  callback: (err: Error | null, items?: IItem[]) => void
+  callback: (err: Error | null, items?: IItem[]) => void,
 ): void {
   if (path.length == 0) {
     throw new Error("Empty path");
@@ -138,7 +138,7 @@ export function search(
           } else {
             if (expectDir)
               return callback(
-                new Error("The specified path is not a directory")
+                new Error("The specified path is not a directory"),
               );
 
             if (!all && !FileUtil.isFile(stats)) {

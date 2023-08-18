@@ -74,7 +74,7 @@ fs.mkdirSync(Path.join(tmp, "full/subdir01"));
 for (var n = 0; n < 200; n++) {
   fs.writeFileSync(
     Path.join(tmp, "full", "file" + n + "-quite-long-name.txt"),
-    "This is a sample file number " + n
+    "This is a sample file number " + n,
   );
 }
 
@@ -101,7 +101,7 @@ function error(
   err: Error,
   done: Function,
   expectedCode: string,
-  expectedDescription?: string
+  expectedDescription?: string,
 ) {
   try {
     assert.ok(err, "Error expected");
@@ -112,14 +112,14 @@ function error(
     assert.equal(
       actualCode,
       expectedCode,
-      "Unexpected error code: " + actualCode
+      "Unexpected error code: " + actualCode,
     );
 
     if (typeof expectedDescription !== "undefined")
       assert.equal(
         actualDescription,
         expectedDescription,
-        "Unexpected description: " + actualDescription
+        "Unexpected description: " + actualDescription,
       );
 
     done();
@@ -136,7 +136,7 @@ function equalStats(attrs: SFTP.IStats, stats: fs.Stats): void {
   assert.equal(
     (attrs.mtime.getTime() / 1000) | 0,
     (stats.mtime.getTime() / 1000) | 0,
-    "mtime mismatch"
+    "mtime mismatch",
   );
   if (attrs.atime == null) {
     throw Error("bug");
@@ -144,7 +144,7 @@ function equalStats(attrs: SFTP.IStats, stats: fs.Stats): void {
   assert.equal(
     (attrs.atime.getTime() / 1000) | 0,
     (stats.atime.getTime() / 1000) | 0,
-    "atime mismatch"
+    "atime mismatch",
   );
   assert.equal(attrs.mode, stats.mode, "mode mismatch");
   assert.equal(attrs.uid, stats.uid, "uid mismatch");
@@ -212,7 +212,7 @@ describe("Basic Tests", function () {
       check(err, done, () => {
         assert.equal("/", resolvedPath, "Unexpected resolved path");
         done();
-      })
+      }),
     );
   });
 
@@ -229,10 +229,10 @@ describe("Basic Tests", function () {
           assert.equal(
             "/full/file0-quite-long-name.txt",
             resolvedPath,
-            "Unexpected resolved path"
+            "Unexpected resolved path",
           );
           done();
-        })
+        }),
     );
   });
 
@@ -248,7 +248,7 @@ describe("Basic Tests", function () {
         var stats = fs.statSync(Path.join(tmp, name));
         assert.ok(stats.isDirectory, "Directory expected");
         done();
-      })
+      }),
     );
   });
 
@@ -267,7 +267,7 @@ describe("Basic Tests", function () {
         var exists = fs.existsSync(Path.join(tmp, name));
         assert.ok(!exists, "Directory not expected");
         done();
-      })
+      }),
     );
   });
 
@@ -275,7 +275,7 @@ describe("Basic Tests", function () {
     var name = "dir000";
 
     client.opendir(name, (err, _handle) =>
-      error(err, done, "ENOENT", wrongPath)
+      error(err, done, "ENOENT", wrongPath),
     );
   });
 
@@ -312,10 +312,10 @@ describe("Basic Tests", function () {
                 assert.equal(list.length, 0, "Not all items listed");
                 client.close(handle, done);
               }
-            })
+            }),
           );
         }
-      })
+      }),
     );
   });
 
@@ -348,14 +348,14 @@ describe("Basic Tests", function () {
       check(err, done, () => {
         assert.ok(
           !fs.existsSync(Path.join(tmp, name1)),
-          "File should not exist"
+          "File should not exist",
         );
         var body2 = fs.readFileSync(Path.join(tmp, name2), {
           encoding: "utf8",
         });
         assert.equal(body2, body, "File content mismatch");
         done();
-      })
+      }),
     );
   });
 
@@ -369,7 +369,7 @@ describe("Basic Tests", function () {
     fs.writeFileSync(Path.join(tmp, name2), body2);
 
     client.rename(name1, name2, (err) =>
-      error(err, done, "EFAILURE", "File exists")
+      error(err, done, "EFAILURE", "File exists"),
     );
   });
 
@@ -386,14 +386,14 @@ describe("Basic Tests", function () {
       check(err, done, () => {
         assert.ok(
           !fs.existsSync(Path.join(tmp, name1)),
-          "File should not exist"
+          "File should not exist",
         );
         var body3 = fs.readFileSync(Path.join(tmp, name2), {
           encoding: "utf8",
         });
         assert.equal(body3, body, "File content mismatch");
         done();
-      })
+      }),
     );
   });
 
@@ -425,7 +425,7 @@ describe("Basic Tests", function () {
         });
         assert.equal(body2, body, "File content mismatch");
         done();
-      })
+      }),
     );
   });
 
@@ -445,10 +445,10 @@ describe("Basic Tests", function () {
       check(err, done, () => {
         assert.ok(
           !fs.existsSync(Path.join(tmp, name)),
-          "File should not exist"
+          "File should not exist",
         );
         done();
-      })
+      }),
     );
   });
 
@@ -456,7 +456,7 @@ describe("Basic Tests", function () {
     var name = getFileName();
 
     client.open(name, "r+", {}, (err, _handle) =>
-      error(err, done, "ENOENT", wrongPath)
+      error(err, done, "ENOENT", wrongPath),
     );
   });
 
@@ -486,7 +486,7 @@ describe("Basic Tests", function () {
                     assert.equal(
                       body2,
                       "9876543210" + "abc" + "12233445566778899" + "ABCDE",
-                      "File content mismatch"
+                      "File content mismatch",
                     );
 
                     client.read(
@@ -500,20 +500,20 @@ describe("Basic Tests", function () {
                           assert.equal(
                             buf.length,
                             0,
-                            "Unexpected buffer length"
+                            "Unexpected buffer length",
                           );
                           assert.equal(bytesRead, 0, "Unexpected bytesRead");
 
                           client.close(handle, done);
-                        })
+                        }),
                     );
-                  })
+                  }),
                 );
-              })
+              }),
             );
-          })
+          }),
         );
-      })
+      }),
     );
   });
 
@@ -531,7 +531,7 @@ describe("Basic Tests", function () {
             "9876543210" +
             "00112233445566778899" +
             "abcdefghijklmnopqrstuvwxyz" +
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
         );
 
         client.write(handle, buffer, 10, 30, 0, (err) =>
@@ -546,17 +546,17 @@ describe("Basic Tests", function () {
                     assert.equal(
                       body2,
                       "9876543210" + "abc" + "12233445566778899" + "ABCDE",
-                      "File content mismatch"
+                      "File content mismatch",
                     );
 
                     client.close(handle, done);
-                  })
+                  }),
                 );
-              })
+              }),
             );
-          })
+          }),
         );
-      })
+      }),
     );
   });
 
@@ -617,7 +617,7 @@ describe("Basic Tests", function () {
         //console.log(attrs);
         equalStats(attrs, stats);
         done();
-      })
+      }),
     );
   });
 
@@ -638,7 +638,7 @@ describe("Basic Tests", function () {
         //console.log(attrs);
         equalStats(attrs, stats);
         done();
-      })
+      }),
     );
   });
 
@@ -650,11 +650,11 @@ describe("Basic Tests", function () {
         client.close(handle, (err) =>
           check(err, done, () => {
             client.fstat(handle, (err, _attrs) =>
-              error(err, done, "EFAILURE", "Invalid handle")
+              error(err, done, "EFAILURE", "Invalid handle"),
             );
-          })
+          }),
         );
-      })
+      }),
     );
   });
 
@@ -671,9 +671,9 @@ describe("Basic Tests", function () {
             //console.log(attrs);
             equalStats(attrs, stats);
             client.close(handle, done);
-          })
+          }),
         );
-      })
+      }),
     );
   });
 
@@ -681,7 +681,7 @@ describe("Basic Tests", function () {
     var name = "dir000/file.txt";
 
     client.setstat(name, { size: 12 }, (err) =>
-      error(err, done, "ENOENT", wrongPath)
+      error(err, done, "ENOENT", wrongPath),
     );
   });
 
@@ -704,7 +704,7 @@ describe("Basic Tests", function () {
         assert.equal(stats.atime.getTime() / 1000, atime.getTime() / 1000);
 
         done();
-      })
+      }),
     );
   });
 
@@ -730,17 +730,17 @@ describe("Basic Tests", function () {
               assert.equal(stats.size, 12);
               assert.equal(
                 (stats.mtime.getTime() / 1000) | 0,
-                (mtime.getTime() / 1000) | 0
+                (mtime.getTime() / 1000) | 0,
               );
               assert.equal(
                 (stats.atime.getTime() / 1000) | 0,
-                (atime.getTime() / 1000) | 0
+                (atime.getTime() / 1000) | 0,
               );
 
               client.close(handle, done);
-            })
+            }),
         );
-      })
+      }),
     );
   });
 

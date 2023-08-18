@@ -310,15 +310,15 @@ export class FileUtil {
 
   static fail(
     message: string,
-    callback?: (err: Error|null, ...args: any[]) => any
+    callback?: (err: Error | null, ...args: any[]) => any,
   ): void;
   static fail(
     code: string,
-    callback?: (err: Error|null, ...args: any[]) => any
+    callback?: (err: Error | null, ...args: any[]) => any,
   ): void;
   static fail(
     code: string,
-    callback?: (err: Error|null, ...args: any[]) => any
+    callback?: (err: Error | null, ...args: any[]) => any,
   ): void {
     var message;
     var errno;
@@ -376,7 +376,7 @@ export class FileUtil {
     fs: IFilesystem,
     handle: any,
     process: (item: IItem) => any,
-    callback: (err: Error) => any
+    callback: (err: Error) => any,
   ): void {
     // send first read request
     let error: Error | null = null;
@@ -414,7 +414,7 @@ export class FileUtil {
     path: string,
     emitter: IEventEmitter | undefined,
     process: (item: IItem) => any,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     // list directory and process its items
     fs.opendir(path, (err, handle) => {
@@ -443,7 +443,7 @@ export class FileUtil {
     fs: IFilesystem,
     path: string,
     dotdirs: boolean,
-    callback: (err: Error | null, items?: IItem[]) => any
+    callback: (err: Error | null, items?: IItem[]) => any,
   ): void {
     var items = <IItem[]>[];
 
@@ -461,7 +461,7 @@ export class FileUtil {
   static purge(
     fs: IFilesystem,
     path: string,
-    callback: (err: Error | null) => any
+    callback: (err: Error | null) => any,
   ): void {
     FileUtil.list(fs, path, false, (err, items) => {
       if (err) {
@@ -498,7 +498,7 @@ export class FileUtil {
     fs: IFilesystem,
     path: string,
     overwrite: boolean,
-    callback: (err: Error | null, created: boolean) => any
+    callback: (err: Error | null, created: boolean) => any,
   ): void {
     fs.stat(path, (err, stats) => {
       if (!err) {
@@ -531,7 +531,7 @@ export class FileUtil {
     source: IDataSource,
     target: IDataTarget,
     emitter: IEventEmitter | undefined,
-    callback?: (err: Error | null) => any
+    callback?: (err: Error | null) => any,
   ): void {
     let empty = true;
     let writable = true;

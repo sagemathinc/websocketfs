@@ -30,7 +30,7 @@ var Promise = Promise || APromise;
 export interface Promise<T> {
   then<U>(
     onFulfilled?: (value: T) => U | Task<U>,
-    onRejected?: (reason: any) => U | Task<U>
+    onRejected?: (reason: any) => U | Task<U>,
   ): Task<U>;
   catch<U>(onRejected: (reason: any) => U | Task<U>): Task<U>;
   done?(): void;
@@ -62,7 +62,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     path: string,
     flags: string,
     attrs?: IStats,
-    callback?: (err: Error, handle: any) => any
+    callback?: (err: Error, handle: any) => any,
   ): Task<any> {
     if (typeof callback === "undefined" && typeof attrs === "function") {
       callback = <any>attrs;
@@ -86,7 +86,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback?: (err: Error, buffer: Buffer, bytesRead: number) => any
+    callback?: (err: Error, buffer: Buffer, bytesRead: number) => any,
   ): Task<Buffer> {
     return this._task(callback, (callback) => {
       this._fs.read(handle, buffer, offset, length, position, callback);
@@ -99,7 +99,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     position: number,
     length: number,
     blockSize: number,
-    callback?: (err: Error, hashes: Buffer, alg: string) => any
+    callback?: (err: Error, hashes: Buffer, alg: string) => any,
   ): Task<Buffer> {
     return this._task(callback, (callback) => {
       if (this._fs.fhash == null) {
@@ -116,7 +116,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     length: number,
     toHandle: any,
     toPosition: number,
-    callback: (err: Error) => any
+    callback: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback) => {
       if (this._fs.fcopy == null) {
@@ -129,7 +129,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
         length,
         toHandle,
         toPosition,
-        callback
+        callback,
       );
     });
   }
@@ -140,7 +140,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     offset: number,
     length: number,
     position: number,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback) => {
       this._fs.write(handle, buffer, offset, length, position, callback);
@@ -149,7 +149,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   lstat(
     path: string,
-    callback?: (err: Error, attrs: IStats) => any
+    callback?: (err: Error, attrs: IStats) => any,
   ): Task<IStats> {
     return this._task(callback, (callback) => {
       this._fs.lstat(path, callback);
@@ -158,7 +158,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   fstat(
     handle: any,
-    callback?: (err: Error, attrs: IStats) => any
+    callback?: (err: Error, attrs: IStats) => any,
   ): Task<IStats> {
     return this._task(callback, (callback) => {
       this._fs.fstat(handle, callback);
@@ -168,7 +168,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   setstat(
     path: string,
     attrs: IStats,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback) => {
       this._fs.setstat(path, attrs, callback);
@@ -178,7 +178,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   fsetstat(
     handle: any,
     attrs: IStats,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback) => {
       this._fs.fsetstat(handle, attrs, callback);
@@ -187,7 +187,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   opendir(
     path: string,
-    callback?: (err: Error, handle: any) => any
+    callback?: (err: Error, handle: any) => any,
   ): Task<void> {
     return this._task(callback, (callback) => {
       this._fs.opendir(path, callback);
@@ -196,15 +196,15 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   readdir(
     path: string,
-    callback?: (err: Error, items: IItem[] | boolean) => any
+    callback?: (err: Error, items: IItem[] | boolean) => any,
   ): Task<IItem[]>;
   readdir(
     handle: any,
-    callback?: (err: Error, items: IItem[] | boolean) => any
+    callback?: (err: Error, items: IItem[] | boolean) => any,
   ): Task<IItem[] | boolean>;
   readdir(
     handle: any,
-    callback?: (err: Error, items: IItem[] | boolean) => any
+    callback?: (err: Error, items: IItem[] | boolean) => any,
   ): Task<IItem[] | boolean> {
     return this._task(callback, (callback) => {
       if (typeof handle === "string") {
@@ -227,7 +227,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   mkdir(
     path: string,
     attrs?: IStats,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     if (typeof callback === "undefined" && typeof attrs === "function") {
       callback = <any>attrs;
@@ -247,7 +247,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   realpath(
     path: string,
-    callback?: (err: Error, resolvedPath: string) => any
+    callback?: (err: Error, resolvedPath: string) => any,
   ): Task<string> {
     return this._task(callback, (callback) => {
       this._fs.realpath(path, callback);
@@ -256,7 +256,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   stat(
     path: string,
-    callback?: (err: Error, attrs: IStats) => any
+    callback?: (err: Error, attrs: IStats) => any,
   ): Task<IStats> {
     return this._task(callback, (callback) => {
       this._fs.stat(path, callback);
@@ -266,25 +266,25 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   rename(
     oldPath: string,
     newPath: string,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void>;
   rename(
     oldPath: string,
     newPath: string,
     overwrite: boolean,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void>;
   rename(
     oldPath: string,
     newPath: string,
     flags: RenameFlags,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void>;
   rename(
     oldPath: string,
     newPath: string,
     flags: any,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     if (typeof callback === "undefined" && typeof flags === "function") {
       callback = flags;
@@ -300,7 +300,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   readlink(
     path: string,
-    callback?: (err: Error, linkString: string) => any
+    callback?: (err: Error, linkString: string) => any,
   ): Task<string> {
     return this._task(callback, (callback) => {
       this._fs.readlink(path, callback);
@@ -310,7 +310,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   symlink(
     oldPath: string,
     newPath: string,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback) => {
       this._fs.symlink(oldPath, newPath, callback);
@@ -325,7 +325,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   link(
     oldPath: string,
     newPath: string,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback) => {
       this._fs.link(oldPath, newPath, callback);
@@ -334,7 +334,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   list(
     remotePath: string,
-    callback?: (err: Error, items: IItem[]) => any
+    callback?: (err: Error, items: IItem[]) => any,
   ): Task<IItem[]> {
     return this._task(callback, (callback, emitter) => {
       remotePath = Path.check(remotePath, "remotePath");
@@ -356,7 +356,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   search(
     remotePath: string,
     options?: ISearchOptions,
-    callback?: (err: Error, items: IItem[]) => any
+    callback?: (err: Error, items: IItem[]) => any,
   ): Task<IItem[]> {
     if (typeof callback === "undefined" && typeof options === "function") {
       callback = <any>options;
@@ -372,7 +372,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   info(
     remotePath: string,
-    callback?: (err: Error | null, item: IItem) => any
+    callback?: (err: Error | null, item: IItem) => any,
   ): Task<IItem> {
     return this._task(callback, (callback, emitter) => {
       remotePath = Path.check(remotePath, "remotePath");
@@ -400,7 +400,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       flag?: string;
       mimeType?: string;
     },
-    callback?: (err: Error, data: {}) => any
+    callback?: (err: Error, data: {}) => any,
   ): Task<any> {
     if (typeof callback === "undefined" && typeof options === "function") {
       callback = <any>options;
@@ -458,7 +458,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   putFile(
     localPath: string,
     remotePath: string,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback, emitter) => {
       var local = Path.create(localPath, this._local, "localPath");
@@ -471,7 +471,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   getFile(
     remotePath: string,
     localPath: string,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback, emitter) => {
       var remote = Path.create(remotePath, this._fs, "remotePath");
@@ -485,7 +485,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     sourcePath: Path,
     targetPath: Path,
     emitter: IEventEmitter | undefined,
-    callback: (err: Error | null, ...args: any[]) => any
+    callback: (err: Error | null, ...args: any[]) => any,
   ): void {
     // append filename if target path ens with slash
     if (targetPath.endsWithSlash()) {
@@ -511,19 +511,19 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     localPath: string,
     remotePath: string,
     options?: any,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void>;
   upload(
     input: any,
     remotePath: string,
     options?: any,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void>;
   upload(
     input: any,
     remotePath: string,
     options?: any,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     if (typeof options === "function" && typeof callback === "undefined") {
       callback = <any>options;
@@ -541,7 +541,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     remotePath: string | string[],
     localPath: string,
     options?: any,
-    callback?: (err: Error) => any
+    callback?: (err: Error) => any,
   ): Task<void> {
     if (typeof options === "function" && typeof callback === "undefined") {
       callback = <any>options;
@@ -561,7 +561,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     toPath: Path,
     _options: any,
     emitter: IEventEmitter | undefined,
-    callback: (err: Error|null, ...args: any[]) => any
+    callback: (err: Error | null, ...args: any[]) => any,
   ): void {
     var sources: undefined | IDataSource[] = undefined;
 
@@ -630,7 +630,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
         if (source.stats != null && FileUtil.isDirectory(source.stats)) {
           FileUtil.mkdir(toFs, targetPath, false, (err, _created) =>
-            transferred(err)
+            transferred(err),
           );
         } else {
           var target = new FileDataTarget(toFs, targetPath);
@@ -688,8 +688,8 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     callback: undefined | ((err: Error | null, ...args: any[]) => void),
     action: (
       callback: (err: Error | null, ...args: any[]) => void,
-      emitter?: IEventEmitter
-    ) => void
+      emitter?: IEventEmitter,
+    ) => void,
   ): any {
     var emitter;
     if (action.length >= 2) emitter = new EventEmitter();
@@ -719,7 +719,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     const that = this;
     function executor(
       resolve: (result: T | Promise<T>) => void,
-      reject: (error: Error) => void
+      reject: (error: Error) => void,
     ): void {
       try {
         action(finish, emitter);

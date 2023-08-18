@@ -8,4 +8,71 @@ Anyway, I so far have a proof of concept of this working, though to get this to 
 
 ## Quickstart
 
-Nothing yet -- stay tuned!
+### From npm
+
+```sh
+~$ mkdir /tmp/x
+~$ cd /tmp/x
+~/tmp/x$ pnpm init
+~/tmp/x$ pnpm install websocketfs
+~/tmp/x$ node mkdir -p /tmp/mnt; node_modules/websocketfs/dist/lib/fuse/mount-sftp.js /tmp/mnt
+```
+
+Then in another terminal, type `ls /tmp/mnt`:
+
+```sh
+~/websocketfs$ ls /tmp/mnt
+LICENSE    dist      node_modules    tmp
+README.md  examples  package.json    tsconfig.json
+TODO.md    lib       pnpm-lock.yaml  websocketfs.term
+```
+
+Nothing else is implemented yet...
+
+### From a git clone of the source code
+
+```sh
+~$ git clone https://github.com/sagemathinc/websocketfs
+~/websocketfs$ pnpm install && pnpm build && pnpm test
+~/websocketfs$ mkdir -p /tmp/mnt; node dist/lib/fuse/mount-sftp.js /tmp/mnt
+SFTP server listening at ws://localhost:40291
+Connected to ws://localhost:40291
+```
+
+Then in another terminal, type `ls /tmp/mnt`:
+
+```sh
+~/websocketfs$ ls /tmp/mnt
+LICENSE    dist      node_modules    tmp
+README.md  examples  package.json    tsconfig.json
+TODO.md    lib       pnpm-lock.yaml  websocketfs.term
+```
+
+Nothing else is implemented yet...
+
+### A Note about Fuse
+
+FUSE is really weird on MacOS due to security constraints and commercial interests.
+I'm developing this for linux. To install or build, you need to have the fuse C library
+available:
+
+```sh
+sudo apt-get install libfuse-dev
+```
+
+Also, you need to be able to use FUSE at all under Linux, e.g., you can't
+use FUSE in a Docker container unless you run it with these options:
+
+```
+--cap-add SYS_ADMIN --device /dev/fuse
+```
+
+The problem that this module will hopefully solve someday is "a FUSE filesystem
+implemented in Javascript over websockets that is similar to sshfs in its
+underlying wire protocol". It doesn't do anything at all, of course, to make
+it easier to use FUSE itself. The goal is to provide a foundation for network mounted
+POSIX filesystems that is _served_ and authenticated entirely through a website via HTTP,
+without involving ssh at all.
+
+In the context of WebAssembly and WASI, it may of course actually provide a filesystem
+without FUSE.

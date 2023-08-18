@@ -37,9 +37,11 @@ class SftpRequest extends SftpPacketReader {
     super(buffer);
   }
 
-  readHandle(): number {
+  readHandle(): number | null {
     // read a 4-byte handle
-    if (this.readInt32() != 4) return null;
+    if (this.readInt32() != 4) {
+      return null;
+    }
 
     return this.readInt32();
   }
@@ -237,8 +239,10 @@ export class SftpServerSession {
       // logging
       var meta = {};
       meta["session"] = this._id;
-      if (response.type != SftpPacketType.VERSION) meta["req"] = response.id;
-      meta["type"] = SftpPacket.toString(response.type);
+      if (response.type != SftpPacketType.VERSION) {
+        meta["req"] = response.id;
+      }
+      meta["type"] = SftpPacket.toString(response.type ?? "");
       meta["length"] = packet.length;
       if (this._trace) meta["raw"] = packet;
 
@@ -313,7 +317,7 @@ export class SftpServerSession {
 
   private sendIfError(
     response: SftpResponse,
-    err: NodeJS.ErrnoException
+    err: NodeJS.ErrnoException | null
   ): boolean {
     if (err == null || typeof err === "undefined") return false;
 
@@ -323,7 +327,7 @@ export class SftpServerSession {
 
   private sendSuccess(
     response: SftpResponse,
-    err: NodeJS.ErrnoException
+    err: NodeJS.ErrnoException | null
   ): void {
     if (this.sendIfError(response, err)) return;
 
@@ -333,8 +337,8 @@ export class SftpServerSession {
 
   private sendAttribs(
     response: SftpResponse,
-    err: NodeJS.ErrnoException,
-    stats: IStats
+    err: NodeJS.ErrnoException | null,
+    stats?: IStats
   ): void {
     if (this.sendIfError(response, err)) return;
 
@@ -358,10 +362,15 @@ export class SftpServerSession {
 
   private sendPath(
     response: SftpResponse,
-    err: NodeJS.ErrnoException,
-    path: string
+    err: NodeJS.ErrnoException | null,
+    path?: string
   ): void {
-    if (this.sendIfError(response, err)) return;
+    if (this.sendIfError(response, err)) {
+      return;
+    }
+    if (path == null) {
+      throw Error("path must not be null except when there is an error");
+    }
 
     response.type = SftpPacketType.NAME;
     response.start();
@@ -392,6 +401,7 @@ export class SftpServerSession {
 
     // close all handles
     this._fs.end();
+    // @ts-ignore
     delete this._fs;
   }
 
@@ -402,7 +412,7 @@ export class SftpServerSession {
       var meta = {};
       meta["session"] = this._id;
       if (request.type != SftpPacketType.INIT) meta["req"] = request.id;
-      meta["type"] = SftpPacket.toString(request.type);
+      meta["type"] = SftpPacket.toString(request.type ?? "");
       meta["length"] = request.length;
       if (this._trace) meta["raw"] = request.buffer;
 
@@ -479,8 +489,13 @@ export class SftpServerSession {
 
           var openFile = () => {
             var mode = modes.shift();
-            fs.open(path, mode, attrs, (err, handle) => {
-              if (this.sendIfError(response, err)) return;
+            fs.open(path, mode ?? "", attrs, (err, handle) => {
+              if (this.sendIfError(response, err)) {
+                return;
+              }
+              if (handle == null) {
+                throw Error("BUG: handle must be non-null");
+              }
 
               if (modes.length == 0) {
                 this.sendHandle(response, handle);
@@ -499,14 +514,22 @@ export class SftpServerSession {
 
         case SftpPacketType.CLOSE:
           var handle = request.readHandle();
+          if (handle == null) {
+            throw Error("handle must not be null");
+          }
 
-          if (this._items[handle]) delete this._items[handle];
+          if (this._items[handle]) {
+            delete this._items[handle];
+          }
 
           fs.close(handle, (err) => this.sendSuccess(response, err));
           return;
 
         case SftpPacketType.READ:
           var handle = request.readHandle();
+          if (handle == null) {
+            throw Error("handle must not be null");
+          }
           var position = request.readInt64();
           var count = request.readInt32();
           if (count > 0x8000) count = 0x8000;
@@ -540,6 +563,9 @@ export class SftpServerSession {
 
         case SftpPacketType.WRITE:
           var handle = request.readHandle();
+          if (handle == null) {
+            throw Error("handle must not be null");
+          }
           var position = request.readInt64();
           var count = request.readInt32();
           var offset = request.position;
@@ -560,6 +586,9 @@ export class SftpServerSession {
 
         case SftpPacketType.FSTAT:
           var handle = request.readHandle();
+          if (handle == null) {
+            throw Error("handle must not be null");
+          }
           fs.fstat(handle, (err, stats) =>
             this.sendAttribs(response, err, stats)
           );
@@ -574,6 +603,9 @@ export class SftpServerSession {
 
         case SftpPacketType.FSETSTAT:
           var handle = request.readHandle();
+          if (handle == null) {
+            throw Error("handle must not be null");
+          }
           var attrs = new SftpAttributes(request);
 
           fs.fsetstat(handle, attrs, (err) => this.sendSuccess(response, err));
@@ -583,8 +615,12 @@ export class SftpServerSession {
           var path = request.readString();
 
           fs.opendir(path, (err, handle) => {
-            if (this.sendIfError(response, err)) return;
-
+            if (this.sendIfError(response, err)) {
+              return;
+            }
+            if (handle == null) {
+              throw Error("handle must not be null");
+            }
             this.sendHandle(response, handle);
           });
           return;
@@ -618,10 +654,16 @@ export class SftpServerSession {
 
             while (list.length > 0) {
               var item = list.shift();
+              if (item == null) {
+                throw Error("bug");
+              }
               this.writeItem(response, item);
               count++;
 
               if (response.position > 0x7000) {
+                if (handle == null) {
+                  throw Error("handle must not be null");
+                }
                 this._items[handle] = list;
                 done();
                 return;
@@ -632,6 +674,9 @@ export class SftpServerSession {
           };
 
           var readdir = () => {
+            if (handle == null) {
+              throw Error("handle must not be null");
+            }
             fs.readdir(handle, (err, items) => {
               if (this.sendIfError(response, err)) return;
 
@@ -639,6 +684,9 @@ export class SftpServerSession {
             });
           };
 
+          if (handle == null) {
+            throw Error("handle must not be null");
+          }
           var previous = this._items[handle];
           if (previous && previous.length > 0) {
             this._items[handle] = [];
@@ -726,9 +774,15 @@ export class SftpServerSession {
 
         case SftpExtensions.COPY_DATA:
           var fromHandle = request.readHandle();
+          if(fromHandle == null) {
+            throw Error("fromHandle must not be null");
+          }
           var fromPosition = request.readInt64();
           var length = request.readInt64();
           var toHandle = request.readHandle();
+          if(toHandle == null) {
+            throw Error("toHandle must not be null");
+          }
           var toPosition = request.readInt64();
 
           fs.fcopy(
@@ -743,6 +797,9 @@ export class SftpServerSession {
 
         case SftpExtensions.CHECK_FILE_HANDLE:
           var handle = request.readHandle();
+          if(handle == null) {
+            throw Error("handle must not be null");
+          }
           var alg = request.readString();
           var position = request.readInt64();
           var length = request.readInt64();

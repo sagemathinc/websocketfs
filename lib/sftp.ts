@@ -98,7 +98,7 @@ module SFTP {
     ): Task<void> {
       if (typeof callback === "undefined" && typeof options === "function") {
         callback = <any>options;
-        options = null;
+        options = undefined;
       }
 
       return super._task(callback, (callback) => {
@@ -113,6 +113,7 @@ module SFTP {
         var factory = new WebSocketChannelFactory();
         factory.connect(address, options, (err, channel) => {
           if (err) return callback(err);
+          if (channel == null) throw Error("bug");
 
           super._bind(channel, options, callback);
         });
@@ -121,12 +122,6 @@ module SFTP {
   }
 
   // #if NODE
-  export class Local extends plus.FilesystemPlus {
-    constructor() {
-      var fs = new local.LocalFilesystem();
-      super(fs, null);
-    }
-  }
 
   export var LocalFilesystem = local.LocalFilesystem;
 

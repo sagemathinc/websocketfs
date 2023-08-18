@@ -199,7 +199,8 @@ export class SftpExtensions {
           res["supportedBlockVector"] = reader.readUint16();
 
           var attribExtensionCount = reader.readUint32();
-          var attribExtensionNames = (res["attribExtensionsNames"] = []);
+          var attribExtensionNames: string[] = (res["attribExtensionsNames"] =
+            []);
           while (--attribExtensionCount >= 0) {
             attribExtensionNames.push(reader.readString());
           }
@@ -207,9 +208,9 @@ export class SftpExtensions {
           extensionCount = reader.readUint32();
         }
 
-        var extensionNames = (res["extensionsNames"] = []);
+        var extensionNames: string[] = (res["extensionsNames"] = []);
         while (extensionCount !== 0 && reader.position < reader.length) {
-          var name = reader.readString();
+          const name = reader.readString();
           extensionNames.push(name);
           extensionCount--;
         }
@@ -225,7 +226,7 @@ export class SftpExtensions {
         res["illegalCharacters"] = reader.readString();
 
         var count = reader.readUint32();
-        var values = (res["reservedNames"] = []);
+        var values: string[] = (res["reservedNames"] = []);
         while (count > 0) {
           var name = reader.readString();
           values.push(name);
@@ -306,7 +307,9 @@ function readMetadata(reader: SftpPacketReader): IMetadata {
   var metadata = {};
   while (data.position < data.length) {
     var key = data.readString();
-    if (key.length == 0) return metadata;
+    if (key.length == 0) {
+      return metadata;
+    }
     var type = data.readByte();
     var value;
     switch (type) {
@@ -333,6 +336,7 @@ function readMetadata(reader: SftpPacketReader): IMetadata {
     }
     metadata[key] = value;
   }
+  throw Error("fail");
 }
 //#endif
 
@@ -476,8 +480,8 @@ export class SftpAttributes implements IStats {
         typeof stats.gid !== "undefined"
       ) {
         flags |= SftpAttributeFlags.UIDGID;
-        this.uid = stats.uid | 0;
-        this.gid = stats.gid | 0;
+        this.uid = stats.uid ?? 0;
+        this.gid = stats.gid ?? 0;
       }
 
       if (typeof stats.mode !== "undefined") {
@@ -490,8 +494,8 @@ export class SftpAttributes implements IStats {
         typeof stats.mtime !== "undefined"
       ) {
         flags |= SftpAttributeFlags.ACMODTIME;
-        this.atime = stats.atime; //TODO: make sure its Date
-        this.mtime = stats.mtime; //TODO: make sure its Date
+        this.atime = stats.atime ?? new Date(0); //TODO: make sure its Date
+        this.mtime = stats.mtime ?? new Date(0); //TODO: make sure its Date
       }
 
       if (typeof (<any>stats).nlink !== "undefined") {

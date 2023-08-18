@@ -5,7 +5,7 @@
   "main": "./dist/lib/sftp.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "prepublishOnly": "pnpm test",
+    "prepublishOnly": "pnpm test-all",
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules tmp",
     "test": "pnpm exec jest dist/tests",

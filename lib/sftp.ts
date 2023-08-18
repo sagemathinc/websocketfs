@@ -191,7 +191,7 @@ module SFTP {
         private _hideUidGid: boolean;
         */
     private _log: ILogWriter;
-    private _verifyClient: Function;
+    private _verifyClient: Function | undefined;
 
     constructor(options?: IServerOptions) {
       super();
@@ -266,19 +266,19 @@ module SFTP {
       info: RequestInfo,
       accept: (result: boolean, code?: number, description?: string) => void
     ): void {
-      var con = info.req.connection;
+      var con = info.req.socket;
 
       if (util.LogHelper.getLevel(this._log) <= 10) {
         this._log.trace(
           {
             secure: info.secure,
             origin: info.origin || null,
-            clientAddress: con.remoteAddress,
-            clientPort: con.remotePort,
+            clientAddress: con?.remoteAddress,
+            clientPort: con?.remotePort,
           },
           "Incoming connection from %s:%d",
-          con.remoteAddress,
-          con.remotePort
+          con?.remoteAddress,
+          con?.remotePort
         );
       }
 
@@ -291,14 +291,14 @@ module SFTP {
         headers?: string[]
       ) => {
         if (!result) {
-          if (code < 200 || code > 599) code = 500;
+          if (code == null || code < 200 || code > 599) code = 500;
           if (typeof code === "undefined") code = 401;
           if (typeof description === "undefined")
             description = http.STATUS_CODES[code];
           this._log.debug(
             "Rejected connection from %s:%d (%d %s)",
-            con.remoteAddress,
-            con.remotePort,
+            con?.remoteAddress,
+            con?.remotePort,
             code,
             description
           );
@@ -311,8 +311,8 @@ module SFTP {
 
         this._log.debug(
           "Accepted connection from %s:%d",
-          con.remoteAddress,
-          con.remotePort
+          con?.remoteAddress,
+          con?.remotePort
         );
         if (typeof result == "object")
           (<any>info.req)._sftpSessionInfo = result;
@@ -370,7 +370,7 @@ module SFTP {
 
     accept(
       ws: WebSocket,
-      callback?: (err: Error, session: SftpServerSession) => void
+      callback?: (err: Error | null, session?: SftpServerSession) => void
     ): void {
       try {
         //this._log.debug(ws.upgradeReq);
@@ -383,6 +383,13 @@ module SFTP {
 
         var log = this._log;
         var virtualRoot = sessionInfo.virtualRoot;
+        if (virtualRoot == null) {
+          throw Error("virtualRoot must not be null");
+        }
+        if (sessionInfo.filesystem == null) {
+          throw Error("sessionInfo.filesystem must not be null");
+        }
+
         var fs = new SafeFilesystem(
           sessionInfo.filesystem,
           virtualRoot,
@@ -391,14 +398,14 @@ module SFTP {
 
         fs.stat(".", (err, attrs) => {
           try {
-            if (!err && !FileUtil.isDirectory(attrs))
+            if (!err && !FileUtil.isDirectory(attrs ?? {}))
               err = new Error("Not a directory");
 
             if (err) {
               var message = "Unable to access file system";
               log.error({ root: virtualRoot }, message);
               ws.close(CloseReason.UNEXPECTED_CONDITION, message);
-              callback(err, null);
+              callback?.(err);
               return;
             }
 
@@ -419,11 +426,11 @@ module SFTP {
             this.emit("startedSession", this);
             (<any>ws).session = session;
           } catch (err) {
-            callback(err, null);
+            callback?.(err);
           }
         });
       } catch (err) {
-        process.nextTick(() => callback(err, null));
+        process.nextTick(() => callback?.(err));
       }
     }
   }

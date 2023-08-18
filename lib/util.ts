@@ -155,7 +155,7 @@ export class LogHelper {
           if (typeof format !== "undefined") array.unshift(format);
           if (typeof obj === "string" || obj === null) {
             array.unshift(obj);
-            obj = null;
+            obj = undefined;
           }
 
           array = [names[index] + ":", util.format.apply(util, array)]; // WEB: array.push("(" + names[index] + ")");

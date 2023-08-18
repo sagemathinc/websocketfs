@@ -83,16 +83,19 @@ export class LocalFilesystem implements IFilesystem {
 
     let totalBytes = 0;
 
-    if (!buffer) {
-      buffer = Buffer.alloc(length);
+    let buf : Buffer;
+    if (buffer == null) {
+      buf = Buffer.alloc(length);
       offset = 0;
+    } else {
+      buf = buffer;
     }
 
     let offset2 = offset;
 
     const read = () => {
-      fs.read(handle, buffer, offset2, length, position, (err, bytesRead) => {
-        if (typeof err === "undefined" || err == null) {
+    fs.read(handle, buf, offset2, length, position, (err, bytesRead) => {
+        if (err == null) {
           length -= bytesRead;
           totalBytes += bytesRead;
 
@@ -103,10 +106,7 @@ export class LocalFilesystem implements IFilesystem {
             return;
           }
         }
-        if (buffer == null) {
-          throw Error("bug");
-        }
-        callback(err, buffer.slice(offset, offset + totalBytes), totalBytes);
+        callback(err, buf.slice(offset, offset + totalBytes), totalBytes);
       });
     };
 

@@ -29,14 +29,10 @@ import {
 } from "ws";
 import type { WebSocket } from "ws";
 
-// #if NODE
 module SFTP {
   export interface IStats extends api.IStats {}
-
   export interface IItem extends api.IItem {}
-
   export interface IFilesystem extends api.IFilesystem {}
-
   export interface ILogWriter extends util.ILogWriter {}
 
   export enum RenameFlags {
@@ -48,13 +44,11 @@ module SFTP {
     prompt: string;
     secret: boolean;
   }
-  // #endif
 
   export interface IClientOptions {
     log?: ILogWriter | any;
     protocol?: string;
     promise?: Function;
-    // #if NODE
     agent?: http.Agent;
     headers?: { [key: string]: string };
     protocolVersion?: any;
@@ -78,7 +72,6 @@ module SFTP {
           queries: IClientAuthenticationQuery[],
           callback: (values: { [name: string]: string }) => void
         ) => void);
-    // #endif
   }
 
   export class Client extends SftpClient implements ISftpClientEvents<Client> {
@@ -91,14 +84,14 @@ module SFTP {
     }
 
     constructor() {
-      var localFs = new local.LocalFilesystem(); // WEB: // removed
-      super(localFs); // WEB: super(null);
+      const localFs = new local.LocalFilesystem();
+      super(localFs);
     }
 
     connect(
       address: string,
       options?: IClientOptions,
-      callback?: (err: Error) => void
+      callback?: (err: Error | null) => void
     ): Task<void> {
       if (typeof callback === "undefined" && typeof options === "function") {
         callback = <any>options;
@@ -124,8 +117,6 @@ module SFTP {
       });
     }
   }
-
-  // #if NODE
 
   export var LocalFilesystem = local.LocalFilesystem;
 

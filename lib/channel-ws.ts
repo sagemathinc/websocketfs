@@ -2,6 +2,9 @@ import http from "http";
 import WebSocket from "ws";
 import Url from "url";
 import * as channel from "./channel";
+import debug from "debug";
+
+const log = debug("websocketfs:channel-ws");
 
 import IChannel = channel.IChannel;
 
@@ -13,18 +16,17 @@ export class WebSocketChannelFactory {
     options: any,
     callback: (err: Error, channel?: IChannel) => any
   ): void {
+    log("connect", address, options);
     options = options || {};
 
-    // #if NODE
     var url = Url.parse(address);
     options.username = url.auth || options.username;
     options.password = options.password || options.passphrase;
     url.auth = null;
     address = Url.format(url);
-    // #endif
 
-    this._connect(address, options, null, callback); // WEB: // removed
-  } // WEB: // removed
+    this._connect(address, options, null, callback);
+  }
 
   private _connect(
     address: string,
@@ -32,8 +34,7 @@ export class WebSocketChannelFactory {
     credentials: string | null,
     callback: (err: Error | null, channel?: IChannel) => any
   ): void {
-    // WEB: // removed
-    // #if NODE
+    log("_connect", address, options);
     var username = options.username;
     var password = options.password;
 
@@ -47,26 +48,22 @@ export class WebSocketChannelFactory {
     }
 
     let authenticate: string | null = null;
-    // #endif
 
-    //WEB: var protocols;
-    //WEB: if (options.protocol) protocols = [options.protocol];
-    const ws = new WebSocket(address, options); //WEB: var ws = new WebSocket(address, protocols);
-    //WEB: ws.binaryType = "arraybuffer";
-
+    log("create websocket");
+    const ws = new WebSocket(address, options);
+    log("create channel");
     const channel = new WebSocketChannel(ws, true, false);
 
     ws.on("open", () => {
-      //WEB: ws.onopen = () => {
+      log("websocket on open");
       channel._init();
-
       callback(null, channel);
-    }); //WEB: };
+    });
 
-    // #if NODE
-    (<Function>ws.on)(
+    ws.on(
       "unexpected-response",
       (req: http.ClientRequest, res: http.IncomingMessage) => {
+        log("websocket on unexpected-response");
         // abort the request
         req.abort();
 
@@ -119,12 +116,11 @@ export class WebSocketChannelFactory {
         "Basic " + Buffer.from(username + ":" + password).toString("base64")
       );
     }
-    // #endif
 
     channel.on("close", (err) => {
+      log("websocket close", err);
       err = err || new Error("Connection closed");
 
-      // #if NODE
       if (
         err.code === "X_NOAUTH" &&
         authenticate &&
@@ -169,28 +165,25 @@ export class WebSocketChannelFactory {
           callback(err);
         }
       }
-      // #endif
 
       callback(err);
     });
   }
 
-  // #if NODE
   bind(ws: WebSocket): IChannel {
-    if (ws.readyState != WebSocket.OPEN)
+    if (ws.readyState != WebSocket.OPEN) {
       throw new Error("WebSocket is not open");
+    }
 
     return new WebSocketChannel(ws, true, true);
   }
-  // #endif
 }
 
 class WebSocketChannel implements IChannel {
   private ws: WebSocket;
-  private options: any; //WEB: private binary: boolean;
+  private options: any;
   private established: boolean;
   private closed: boolean;
-  //WEB: private failed: boolean;
   private onclose: ((err: Error) => void) | null;
 
   on(event: string, listener: Function): IChannel {
@@ -212,13 +205,14 @@ class WebSocketChannel implements IChannel {
 
   private onmessage(listener: (packet: Buffer) => void): void {
     this.ws.on("message", (data, flags) => {
-      //WEB: this.ws.onmessage = message => {
-      if (this.closed) return;
+      if (this.closed) {
+        return;
+      }
 
       var packet: Buffer;
       if (flags.binary) {
-        //WEB: if (this.binary) { //TODO: handle text messages
-        packet = <Buffer>data; //WEB: packet = new Uint8Array(message.data);
+        // TODO: handle text messages
+        packet = <Buffer>data;
       } else {
         var err = <any>(
           new Error("Connection failed due to unsupported packet type")
@@ -230,20 +224,15 @@ class WebSocketChannel implements IChannel {
       }
 
       listener(packet);
-    }); //WEB: };
+    });
   }
 
   constructor(ws: WebSocket, binary: boolean, established: boolean) {
     this.ws = ws;
     this.options = { binary: binary }; //WEB: this.binary = binary;
     this.established = established;
-    //WEB: this.failed = false;
 
     ws.on("close", (reason, description) => {
-      //WEB: ws.onclose = e => {
-      //WEB: var reason = e.code;
-      //WEB: var description = e.reason;
-
       var message = "Connection failed";
       var code = "EFAILURE";
       switch (reason) {
@@ -258,11 +247,6 @@ class WebSocketChannel implements IChannel {
           code = "EPROTOTYPE";
           break;
         case 1006:
-          //WEB: if (this.failed) {
-          //WEB:     message = "Connection refused";
-          //WEB:     code = "ECONNREFUSED";
-          //WEB:     break;
-          //WEB: }
           message = "Connection aborted";
           code = "ECONNABORTED";
           break;

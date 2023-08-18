@@ -1,4 +1,5 @@
 - [ ] upgrade to newest ws module.
+- [ ] redo all logging to use the debug module \(and add more logging\)
 - [ ] get rid of all the #if macro preprocess comments \(maybe grunt used them\). We can solve these problems for the web later, e.g., using polyfills or better code.
 - [ ] require require's to use static import syntax instead
 - [ ] eliminate use of `var`

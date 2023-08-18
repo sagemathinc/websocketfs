@@ -3,7 +3,7 @@ import Path = require("path");
 import fs = require("fs");
 import SFTP = require("../lib/sftp");
 import misc = require("../lib/sftp-misc");
-import getPort = require("get-port");
+import getPort = require("port-get");
 
 import IItem = SFTP.IItem;
 

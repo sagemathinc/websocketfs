@@ -1,6 +1,6 @@
 import assert = require("assert");
 import SFTP = require("../lib/sftp");
-import getPort = require("get-port");
+import getPort = require("port-get");
 
 let port;
 

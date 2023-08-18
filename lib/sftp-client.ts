@@ -89,8 +89,8 @@ class SftpClientCore implements IFilesystem {
   private static _nextSessionId = 1;
   private _sessionId: number;
 
-  private _host: IChannel;
-  private _id: number;
+  private _host: IChannel | null;
+  private _id: number | null;
   private _requests: SftpRequest[];
   private _extensions: Object;
   private _features: Object;
@@ -112,9 +112,14 @@ class SftpClientCore implements IFilesystem {
     request.id = this._id;
 
     if (type == SftpPacketType.INIT) {
-      if (this._id != null) throw new Error("Already initialized");
+      if (this._id != null) {
+        throw Error("Already initialized");
+      }
       this._id = 1;
     } else {
+      if (this._id == null) {
+        throw Error("Must be initialized first");
+      }
       this._id = (this._id + 1) & 0xffffffff;
     }
 
@@ -123,7 +128,7 @@ class SftpClientCore implements IFilesystem {
   }
 
   private writeStats(packet: SftpPacketWriter, attrs?: IStats): void {
-    var pattrs = new SftpAttributes();
+    const pattrs = new SftpAttributes();
     pattrs.from(attrs);
     pattrs.write(packet);
   }
@@ -168,8 +173,9 @@ class SftpClientCore implements IFilesystem {
       return;
     }
 
-    if (typeof this._requests[request.id] !== "undefined")
-      throw new Error("Duplicate request");
+    if (request.id != null && this._requests[request.id] != null) {
+      throw Error("Duplicate request");
+    }
 
     var packet = request.finish();
 
@@ -178,7 +184,7 @@ class SftpClientCore implements IFilesystem {
       var meta = {};
       meta["session"] = this._sessionId;
       if (request.type != SftpPacketType.INIT) meta["req"] = request.id;
-      meta["type"] = SftpPacket.toString(request.type);
+      meta["type"] = SftpPacket.toString(request.type ?? "");
       meta["length"] = packet.length;
       if (this._trace) meta["raw"] = packet;
 
@@ -201,6 +207,9 @@ class SftpClientCore implements IFilesystem {
     this._host.send(packet);
     this._bytesSent += packet.length;
 
+    // TOOD: some of the testing code does make a request
+    // with id set to null.
+    // @ts-ignore
     this._requests[request.id] = {
       callback: callback,
       responseParser: responseParser,
@@ -208,7 +217,7 @@ class SftpClientCore implements IFilesystem {
     };
   }
 
-  _init(host: IChannel, log: ILogWriter, callback: (err: Error) => any): void {
+  _init(host: IChannel, log: ILogWriter, callback: (err?: Error) => any): void {
     if (this._host) throw new Error("Already bound");
 
     this._host = host;
@@ -303,7 +312,7 @@ class SftpClientCore implements IFilesystem {
         this._features[SftpFeature.COPY_DATA] = SftpExtensions.COPY_DATA;
         // #endif
 
-        callback(null);
+        callback();
       },
       info
     );
@@ -317,7 +326,7 @@ class SftpClientCore implements IFilesystem {
       var meta = {};
       meta["session"] = this._sessionId;
       if (response.type != SftpPacketType.VERSION) meta["req"] = response.id;
-      meta["type"] = SftpPacket.toString(response.type);
+      meta["type"] = SftpPacket.toString(response.type ?? "");
       meta["length"] = response.length;
       if (this._trace) meta["raw"] = response.buffer;
 
@@ -337,14 +346,14 @@ class SftpClientCore implements IFilesystem {
       }
     }
 
-    var request = this._requests[response.id];
-
-    if (typeof request === "undefined") throw new Error("Unknown response ID");
-
+    // @ts-ignore -- TODO: id is sometimes null in unit tests
+    const request = this._requests[response.id];
+    if (request == null) {
+      throw Error("Unknown response ID");
+    }
+    // @ts-ignore
     delete this._requests[response.id];
-
     response.info = request.info;
-
     request.responseParser.call(this, response, request.callback);
   }
 
@@ -834,10 +843,12 @@ class SftpClientCore implements IFilesystem {
     this.execute(request, callback, responseParser, info);
   }
 
-  private readStatus(response: SftpResponse): Error {
+  private readStatus(response: SftpResponse): Error | null {
     var nativeCode = response.readInt32();
     var message = response.readString();
-    if (nativeCode == SftpStatusCode.OK) return null;
+    if (nativeCode == SftpStatusCode.OK) {
+      return null;
+    }
 
     var info = response.info;
     return this.createError(nativeCode, message, info);
@@ -940,30 +951,36 @@ class SftpClientCore implements IFilesystem {
 
   private parseStatus(
     response: SftpResponse,
-    callback: (err: Error) => any
+    callback: (err: Error | null) => any
   ): void {
-    if (!this.checkResponse(response, SftpPacketType.STATUS, callback)) return;
+    if (!this.checkResponse(response, SftpPacketType.STATUS, callback)) {
+      return;
+    }
 
     callback(null);
   }
 
   private parseAttribs(
     response: SftpResponse,
-    callback: (err: Error, attrs: IStats) => any
+    callback: (err: Error | null, attrs: IStats) => any
   ): void {
-    if (!this.checkResponse(response, SftpPacketType.ATTRS, callback)) return;
+    if (!this.checkResponse(response, SftpPacketType.ATTRS, callback)) {
+      return;
+    }
 
-    var attrs = new SftpAttributes(response);
-    delete attrs.flags;
+    const attrs = new SftpAttributes(response);
+    attrs.flags = 0;
 
     callback(null, attrs);
   }
 
   private parseHandle(
     response: SftpResponse,
-    callback: (err: Error, handle: any) => any
+    callback: (err: Error | null, handle: any) => any
   ): void {
-    if (!this.checkResponse(response, SftpPacketType.HANDLE, callback)) return;
+    if (!this.checkResponse(response, SftpPacketType.HANDLE, callback)) {
+      return;
+    }
 
     var handle = response.readData(true);
 
@@ -972,9 +989,11 @@ class SftpClientCore implements IFilesystem {
 
   private parsePath(
     response: SftpResponse,
-    callback: (err: Error, path?: string) => any
+    callback: (err: Error | null, path?: string) => any
   ): void {
-    if (!this.checkResponse(response, SftpPacketType.NAME, callback)) return;
+    if (!this.checkResponse(response, SftpPacketType.NAME, callback)) {
+      return;
+    }
 
     var count = response.readInt32();
     if (count != 1) throw new Error("Invalid response");
@@ -986,7 +1005,11 @@ class SftpClientCore implements IFilesystem {
 
   private parseData(
     response: SftpResponse,
-    callback: (err: Error, buffer: Buffer, bytesRead: number) => any,
+    callback: (
+      err: Error | null,
+      buffer: Buffer | null,
+      bytesRead: number
+    ) => any,
     retries: number,
     h: Buffer,
     buffer: Buffer,
@@ -995,7 +1018,7 @@ class SftpClientCore implements IFilesystem {
     position: number
   ): void {
     if (response.type == SftpPacketType.STATUS) {
-      var error = this.readStatus(response);
+      const error = this.readStatus(response);
       if (error != null) {
         if (error["nativeCode"] == SftpStatusCode.EOF) {
           buffer = buffer ? buffer.slice(offset, 0) : Buffer.alloc(0);
@@ -1016,7 +1039,7 @@ class SftpClientCore implements IFilesystem {
       // workaround for broken servers such as Globalscape 7.1.x that occasionally send empty data
 
       if (retries > 4) {
-        var error = this.createError(
+        const error = this.createError(
           SftpStatusCode.FAILURE,
           "Unable to read data",
           response.info
@@ -1063,13 +1086,16 @@ class SftpClientCore implements IFilesystem {
 
   private parseItems(
     response: SftpResponse,
-    callback: (err: Error, items: IItem[] | boolean) => any
+    callback: (err: Error | null, items?: IItem[] | boolean) => any
   ): void {
     if (response.type == SftpPacketType.STATUS) {
       var error = this.readStatus(response);
       if (error != null) {
-        if (error["nativeCode"] == SftpStatusCode.EOF) callback(null, false);
-        else callback(error, null);
+        if (error["nativeCode"] == SftpStatusCode.EOF) {
+          callback(null, false);
+        } else {
+          callback(error);
+        }
         return;
       }
     }
@@ -1090,7 +1116,7 @@ class SftpClientCore implements IFilesystem {
   // #if FULL
   private parseHash(
     response: SftpResponse,
-    callback: (err: Error, hashes: Buffer, alg: string) => any
+    callback: (err: Error | null, hashes: Buffer, alg: string) => any
   ): void {
     if (!this.checkResponse(response, SftpPacketType.EXTENDED_REPLY, callback))
       return;
@@ -1130,7 +1156,7 @@ export class SftpClient extends FilesystemPlus {
   bind(
     channel: IChannel,
     options?: any,
-    callback?: (err: Error) => void
+    callback?: (err: Error | null) => void
   ): Task<void> {
     if (typeof callback === "undefined" && typeof options === "function") {
       callback = options;
@@ -1145,7 +1171,7 @@ export class SftpClient extends FilesystemPlus {
   protected _bind(
     channel: IChannel,
     options: any,
-    callback: (err: Error) => void
+    callback: (err: Error | null) => void
   ): void {
     var sftp = <SftpClientCore>this._fs;
 

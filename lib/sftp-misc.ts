@@ -460,8 +460,8 @@ export class SftpAttributes implements IStats {
     }
   }
 
-  from(stats: IStats): void {
-    if (stats == null || typeof stats === "undefined") {
+  from(stats?: IStats): void {
+    if (stats == null) {
       this.flags = 0;
     } else {
       var flags = 0;

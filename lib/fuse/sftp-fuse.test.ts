@@ -26,6 +26,7 @@ describe("Check many functions...", () => {
     expect(await fs.readdir(source)).toEqual([]);
     expect(await fs.readdir(target)).toEqual([]);
   });
+
   it("Writes a file, then checks that it is there", async () => {
     await fs.writeFile(path.join(source, "a.txt"), "test");
     // make sure we wrote it properly
@@ -39,4 +40,48 @@ describe("Check many functions...", () => {
     // check it appears in the listing
     expect(await fs.readdir(target)).toEqual(["a.txt"]);
   });
+
+  it("Check stat of a path, which calls getattr", async () => {
+    const source_stat = await fs.stat(path.join(source, "a.txt"));
+    const target_stat = await fs.stat(path.join(target, "a.txt"));
+    //console.log({ source_stat, target_stat });
+    // check times are within 1000
+    for (const name of [
+      "atimeMs",
+      "mtimeMs",
+      "ctimeMs",
+      "atime",
+      "mtime",
+      "ctime",
+    ]) {
+      expect(Math.abs(source_stat[name] - target_stat[name])).toBeLessThan(
+        1000,
+      );
+    }
+
+    // Delete attributes that shouldn't match exactly.
+    for (const name of [
+      "dev",
+      "ino",
+      "atimeMs", // because time is low resolution
+      "mtimeMs",
+      "ctimeMs",
+      "atime",
+      "mtime",
+      "ctime",
+      "blocks", // blocks = not implemented (not part of base sftp?)
+    ]) {
+      delete source_stat[name];
+      delete target_stat[name];
+    }
+    expect(source_stat).toEqual(target_stat);
+  });
+
+//   it("Check readlink", async () => {
+//     // create a symbolic link
+//     await fs.link(path.join(source, "a.txt"), path.join(source, "b.txt"));
+//     const link0 = await fs.readlink(path.join(source, "b.txt"));
+//     //const link = await fs.readlink(path.join(target, "b.txt"));
+//     console.log({ link0 });
+//   });
 });

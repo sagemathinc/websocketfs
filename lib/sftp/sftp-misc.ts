@@ -371,9 +371,7 @@ export class SftpAttributes implements IStats {
   atime: Date;
   mtime: Date;
   nlink: number;
-  //#if FULL
   metadata: IMetadata;
-  //#endif
 
   isDirectory(): boolean {
     return (this.mode & FileType.ALL) == FileType.DIRECTORY;
@@ -413,7 +411,6 @@ export class SftpAttributes implements IStats {
       this.mtime = new Date(1000 * reader.readUint32());
     }
 
-    //#if FULL
     if (flags & SftpAttributeFlags.EXTENDED) {
       this.flags &= ~SftpAttributeFlags.EXTENDED;
       var count = reader.readInt32();
@@ -426,7 +423,6 @@ export class SftpAttributes implements IStats {
         }
       }
     }
-    //#endif
   }
 
   write(response: SftpPacketWriter): void {

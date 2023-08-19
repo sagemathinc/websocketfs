@@ -38,7 +38,7 @@
     }
   ],
   "dependencies": {
-    "@cocalc/fuse-native": "^2.3.0",
+    "@cocalc/fuse-native": "^2.3.1",
     "@types/node": "^20.5.0",
     "awaiting": "^3.0.0",
     "debug": "^4.3.4",

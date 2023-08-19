@@ -48,17 +48,17 @@ export default class SftpFuse {
     cb(0);
   }
 
-  access(path: string, mode: number, cb) {
-    log("access", path, mode);
-    // TODO
-    cb(0);
-  }
+//   access(path: string, mode: number, cb) {
+//     log("access", path, mode);
+//     // TODO
+//     cb(0);
+//   }
 
-  statfs(path: string, cb) {
-    // this gets called when you do "df" on the mountpoint.
-    log("statfs: TODO", path);
-    cb(0, {});
-  }
+//   statfs(path: string, cb) {
+//     // this gets called when you do "df" on the mountpoint.
+//     log("statfs: TODO", path);
+//     cb(0, {});
+//   }
 
   getattr(path: string, cb) {
     log("getattr", path);

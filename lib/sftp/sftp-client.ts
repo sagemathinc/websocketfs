@@ -485,7 +485,7 @@ class SftpClientCore implements IFilesystem {
 
     this.command(SftpPacketType.LSTAT, [path], callback, this.parseAttribs, {
       command: "lstat",
-      path: path,
+      path,
     });
   }
 

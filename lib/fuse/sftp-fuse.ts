@@ -2,6 +2,7 @@ import { Client as SftpClient } from "../sftp/sftp";
 import { callback } from "awaiting";
 import { bindMethods } from "./util";
 import Fuse from "@cocalc/fuse-native";
+import type { SftpError } from "../sftp/util";
 
 import debug from "debug";
 
@@ -133,5 +134,12 @@ export default class SftpFuse {
         }
       }
     }
+  }
+
+  async unlink(path: string, cb: Callback) {
+    log("unlink", path);
+    this.sftp.unlink(path, (err?: SftpError) => {
+      cb(err != null ? Fuse[err.code] : 0);
+    });
   }
 }

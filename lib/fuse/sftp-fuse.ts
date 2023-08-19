@@ -34,6 +34,11 @@ export default class SftpFuse {
     await callback(this.sftp.connect, this.remote, {});
   }
 
+  end() {
+    log("ending connectiong to", this.remote);
+    this.sftp.end();
+  }
+
   //
   // Everything below is implementing the FUSE api
   //

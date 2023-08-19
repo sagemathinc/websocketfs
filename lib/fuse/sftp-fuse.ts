@@ -1,7 +1,7 @@
 import { Client as SftpClient } from "../sftp/sftp";
 import { callback } from "awaiting";
 import { bindMethods } from "./util";
-import Fuse from "fuse-native";
+import Fuse from "@cocalc/fuse-native";
 
 import debug from "debug";
 

@@ -1,6 +1,6 @@
 import { callback } from "awaiting";
 import SftpFuse from "./sftp-fuse";
-import Fuse from "fuse-native";
+import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
 
 const log = debug("websocketfs:fuse:mount");

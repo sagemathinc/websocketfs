@@ -13,8 +13,9 @@ const log = debug("websocketfs:fuse:bind");
 export default async function bind(source: string, target: string) {
   const port = await startServer(source);
   const remote = `ws://localhost:${port}`;
-  await mount({ path: target, remote });
+  const fuse = await mount({ path: target, remote });
   log("FUSE mounted websocketfs", { source, target });
+  return fuse;
 }
 
 async function startServer(virtualRoot: string): Promise<number> {

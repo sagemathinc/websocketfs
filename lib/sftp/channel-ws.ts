@@ -14,7 +14,7 @@ export class WebSocketChannelFactory {
   connect(
     address: string,
     options: any,
-    callback: (err: Error, channel?: IChannel) => any
+    callback: (err: Error, channel?: IChannel) => any,
   ): void {
     log("connect", address, options);
     options = options || {};
@@ -32,7 +32,7 @@ export class WebSocketChannelFactory {
     address: string,
     options: any,
     credentials: string | null,
-    callback: (err: Error | null, channel?: IChannel) => any
+    callback: (err: Error | null, channel?: IChannel) => any,
   ): void {
     log("_connect", address, options);
     var username = options.username;
@@ -108,7 +108,7 @@ export class WebSocketChannelFactory {
         if (information) err.info = information;
 
         channel._close(2, err);
-      }
+      },
     );
 
     function getBasicAuthHeader(username: string, password: string): string {
@@ -216,7 +216,7 @@ class WebSocketChannel implements IChannel {
       } else {
         const err = new SftpError(
           "Connection failed due to unsupported packet type -- all messages must be binary",
-          { code: "EFAILURE", errno: "EFAILURE", level: "ws" }
+          { code: "EFAILURE", errno: "EFAILURE", level: "ws" },
         );
         this._close(1, err);
         return;

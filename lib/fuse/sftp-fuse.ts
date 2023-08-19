@@ -1,3 +1,11 @@
+/*
+
+Some relevant docs:
+- https://libfuse.github.io/doxygen/structfuse__operations.html
+- https://github.com/direktspeed/node-fuse-bindings
+- https://filezilla-project.org/specs/draft-ietf-secsh-filexfer-02.txt
+//
+*/
 import { Client as SftpClient } from "../sftp/sftp";
 import { callback } from "awaiting";
 import { bindMethods } from "./util";
@@ -7,9 +15,6 @@ import type { SftpError } from "../sftp/util";
 import debug from "debug";
 
 const log = debug("websocketfs:fuse:sftp");
-
-// https://libfuse.github.io/doxygen/structfuse__operations.html
-// https://github.com/direktspeed/node-fuse-bindings
 
 type Callback = Function;
 
@@ -28,6 +33,10 @@ export default class SftpFuse {
     log("connecting to ", this.remote);
     await callback(this.sftp.connect, this.remote, {});
   }
+
+  //
+  // Everything below is implementing the FUSE api
+  //
 
   init(cb) {
     log("Filesystem init");
@@ -91,7 +100,7 @@ export default class SftpFuse {
       }
       cb(
         0,
-        items.map(({ filename }) => filename)
+        items.map(({ filename }) => filename),
       );
       return items;
     } catch (err) {
@@ -100,13 +109,29 @@ export default class SftpFuse {
     }
   }
 
+  // TODO: doesn't seem to be in sftp spec... but we can add anything
+  // we want later for speed purposes, right?
+  // truncate(path:string, size:number, cb) {  }
+  // ftruncate(path:string, fd:number, size:number, cb) {  }
+  readlink(path, cb) {
+    log("readlink", path);
+    this.sftp.readlink(path, (err?: SftpError, link?: string) => {
+      if (err) {
+        cb(Fuse[err.code]);
+      } else {
+        log("got link = ", link);
+        cb(0, link);
+      }
+    });
+  }
+
   async read(
     path: string,
     _fd: number,
     buf: Buffer,
     len: number,
     pos: number,
-    cb: Callback
+    cb: Callback,
   ) {
     log("read", { path, len, pos });
     let handle: any = undefined;

@@ -535,12 +535,10 @@ export class SafeFilesystem implements IFilesystem {
     path: string,
     callback: (err: Error | null, linkString?: string) => any,
   ): void {
-    path = this.toRealPath(path);
+    const filePath = this.toRealPath(path);
 
     try {
-      this.fs.readlink(path, (err, linkString) =>
-        this.processCallbackPath(err, linkString, callback),
-      );
+      this.fs.readlink(filePath, callback);
     } catch (err) {
       callback(err);
     }

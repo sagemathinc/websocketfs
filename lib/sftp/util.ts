@@ -230,7 +230,7 @@ export class SftpError extends Error {
 
   constructor(
     message?: string,
-    extra: { code?: string; errno?: string; level?: string } = {}
+    extra: { code?: string; errno?: string; level?: string } = {},
   ) {
     super(message);
     this.code = extra.code;

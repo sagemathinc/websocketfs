@@ -7,13 +7,13 @@ function getMethods(obj: object): string[] {
     Object.getOwnPropertyNames(current_obj).map((item) => properties.add(item));
   } while ((current_obj = Object.getPrototypeOf(current_obj)));
   return [...properties.keys()].filter(
-    (item) => typeof obj[item] === "function"
+    (item) => typeof obj[item] === "function",
   );
 }
 
 export function bindMethods<T extends object>(
   obj: T,
-  method_names: undefined | string[] = undefined
+  method_names: undefined | string[] = undefined,
 ): T {
   if (method_names === undefined) {
     method_names = getMethods(obj);

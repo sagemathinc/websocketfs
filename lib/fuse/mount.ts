@@ -22,4 +22,5 @@ export default async function mount(opts: Options) {
     mkdir: true,
   });
   await callback(fuse.mount.bind(fuse));
+  return fuse;
 }

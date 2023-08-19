@@ -1,6 +1,6 @@
 {
   "name": "websocketfs",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Like sshfs, but over a WebSocket",
   "main": "./dist/lib/index.js",
   "scripts": {
@@ -41,8 +41,8 @@
     "@types/node": "^20.5.0",
     "awaiting": "^3.0.0",
     "debug": "^4.3.4",
+    "fuse-native": "^2.2.6",
     "get-stream": "^8.0.1",
-    "node-fuse-bindings": "^2.12.4",
     "port-get": "^1.0.0",
     "ws": "^8.13.0"
   },

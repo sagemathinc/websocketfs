@@ -1,6 +1,6 @@
 import { callback } from "awaiting";
 import SftpFuse from "./sftp-fuse";
-const { mount: fuseMount } = require("node-fuse-bindings");
+import Fuse from "fuse-native";
 import debug from "debug";
 
 const log = debug("websocketfs:fuse:mount");
@@ -16,5 +16,10 @@ export default async function mount(opts: Options) {
 
   const sftpFuseClient = new SftpFuse(remote);
   await sftpFuseClient.connect();
-  await callback(fuseMount, path, sftpFuseClient);
+  const fuse = new Fuse(path, sftpFuseClient, {
+    debug: log.enabled,
+    force: true,
+    mkdir: true,
+  });
+  await callback(fuse.mount.bind(fuse));
 }

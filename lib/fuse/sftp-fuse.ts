@@ -1,7 +1,7 @@
 import { Client as SftpClient } from "../sftp/sftp";
 import { callback } from "awaiting";
 import { bindMethods } from "./util";
-const fuse = require("node-fuse-bindings");
+import Fuse from "fuse-native";
 
 import debug from "debug";
 
@@ -28,19 +28,19 @@ export default class SftpFuse {
 
   init(cb) {
     log("Filesystem init");
-    cb();
+    cb(0);
   }
 
   access(path: string, mode: number, cb) {
     log("access", path, mode);
     // TODO
-    cb();
+    cb(0);
   }
 
   statfs(path: string, cb) {
     // this gets called when you do "df" on the mountpoint.
     log("statfs: TODO", path);
-    cb(undefined, {});
+    cb(0, {});
   }
 
   async getattr(path: string, cb) {
@@ -50,7 +50,7 @@ export default class SftpFuse {
       cb(undefined, stats);
     } catch (err) {
       log("getattr error ", err);
-      cb(fuse[err.code]);
+      cb(Fuse[err.code]);
     }
   }
 
@@ -62,17 +62,17 @@ export default class SftpFuse {
   flush(path: string, _fd: number, cb) {
     log("flush", path);
     // TODO: this will impact caching...?
-    cb();
+    cb(0);
   }
 
   fsync(path: string, _fd: number, _datasync, cb) {
     log("fsync", path);
-    cb();
+    cb(0);
   }
 
   fsyncdir(path: string, _fd: number, _datasync, cb) {
     log("fsyncdir", path);
-    cb();
+    cb(0);
   }
 
   async readdir(path: string, cb) {
@@ -87,7 +87,7 @@ export default class SftpFuse {
         throw Error("readdir fail");
       }
       cb(
-        undefined,
+        0,
         items.map(({ filename }) => filename)
       );
       return items;

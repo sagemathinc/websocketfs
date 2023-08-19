@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   "@cocalc/fuse-native":
-    specifier: ^2.2.8
-    version: 2.2.8
+    specifier: ^2.3.0
+    version: 2.3.0
   "@types/node":
     specifier: ^20.5.0
     version: 20.5.0
@@ -493,10 +493,10 @@ packages:
       }
     dev: true
 
-  /@cocalc/fuse-native@2.2.8:
+  /@cocalc/fuse-native@2.3.0:
     resolution:
       {
-        integrity: sha512-Qert0PBd7jTSgLb14A8cdgr9+obgWgYQdeayclPpCBo1gOM54UcOtjaaMnSEgF3GXWgbvWCe8QHa9fqWGvfu7Q==,
+        integrity: sha512-FDe3NO+msaogAZYe1CCieSPweiRVCRmzSk3G1m0+5IIKVM3fgiOObfSDjy3nDWGxy5sTzdhFRdo/4pzLpTno7A==,
       }
     hasBin: true
     requiresBuild: true

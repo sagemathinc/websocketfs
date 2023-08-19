@@ -5,7 +5,7 @@
   "main": "./dist/lib/index.js",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "prepublishOnly": "pnpm test-all",
+    "prepublishOnly": "pnpm audit && pnpm test-all",
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules tmp",
     "prettier-all": "pnpm exec prettier -w .",
@@ -38,7 +38,7 @@
     }
   ],
   "dependencies": {
-    "@cocalc/fuse-native": "^2.2.8",
+    "@cocalc/fuse-native": "^2.3.0",
     "@types/node": "^20.5.0",
     "awaiting": "^3.0.0",
     "debug": "^4.3.4",

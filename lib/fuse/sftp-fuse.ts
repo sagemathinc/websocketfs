@@ -55,37 +55,31 @@ export default class SftpFuse {
     cb(0, {});
   }
 
-  async getattr(path: string, cb) {
+  getattr(path: string, cb) {
     log("getattr", path);
-    try {
-      const stats = await callback(this.sftp.lstat, path);
-      cb(undefined, stats);
-    } catch (err) {
-      log("getattr error ", err);
-      cb(Fuse[err.code]);
-    }
+    this.sftp.lstat(path, fuseError(cb));
   }
 
   fgetattr(path: string, _fd: number, cb) {
     log("fgetattr", path);
-    this.getattr(path, cb);
+    this.getattr(path, fuseError(cb));
   }
 
-  flush(path: string, _fd: number, cb) {
-    log("flush", path);
-    // TODO: this will impact caching...?
-    cb(0);
-  }
+  //   flush(path: string, _fd: number, cb) {
+  //     log("flush", path);
+  //     // TODO: this will impact caching...?
+  //     cb(0);
+  //   }
 
-  fsync(path: string, _fd: number, _datasync, cb) {
-    log("fsync", path);
-    cb(0);
-  }
+  //   fsync(path: string, _fd: number, _datasync, cb) {
+  //     log("fsync", path);
+  //     cb(0);
+  //   }
 
-  fsyncdir(path: string, _fd: number, _datasync, cb) {
-    log("fsyncdir", path);
-    cb(0);
-  }
+  //   fsyncdir(path: string, _fd: number, _datasync, cb) {
+  //     log("fsyncdir", path);
+  //     cb(0);
+  //   }
 
   async readdir(path: string, cb) {
     log("readdir", path);
@@ -105,24 +99,28 @@ export default class SftpFuse {
       return items;
     } catch (err) {
       log("readdir - error", err);
-      cb(err);
+      fuseError(cb)(err);
     }
   }
 
-  // TODO: doesn't seem to be in sftp spec... but we can add anything
+  // TODO: truncate doesn't seem to be in sftp spec... but we can add anything
   // we want later for speed purposes, right?
   // truncate(path:string, size:number, cb) {  }
   // ftruncate(path:string, fd:number, size:number, cb) {  }
+
   readlink(path, cb) {
     log("readlink", path);
-    this.sftp.readlink(path, (err?: SftpError, link?: string) => {
-      if (err) {
-        cb(Fuse[err.code]);
-      } else {
-        log("got link = ", link);
-        cb(0, link);
-      }
-    });
+    this.sftp.readlink(path, fuseError(cb));
+  }
+
+  // We purposely do NOT implement chown, since it traditionally doesn't
+  // mean much for sshfs/fuse, and we don't want it to (everything gets mapped)
+  // for our application to cocalc.
+  //   chown(path:string, uid:number, gid:number, cb)
+
+  chmod(path: string, mode: number, cb) {
+    log("chmod", { path, mode });
+    this.sftp.setstat(path, { mode }, fuseError(cb));
   }
 
   async read(
@@ -141,15 +139,14 @@ export default class SftpFuse {
       this.sftp.read(handle, buf, 0, len, pos, (err, _buffer, bytesRead) => {
         if (err) {
           log("read -- error reading", err);
-          // @ts-ignore
-          cb(Fuse[err.code]);
+          fuseError(cb)(err);
         } else {
           cb(bytesRead);
         }
       });
     } catch (err) {
       log("read -- error opening file", err);
-      cb(Fuse[err.code]);
+      fuseError(cb)(err);
     } finally {
       if (handle != null) {
         try {
@@ -163,8 +160,21 @@ export default class SftpFuse {
 
   async unlink(path: string, cb: Callback) {
     log("unlink", path);
-    this.sftp.unlink(path, (err?: SftpError) => {
-      cb(err != null ? Fuse[err.code] : 0);
-    });
+    this.sftp.unlink(path, fuseError(cb));
   }
+}
+
+function fuseError(cb) {
+  return (err: SftpError, ...args) => {
+    if (err) {
+      if (err.code != null) {
+        cb(Fuse[err.code] ?? err);
+      } else {
+        console.warn(err);
+        cb(Fuse.ENOSYS);
+      }
+    } else {
+      cb(0, ...args);
+    }
+  };
 }

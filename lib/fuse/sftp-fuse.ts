@@ -10,6 +10,8 @@ const log = debug("websocketfs:fuse:sftp");
 // https://libfuse.github.io/doxygen/structfuse__operations.html
 // https://github.com/direktspeed/node-fuse-bindings
 
+type Callback = Function;
+
 export default class SftpFuse {
   private remote: string;
   private sftp: SftpClient;
@@ -94,6 +96,42 @@ export default class SftpFuse {
     } catch (err) {
       log("readdir - error", err);
       cb(err);
+    }
+  }
+
+  async read(
+    path: string,
+    _fd: number,
+    buf: Buffer,
+    len: number,
+    pos: number,
+    cb: Callback
+  ) {
+    log("read", { path, len, pos });
+    let handle: any = undefined;
+    try {
+      handle = await callback(this.sftp.open, path, "r", {});
+      log("read - open got a handle", handle._handle);
+      this.sftp.read(handle, buf, 0, len, pos, (err, _buffer, bytesRead) => {
+        if (err) {
+          log("read -- error reading", err);
+          // @ts-ignore
+          cb(Fuse[err.code]);
+        } else {
+          cb(bytesRead);
+        }
+      });
+    } catch (err) {
+      log("read -- error opening file", err);
+      cb(Fuse[err.code]);
+    } finally {
+      if (handle != null) {
+        try {
+          await callback(this.sftp.close, handle);
+        } catch (err) {
+          log("read -- error closing (ignoring)", err);
+        }
+      }
     }
   }
 }

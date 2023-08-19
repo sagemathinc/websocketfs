@@ -419,7 +419,9 @@ class SftpClientCore implements IFilesystem {
   ): void {
     this.checkCallback(callback);
     var h = this.toHandle(handle);
-    if (buffer) this.checkBuffer(buffer, offset, length);
+    if (buffer) {
+      this.checkBuffer(buffer, offset, length);
+    }
     this.checkPosition(position);
 
     // make sure the length is within reasonable limits

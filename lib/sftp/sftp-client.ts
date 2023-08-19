@@ -546,15 +546,12 @@ class SftpClientCore implements IFilesystem {
     callback: (err: Error, items: IItem[] | boolean) => any
   ): void {
     this.checkCallback(callback);
-    var h = this.toHandle(handle);
-
-    var request = this.getRequest(SftpPacketType.READDIR);
-
+    const h = this.toHandle(handle);
+    const request = this.getRequest(SftpPacketType.READDIR);
     request.writeData(h);
-
     this.execute(request, callback, this.parseItems, {
       command: "readdir",
-      handle: handle,
+      handle,
     });
   }
 
@@ -758,7 +755,6 @@ class SftpClientCore implements IFilesystem {
       handle: handle,
     });
   }
-  // #endif
 
   private checkCallback(callback: any): void {
     if (typeof callback !== "function")

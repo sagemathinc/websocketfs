@@ -6,12 +6,15 @@ for testing and dev purposes only.
 import { Server as SftpServer } from "../sftp/sftp";
 import getPort from "port-get";
 import mount from "./mount";
+import debug from "debug";
+
+const log = debug("websocketfs:fuse:bind");
 
 export default async function bind(source: string, target: string) {
   const port = await startServer(source);
   const remote = `ws://localhost:${port}`;
   await mount({ path: target, remote });
-  console.log(`FUSE mounted ${source} to ${target} via websocketfs`);
+  log("FUSE mounted websocketfs", { source, target });
 }
 
 async function startServer(virtualRoot: string): Promise<number> {
@@ -24,7 +27,7 @@ async function startServer(virtualRoot: string): Promise<number> {
     port,
     virtualRoot,
   });
-  console.log(`SFTP server listening on port ${port}`);
+  log("SFTP server listening on port ", port);
 
   return port;
 }

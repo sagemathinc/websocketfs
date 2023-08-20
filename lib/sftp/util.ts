@@ -225,14 +225,21 @@ export class SftpError extends Error {
   public code?: string;
   public errno?: number;
   public level?: string;
+  public description?: string;
 
   constructor(
     message?: string,
-    extra: { code?: string; errno?: number; level?: string } = {},
+    extra: {
+      code?: string;
+      errno?: number;
+      level?: string;
+      description?: string;
+    } = {},
   ) {
     super(message);
     this.code = extra.code;
     this.errno = extra.errno;
     this.level = extra.level;
+    this.description = extra.description;
   }
 }

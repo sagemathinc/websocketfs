@@ -151,7 +151,7 @@ function equalStats(attrs: SFTP.IStats, stats: fs.Stats): void {
   assert.equal(attrs.gid, stats.gid, "gid mismatch");
 }
 
-var wrongPath = "No such file or directory";
+var wrongPath = "ENOENT";
 
 var getFileName = (function () {
   var n = 1;
@@ -369,7 +369,7 @@ describe("Basic Tests", function () {
     fs.writeFileSync(Path.join(tmp, name2), body2);
 
     client.rename(name1, name2, (err) =>
-      error(err, done, "EFAILURE", "File exists"),
+      error(err, done, "EFAILURE", "EEXIST"),
     );
   });
 

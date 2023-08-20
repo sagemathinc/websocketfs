@@ -14,6 +14,7 @@ import IStats = api.IStats;
 import IItem = api.IItem;
 import RenameFlags = api.RenameFlags;
 import FileUtil = fsmisc.FileUtil;
+("");
 import ILogWriter = util.ILogWriter;
 import LogHelper = util.LogHelper;
 import LogLevel = util.LogLevel;
@@ -65,100 +66,114 @@ class SftpException {
     // loosely based on the list from https://github.com/rvagg/node-errno/blob/master/errno.js
     // with updates besed on http://www-numi.fnal.gov/offline_software/srt_public_context/WebDocs/Errors/unix_system_errors.html
 
+    // We put the error constant in the description,
+    // so it can be used by FUSE on the native OS, since the sftp spec
+    // only has a small number of error status codes, and they get mapped
+    // back to a small subset of what the OS provides. But we're mainly
+    // planning to use this on linux/posix, so can provide higher fidelity.
+    // This is VERY important, e.g., without doing this when you do
+    //   fs.rm('...', {recursive:true})
+    // in node.js, it fails since the error code is wrong!
+    // This is slightly slower and involves more bandwidth, but is worth it.
+
     switch (errno) {
       default:
-        if (err["isPublic"] === true) message = err.message;
-        else message = "Unknown error (" + errno + ")";
+        if (err["isPublic"] === true) {
+          message = err.message;
+        } else {
+          message = "Unknown error (" + errno + ")";
+        }
         break;
       case 1: // EOF
-        message = "End of file";
+        message = "EOF"; // End of file
         code = SftpStatusCode.EOF;
         break;
       case 3: // EACCES
-        message = "Permission denied";
+        message = "EACCES"; // Permission denied
         code = SftpStatusCode.PERMISSION_DENIED;
         break;
       case 4: // EAGAIN
-        message = "Try again";
+        message = "EAGAIN"; // Try again";
         break;
       case 9: // EBADF
-        message = "Bad file number";
+        message = "EBADF"; // Bad file number";
         break;
       case 10: // EBUSY
-        message = "Device or resource busy";
+        message = "EBUSY"; // Device or resource busy";
         break;
       case 18: // EINVAL
-        message = "Invalid argument";
+        message = "EINVAL"; // Invalid argument";
         break;
       case 20: // EMFILE
-        message = "Too many open files";
+        message = "EMFILE"; // Too many open files";
         break;
       case 24: // ENFILE
-        message = "File table overflow";
+        message = "ENFILE"; // File table overflow";
         break;
       case 25: // ENOBUFS
-        message = "No buffer space available";
+        message = "ENOBUFS"; // No buffer space available";
         break;
       case 26: // ENOMEM
-        message = "Out of memory";
+        message = "ENOMEM"; // Out of memory";
         break;
       case 27: // ENOTDIR
-        message = "Not a directory";
+        message = "ENOTDIR"; // Not a directory";
         break;
       case 28: // EISDIR
-        message = "Is a directory";
+        message = "EISDIR"; // Is a directory";
         break;
       case -2: // ENOENT on Linux with Node >=0x12 (or node-webkit - see http://stackoverflow.com/questions/23158277/why-does-the-errno-in-node-webkit-differ-from-node-js)
       case -4058: // ENOENT on Windows with Node >=0.12
       //TODO: need to look into those weird error codes (but err.code seems to consistently be set to "ENOENT"
       case 34: // ENOENT
-        message = "No such file or directory";
+        message = "ENOENT"; // No such file or directory";
         code = SftpStatusCode.NO_SUCH_FILE;
         break;
       case 35: // ENOSYS
-        message = "Operation not supported";
+        message = "ENOSYS"; // Operation not supported";
         code = SftpStatusCode.OP_UNSUPPORTED;
         break;
       case -17: // Node >=0.12 on Linux
       case -4075: // Node >=0.12 on Windows
       case 47: // EEXIST
-        message = "File exists";
+        message = "EEXIST"; // File exists";
         break;
       case 49: // ENAMETOOLONG
-        message = "File name too long";
+        message = "ENAMETOOLONG"; // File name too long";
         break;
       case 50: // EPERM
       case -4048: // EPERM on Windows with Node >=0.12
-        message = "Operation not permitted";
+        message = "EPERM"; // Operation not permitted";
         break;
       case 51: // ELOOP
-        message = "Too many symbolic links encountered";
+        message = "ELOOP"; // Too many symbolic links encountered";
         break;
       case 52: // EXDEV
-        message = "Cross-device link";
+        message = "EXDEV"; // Cross-device link";
         break;
       case 53: // ENOTEMPTY
-        message = "Directory not empty";
+      case -39:
+        message = "ENOTEMPTY"; // ENOTEMPTY: Directory not empty";
         break;
       case 54: // ENOSPC
-        message = "No space left on device";
+        message = "ENOSPC"; // No space left on device";
         break;
       case 55: // EIO
-        message = "I/O error";
+        message = "EIO"; // I/O error";
         break;
       case 56: // EROFS
-        message = "Read-only file system";
+        message = "EROFS"; // Read-only file system";
         break;
       case 57: // ENODEV
-        message = "No such device";
+        message = "ENODEV"; // No such device";
         code = SftpStatusCode.NO_SUCH_FILE;
         break;
       case -29: // Node >=0.12 on Linux
       case 58: // ESPIPE
-        message = "Invalid seek";
+        message = "ESPIPE"; // Invalid seek";
         break;
       case 59: // ECANCELED
-        message = "Operation canceled";
+        message = "ECANCELED"; // Operation canceled";
         break;
     }
 
@@ -728,7 +743,9 @@ export class SftpServerSession {
         case SftpPacketType.RMDIR:
           var path = request.readString();
 
-          fs.rmdir(path, (err) => this.sendSuccess(response, err));
+          fs.rmdir(path, (err) => {
+            this.sendSuccess(response, err);
+          });
           return;
 
         case SftpPacketType.REALPATH:

@@ -269,7 +269,15 @@ export default class SftpFuse {
 
 function fuseError(cb) {
   return (err: SftpError, ...args) => {
+    // console.log("fuseError", { err, args });
     if (err) {
+      if (err.description != null) {
+        const e = Fuse[err.description];
+        if (e != null) {
+          cb(e);
+          return;
+        }
+      }
       if (err.code != null) {
         const errno = Fuse[err.code];
         if (errno) {

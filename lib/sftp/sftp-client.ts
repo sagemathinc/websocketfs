@@ -112,7 +112,6 @@ class SftpClientCore implements IFilesystem {
   private _features: Object;
 
   private _log: ILogWriter;
-  private _debug: boolean;
   private _trace: boolean;
 
   private _maxReadBlockLength: number;
@@ -238,7 +237,6 @@ class SftpClientCore implements IFilesystem {
 
     // determine the log level now to speed up logging later
     var level = LogHelper.getLevel(oldlog);
-    this._debug = level <= LogLevel.DEBUG;
     this._trace = level <= LogLevel.TRACE;
 
     var request = this.getRequest(SftpPacketType.INIT);
@@ -333,27 +331,22 @@ class SftpClientCore implements IFilesystem {
     this._bytesReceived += packet.length;
     var response = <SftpResponse>new SftpPacketReader(packet);
 
-    if (this._debug) {
+    if (log.enabled) {
       var meta = {};
       meta["session"] = this._sessionId;
-      if (response.type != SftpPacketType.VERSION) meta["req"] = response.id;
+      if (response.type != SftpPacketType.VERSION) {
+        meta["req"] = response.id;
+      }
       meta["type"] = SftpPacket.toString(response.type ?? "");
       meta["length"] = response.length;
-      if (this._trace) meta["raw"] = response.buffer;
+      if (this._trace) {
+        meta["buffer"] = response.buffer?.toString();
+      }
 
       if (response.type == SftpPacketType.VERSION) {
-        this._log.debug(
-          meta,
-          "[%d] - Received version response",
-          this._sessionId,
-        );
+        log("Received version response", meta);
       } else {
-        this._log.debug(
-          meta,
-          "[%d] #%d - Received response",
-          this._sessionId,
-          response.id,
-        );
+        log("Received version response", meta, response.id);
       }
     }
 

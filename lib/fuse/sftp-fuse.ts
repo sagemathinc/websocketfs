@@ -7,6 +7,7 @@ Some relevant docs:
 //
 */
 import { Client as SftpClient } from "../sftp/sftp";
+import { RenameFlags } from "../sftp/fs-api";
 import { callback } from "awaiting";
 import { bindMethods } from "./util";
 import { convertOpenFlags } from "./flags";
@@ -243,7 +244,7 @@ export default class SftpFuse {
 
   rename(src: string, dest: string, cb: Callback) {
     log("rename", { src, dest });
-    this.sftp.rename(src, dest, 0, fuseError(cb));
+    this.sftp.rename(src, dest, RenameFlags.OVERWRITE, fuseError(cb));
   }
 
   link(src: string, dest: string, cb: Callback) {

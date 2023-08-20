@@ -255,27 +255,161 @@ describe(".read(fd, buffer, offset, length, position)", () => {
   beforeAll(clean);
 
   it("Basic read file", async () => {
-//     await fs.writeFile(join(target, "test.txt"), "01234567");
-//     const buf = Buffer.alloc(3, 0);
-//     const fd = await fs.open(join(target, "test.txt"), "r");
-//     const bytes = await fd.read(buf, 0, 3, 3);
-//     expect(bytes).toBe(3);
-//     expect(buf.equals(Buffer.from("345"))).toBe(true);
-//     await fd.close();
+    await fs.writeFile(join(target, "test.txt"), "01234567");
+    let fd;
+    try {
+      fd = await fs.open(join(target, "test.txt"), "r");
+      const buffer = Buffer.alloc(3, 0);
+      const { bytesRead } = await fd.read(buffer, 0, 3, 3);
+      expect(bytesRead).toBe(3);
+      expect(buffer.equals(Buffer.from("345"))).toBe(true);
+    } finally {
+      await fd.close();
+    }
   });
 
-  // it("Read more than buffer space", () => {});
-  // it("Read over file boundary", () => {});
-  // it("Read multiple times, caret position should adjust", () => {});
-  // it("Negative tests", () => {});
+  it("Read more than buffer space", async () => {
+    await fs.writeFile(join(target, "test.txt"), "01234567");
+    let fd;
+    try {
+      fd = await fs.open(join(target, "test.txt"), "r");
+      const buffer = Buffer.alloc(2, 0);
+      expect(async () => {
+        await fd.read(buffer, 0, 3, 3);
+      }).rejects.toThrow("out of range");
+    } finally {
+      await fd.close();
+    }
+  });
+
+  it("Read over file boundary", async () => {
+    await fs.writeFile(join(target, "test.txt"), "01234567");
+    let fd;
+    try {
+      fd = await fs.open(join(target, "test.txt"), "r");
+      const buffer = Buffer.alloc(10, 0);
+      const { bytesRead } = await fd.read(buffer, 0, 10, 3);
+      expect(bytesRead).toBe("01234567".length - 3); // instead of 10
+      expect(buffer.toString().slice(0, 5)).toEqual("34567");
+    } finally {
+      await fd.close();
+    }
+  });
+
+  it("Read multiple times; caret position should adjust", async () => {
+    await fs.writeFile(join(target, "test.txt"), "01234567");
+    let fd;
+    try {
+      fd = await fs.open(join(target, "test.txt"), "r");
+      const buffer = Buffer.alloc(4, 0);
+      const { bytesRead } = await fd.read(buffer, 0, 3);
+      expect(bytesRead).toBe(3);
+      expect(buffer.toString().slice(0, 3)).toEqual("012");
+      const { bytesRead: bytesRead2 } = await fd.read(buffer, 0, 4);
+      expect(bytesRead2).toBe(4);
+      expect(buffer.toString()).toEqual("3456");
+      // explicit position:
+      const { bytesRead: bytesRead3 } = await fd.read(buffer, 0, 4, 0);
+      expect(bytesRead3).toBe(4);
+      expect(buffer.toString()).toEqual("0123");
+    } finally {
+      await fd.close();
+    }
+  });
+});
+
+describe(".realpath(...)", () => {
+  it("works with symlinks", async () => {
+    await fs.mkdir(join(target, "a"));
+    await fs.writeFile(join(target, "a", "x"), "hello");
+    await fs.mkdir(join(target, "b"));
+    await fs.symlink("../a", join(target, "b", "b"));
+    const path = await fs.realpath(join(target, "b", "b"));
+    // realpath resolves all the way to the source filesystem somehow.
+    expect(path).toBe(join(dir1.path, "a"));
+  });
+
+  it("returns the root correctly", async () => {
+    expect(await fs.realpath(target)).toBe(target);
+  });
 });
 
 describe("rename(fromPath, toPath)", () => {
-  beforeAll(clean);
   it("Renames -- a simple case", async () => {
     await clean();
     await fs.writeFile(join(target, "foo"), "bar");
     await fs.rename(join(target, "foo"), join(target, "foo2"));
     expect(await fs.readdir(target)).toEqual(["foo2"]);
   });
+
+  it("Updates deep links properly when renaming a directory", async () => {
+    await clean();
+    await fs.mkdir(join(target, "foo/bar/qux"), { recursive: true });
+    expect(await fs.readdir(target)).toEqual(["foo"]);
+    await fs.writeFile(join(target, "foo/bar/qux/a.txt"), "hello");
+    await fs.rename(join(target, "foo"), join(target, "faa"));
+    expect(
+      await fs.readFile(join(target, "faa/bar/qux/a.txt"), "utf8"),
+    ).toEqual("hello");
+    expect(await fs.readdir(target)).toEqual(["faa"]);
+
+    //     expect(fs.toJSON()).toEqual(
+    //       path.join(target, "faa/bar/qux/a.txt": "hello")
+    //     });
+
+    //     await fs.rename(path.join(target, "faa/bar/qux/a.txt", path.join(target, "faa/bar/qux/b.txt");
+    //     expect(fs.toJSON()).toEqual({
+    //       path.join(target, "faa/bar/qux/b.txt": "hello")
+    //     });
+
+    //     await fs.rename(path.join(target, "faa/", path.join(target, "fuu/");
+    //     expect(fs.toJSON()).toEqual({
+    //       path.join(target, "fuu/bar/qux/b.txt": "hello")
+    //     });
+
+    //     await fs.rename(path.join(target, "fuu/bar/", path.join(target, "fuu/bur/");
+    //     expect(fs.toJSON()).toEqual({
+    //       path.join(target, "fuu/bur/qux/b.txt": "hello")
+    //     });
+  });
+
+  /*
+  
+  it('Rename file two levels deep', () => {
+    const vol = create({ '/1/2': 'foobar' });
+    vol.renameSync('/1/2', '/1/3');
+    expect(vol.toJSON()).toEqual({ '/1/3': 'foobar' });
+  });
+  it('Rename file three levels deep', () => {
+    const vol = create({
+      '/foo1': 'bar',
+      '/foo2/foo': 'bar',
+      '/foo3/foo/foo': 'bar',
+    });
+    vol.renameSync('/foo3/foo/foo', '/foo3/foo/foo2');
+    expect(vol.toJSON()).toEqual({
+      '/foo1': 'bar',
+      '/foo2/foo': 'bar',
+      '/foo3/foo/foo2': 'bar',
+    });
+  });
+  it('Throws on no params', () => {
+    const vol = create();
+    expect(() => {
+      (vol as any).renameSync();
+    }).toThrowErrorMatchingSnapshot();
+  });
+  it('Throws on only one param', () => {
+    const vol = create({ '/foo': 'bar' });
+    expect(() => {
+      (vol as any).renameSync('/foo');
+    }).toThrowErrorMatchingSnapshot();
+  });
+  it('Throws if path is of wrong type', () => {
+    const vol = create({ '/foo': 'bar' });
+    expect(() => {
+      (vol as any).renameSync('/foo', 123);
+    }).toThrowErrorMatchingSnapshot();
+  });
+  */
 });

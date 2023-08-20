@@ -533,7 +533,9 @@ export class SafeFilesystem implements IFilesystem {
     flags: RenameFlags,
     callback: (err: Error) => any,
   ): void {
-    if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
+    if (this.isReadOnly()) {
+      return FileUtil.fail("EROFS", callback);
+    }
 
     oldPath = this.toRealPath(oldPath);
     newPath = this.toRealPath(newPath);

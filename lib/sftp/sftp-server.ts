@@ -762,14 +762,15 @@ export class SftpServerSession {
           fs.stat(path, (err, stats) => this.sendAttribs(response, err, stats));
           return;
 
-        case SftpPacketType.RENAME:
-          var oldpath = request.readString();
-          var newpath = request.readString();
+        case SftpPacketType.RENAME: {
+          const oldPath = request.readString();
+          const newPath = request.readString();
 
-          fs.rename(oldpath, newpath, 0, (err) =>
-            this.sendSuccess(response, err),
-          );
+          fs.rename(oldPath, newPath, 0, (err) => {
+            this.sendSuccess(response, err);
+          });
           return;
+        }
 
         case SftpPacketType.READLINK:
           var path = request.readString();

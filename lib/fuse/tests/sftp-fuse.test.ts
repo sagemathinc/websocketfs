@@ -1,5 +1,5 @@
 import * as tmp from "tmp-promise";
-import bind from "./bind";
+import bind from "../bind";
 import fs from "fs/promises";
 import path from "path";
 import { execFile } from "child_process";

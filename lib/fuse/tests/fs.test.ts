@@ -220,57 +220,54 @@ describe("readdir()", () => {
   it("returns a single directory", async () => {
     await fs.mkdir(join(target, "foo"));
     await fs.writeFile(join(target, "foo", "bar"), "hello");
-    const dirs = await fs.readdir(target);
-    expect(dirs).toEqual(["foo"]);
+    expect(await fs.readdir(target)).toEqual(["foo"]);
   });
 
-  /*
-  it('returns multiple directories', () => {
-    const vol = create({
-      '/foo/bar': 'baz',
-      '/tro/lo': 'lo',
-      '/ab/ra': 'kadabra',
-    });
-    const dirs = vol.readdirSync('/');
-
-    (dirs as any).sort();
-
-    expect(dirs).toEqual(['ab', 'foo', 'tro']);
+  it("returns multiple directories", async () => {
+    await fs.mkdir(join(target, "ab"));
+    await fs.mkdir(join(target, "bar"));
+    expect(new Set(await fs.readdir(target))).toEqual(
+      new Set(["ab", "foo", "bar"]),
+    );
   });
 
-  it('returns empty array when dir empty', () => {
-    const vol = create({});
-    const dirs = vol.readdirSync('/');
-
-    expect(dirs).toEqual([]);
+  it("returns empty array when dir empty", async () => {
+    await fs.mkdir(join(target, "empty"));
+    expect(await fs.readdir(join(target, "empty"))).toEqual([]);
   });
 
-  it('respects symlinks', () => {
-    const vol = create({
-      '/a/a': 'a',
-      '/a/aa': 'aa',
-      '/b/b': 'b',
-    });
-
-    vol.symlinkSync('/a', '/b/b/b');
-
-    const dirs = vol.readdirSync('/b/b/b');
-
-    (dirs as any).sort();
-
-    expect(dirs).toEqual(['a', 'aa']);
+  it("respects symlinks", async () => {
+    await fs.mkdir(join(target, "a"));
+    await fs.writeFile(join(target, "a", "x"), "hello");
+    await fs.mkdir(join(target, "b"));
+    await fs.symlink("../a", join(target, "b", "b"));
+    expect(await fs.readdir(join(target, "b", "b"))).toEqual(["x"]);
   });
 
-  it('respects recursive symlinks', () => {
-    const vol = create({});
-
-    vol.symlinkSync('/', '/foo');
-
-    const dirs = vol.readdirSync('/foo');
-
-    expect(dirs).toEqual(['foo']);
+  it("respects recursive symlinks", async () => {
+    await clean();
+    await fs.symlink(".", join(target, "foo"));
+    expect(await fs.readdir(target)).toEqual(["foo"]);
   });
-  */
+});
+
+describe(".read(fd, buffer, offset, length, position)", () => {
+  beforeAll(clean);
+
+  it("Basic read file", async () => {
+//     await fs.writeFile(join(target, "test.txt"), "01234567");
+//     const buf = Buffer.alloc(3, 0);
+//     const fd = await fs.open(join(target, "test.txt"), "r");
+//     const bytes = await fd.read(buf, 0, 3, 3);
+//     expect(bytes).toBe(3);
+//     expect(buf.equals(Buffer.from("345"))).toBe(true);
+//     await fd.close();
+  });
+
+  // it("Read more than buffer space", () => {});
+  // it("Read over file boundary", () => {});
+  // it("Read multiple times, caret position should adjust", () => {});
+  // it("Negative tests", () => {});
 });
 
 describe("rename(fromPath, toPath)", () => {

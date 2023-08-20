@@ -26,5 +26,5 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm install -g pnpm
-      - run: apt-get install libfuse-dev
+      - run: sudo apt-get install libfuse-dev
       - run: pnpm test-all

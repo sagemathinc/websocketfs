@@ -95,7 +95,6 @@ export class LogHelper {
       return writer;
     }
 
-    // #if NODE
     if (check(["log", "debug", "info", "warn", "error", "query"])) {
       // looks like winston, lets's create a proxy for it
       var proxy = <ILogWriter>new Object();
@@ -119,7 +118,6 @@ export class LogHelper {
 
       return <ILogWriter>proxy;
     }
-    // #endif
 
     if (check(["log", "info", "warn", "error", "dir"])) {
       // looks like console, lets's create a proxy for it

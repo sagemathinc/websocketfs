@@ -1,4 +1,3 @@
-// #if NODE
 // ------------------------------------------------------------------------------
 // Based on a forked version of a-promise module
 // Original version: https://github.com/steelbrain/a-promise
@@ -10,7 +9,6 @@
 // State:Pending = 0
 // State:Success = 1
 // State:Failure = 2
-// #endif
 class APromise {
   private State: number;
   private OnError: Array<Function> | null;

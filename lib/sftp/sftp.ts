@@ -452,6 +452,5 @@ module SFTP {
     }
   }
 }
-// #endif
 
 export = SFTP;

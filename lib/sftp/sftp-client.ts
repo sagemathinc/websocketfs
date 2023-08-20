@@ -715,7 +715,6 @@ class SftpClientCore implements IFilesystem {
     );
   }
 
-  // #if FULL
   fcopy(
     fromHandle: any,
     fromPosition: number,

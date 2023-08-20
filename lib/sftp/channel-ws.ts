@@ -277,13 +277,9 @@ class WebSocketChannel implements IChannel {
       err.nativeCode = reason;
 
       this._close(reason, err);
-    }); //WEB: };
+    });
 
     ws.on("error", (err) => {
-      //WEB: ws.onerror = err => {
-      //WEB: this.failed = true;
-
-      // #if NODE
       var code = (<any>err).code;
 
       switch (code) {
@@ -305,8 +301,7 @@ class WebSocketChannel implements IChannel {
         (<any>err).errno = code;
 
       this._close(0, err);
-      // #endif
-    }); //WEB: };
+    });
   }
 
   _init(): void {

@@ -140,7 +140,6 @@ export class SftpExtensions {
   public static METADATA = "meta@sftp.ws";
   public static VERSIONS = "versions";
   public static VENDOR = "vendor-id";
-  // #if FULL
   public static COPY_FILE = "copy-file";
   public static COPY_DATA = "copy-data";
   public static CHECK_FILE = "check-file";
@@ -151,7 +150,6 @@ export class SftpExtensions {
   public static DEFAULT_FS_ATTRIBS = "default-fs-attribs@vandyke.com";
   public static SYMLINK_ORDER = "symlink-order@rjk.greenend.org.uk";
   public static LINK_ORDER = "link-order@rjk.greenend.org.uk";
-  // #endif
 
   static isKnown(name: string): boolean {
     return SftpExtensions.hasOwnProperty("_" + name);
@@ -182,7 +180,6 @@ export class SftpExtensions {
         reader = reader.readStructuredData();
         return reader.readString();
 
-      // #if FULL
       case SftpExtensions.SUPPORTED:
       case SftpExtensions.SUPPORTED2:
         reader = reader.readStructuredData();
@@ -234,7 +231,6 @@ export class SftpExtensions {
         }
 
         return res;
-      // #endif
     }
 
     if (SftpExtensions.isKnown(name)) {
@@ -274,7 +270,6 @@ export class SftpOptions {
   autoClose: boolean;
 }
 
-//#if FULL
 interface IMetadata {
   [key: string]: any;
 }
@@ -338,7 +333,6 @@ function readMetadata(reader: SftpPacketReader): IMetadata {
   }
   throw Error("fail");
 }
-//#endif
 
 export const enum SftpAttributeFlags {
   SIZE = 0x00000001,
@@ -448,14 +442,12 @@ export class SftpAttributes implements IStats {
     }
 
     if (flags & SftpAttributeFlags.EXTENDED) {
-      //#if FULL
       if (this.metadata) {
         response.writeInt32(1);
         response.writeString(SftpExtensions.METADATA);
         writeMetadata(response, this.metadata);
         return;
       }
-      //#endif
       response.writeInt32(0);
     }
   }
@@ -498,11 +490,9 @@ export class SftpAttributes implements IStats {
         this.nlink = (<any>stats).nlink;
       }
 
-      //#if FULL
       if (typeof stats.metadata !== "undefined") {
         this.metadata = stats.metadata;
       }
-      //#endif
 
       this.flags = flags;
     }

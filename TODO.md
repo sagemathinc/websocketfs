@@ -1,6 +1,6 @@
-- [ ] finish implementing all fuse functions
-- [ ] writing a LARGE file \-\- do we need to chunk it? Same question about reading.  It seems like we do. What about changing the params?
+- [x] finish implementing all fuse functions
 - [ ] github actions that does `pnpm test-all`...
+- [ ] writing a LARGE file \-\- do we need to chunk it? Same question about reading.  It seems like we do. What about changing the params?
 - [ ] delete the "WEB" comments in code...
 - [ ] redo all logging to use the debug module
 - [ ] require require's to use static import syntax instead

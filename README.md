@@ -14,7 +14,8 @@ Anyway, I so far have a proof of concept of this working, though to get this to 
 ~/websocketfs$ node
 Welcome to Node.js v16.20.1.
 Type ".help" for more information.
-> a = require('./dist/lib/fuse/bind'); await a.default(process.env.HOME,'/tmp/mnt')
+> a = require('./dist/lib/fuse/bind')
+> await a.default(process.env.HOME,'/tmp/mnt'); null
 ```
 
 Then in another terminal, type `ls /tmp/mnt`:
@@ -54,3 +55,4 @@ without involving ssh at all.
 
 In the context of WebAssembly and WASI, it may of course actually provide a filesystem
 without FUSE.
+

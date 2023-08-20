@@ -10,6 +10,7 @@
 - [ ] eliminate use of `var`
 - [ ] promote the node\-fuse stuff to be part of the main library instead of an example
 - [ ] there are a bunch of TODO's in the code still.
+- [ ] support node v20.x
 - [x] implement reading contents from a file
 - [x] upgrade to newest ws module.
 - [x] fix all typescript errors

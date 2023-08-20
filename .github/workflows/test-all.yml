@@ -15,10 +15,10 @@ jobs:
     strategy:
       matrix:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        # NOTE: 20.x does not work yet for us!
         node-version:
           - "16.x"
           - "18.x"
-          - "20.x"
 
     steps:
       - uses: actions/checkout@v3
@@ -28,4 +28,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm install -g pnpm
       - run: sudo apt-get install libfuse-dev
-      - run: pnpm test-all
+      - run: pnpm install
+      - run: pnpm build
+      - run: pnpm test

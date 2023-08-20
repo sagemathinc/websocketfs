@@ -9,6 +9,7 @@ Some relevant docs:
 import { Client as SftpClient } from "../sftp/sftp";
 import { callback } from "awaiting";
 import { bindMethods } from "./util";
+import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
 import type { SftpError } from "../sftp/util";
 
@@ -110,8 +111,15 @@ export default class SftpFuse {
 
   // TODO: truncate doesn't seem to be in sftp spec... but we can add anything
   // we want later for speed purposes, right?
-  // truncate(path:string, size:number, cb) {  }
-  // ftruncate(path:string, fd:number, size:number, cb) {  }
+  truncate(path: string, size: number, cb) {
+    log("truncate", { path, size });
+    this.sftp.setstat(path, { size }, fuseError(cb));
+  }
+
+  ftruncate(path: string, fd: number, size: number, cb) {
+    log("ftruncate", { path, fd, size });
+    this.truncate(path, size, cb);
+  }
 
   readlink(path, cb) {
     log("readlink", path);
@@ -121,7 +129,15 @@ export default class SftpFuse {
   // We purposely do NOT implement chown, since it traditionally doesn't
   // mean much for sshfs/fuse, and we don't want it to (everything gets mapped)
   // for our application to cocalc.
-  //   chown(path:string, uid:number, gid:number, cb)
+  chown(path: string, uid: number, gid: number, cb) {
+    log("chown", { path, uid, gid });
+    cb(0);
+  }
+
+  utimens(path, atime, mtime, cb) {
+    log("utimens", { path, atime, mtime });
+    cb(0);
+  }
 
   chmod(path: string, mode: number, cb) {
     log("chmod", { path, mode });
@@ -144,6 +160,9 @@ export default class SftpFuse {
 
   open(path: string, flags: string | number, cb) {
     log("open", { path, flags });
+    if (typeof flags == "number") {
+      flags = convertOpenFlags(flags);
+    }
     this.sftp.open(path, flags, {}, (err, handle) => {
       if (err) {
         fuseError(cb)(err);
@@ -185,7 +204,7 @@ export default class SftpFuse {
     position: number,
     cb: Callback,
   ) {
-    log("write", { path, fd });
+    log("write", { path, fd, buffer: buffer.toString(), length, position });
     const handle = this.sftp.fileDescriptorToHandle(fd);
     this.sftp.write(handle, buffer, 0, length, position, (err) => {
       if (err) {
@@ -205,10 +224,10 @@ export default class SftpFuse {
 
   // releasedir(path, fd, cb)
 
-//   create(path: string, mode: number, cb: Callback) {
-//     log("create", { path, mode });
-//     cb(0);
-//   }
+  //   create(path: string, mode: number, cb: Callback) {
+  //     log("create", { path, mode });
+  //     cb(0);
+  //   }
 
   async unlink(path: string, cb: Callback) {
     log("unlink", path);

@@ -399,7 +399,8 @@ class SftpClientCore implements IFilesystem {
     var request = this.getRequest(SftpPacketType.OPEN);
 
     request.writeString(path);
-    request.writeInt32(SftpFlags.toNumber(flags));
+    const flagNumber = SftpFlags.toNumber(flags);
+    request.writeInt32(flagNumber);
     this.writeStats(request, attrs);
 
     this.execute(request, callback, this.parseHandle, {

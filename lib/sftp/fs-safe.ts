@@ -342,12 +342,15 @@ export class SafeFilesystem implements IFilesystem {
     position,
     callback: (err: Error) => any,
   ): void {
-    if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
+    if (this.isReadOnly()) {
+      return FileUtil.fail("EROFS", callback);
+    }
 
     this._execute(
       handle,
-      (handle, callback) =>
-        this.fs.write(handle, buffer, offset, length, position, callback),
+      (handle, callback) => {
+        this.fs.write(handle, buffer, offset, length, position, callback);
+      },
       callback,
     );
   }

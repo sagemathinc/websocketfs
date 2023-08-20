@@ -95,5 +95,31 @@ describe("Check many functions...", () => {
     await fs.chmod(path.join(target, "a.txt"), mode);
   });
 
-
+  it("open -- write to a file in the fuse filesystem", async () => {
+    const data = "Hi From WebSocketFS!";
+    await fs.writeFile(path.join(target, "a.txt"), data);
+    expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
+      data,
+    );
+    expect((await fs.readFile(path.join(source, "a.txt"))).toString()).toBe(
+      data,
+    );
+    // and also append
+    await fs.appendFile(path.join(target, "a.txt"), data);
+    expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
+      data + data,
+    );
+    // and write again (confirming truncate happened)
+    await fs.writeFile(path.join(target, "a.txt"), data);
+    expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
+      data,
+    );
+  });
+  it("open -- write to a file in source filesystem and see reflected in fuse", async () => {
+    const data = "Hello again";
+    await fs.writeFile(path.join(source, "a.txt"), data);
+    expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
+      data,
+    );
+  });
 });

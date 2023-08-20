@@ -1,5 +1,11 @@
-// See cocalc's packages/util/misc for comments
+/*
+Various utilities
 
+*/
+
+
+
+// See cocalc's packages/util/misc for comments
 function getMethods(obj: object): string[] {
   let properties = new Set<string>();
   let current_obj = obj;

@@ -478,7 +478,6 @@ export class SftpServerSession {
           var attrs = new SftpAttributes(request);
 
           var modes = SftpFlags.fromNumber(pflags);
-
           if (modes.length == 0) {
             this.sendStatus(
               response,
@@ -488,7 +487,7 @@ export class SftpServerSession {
             return;
           }
 
-          var openFile = () => {
+          const openFile = () => {
             var mode = modes.shift();
             fs.open(path, mode ?? "", attrs, (err, handle) => {
               if (this.sendIfError(response, err)) {

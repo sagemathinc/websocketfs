@@ -142,4 +142,38 @@ describe("Check many functions...", () => {
       (await fs.readFile(s)).toString(),
     );
   });
+
+  it("create a symlink -- via ln -s", async () => {
+    await callback(execFile, "ln", [
+      "-s",
+      "a.txt",
+      path.join(target, "a-link.txt"),
+    ]);
+    expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
+      (await fs.readFile(path.join(target, "a-link.txt"))).toString(),
+    );
+
+    const data = "some data";
+    await fs.writeFile(path.join(source, "a-link.txt"), data);
+    expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
+      data,
+    );
+  });
+
+  it("create a hard link -- via ln", async () => {
+    await callback(execFile, "ln", [
+      path.join(target, "a.txt"),
+      path.join(target, "a-link2.txt"),
+    ]);
+    expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
+      (await fs.readFile(path.join(target, "a-link2.txt"))).toString(),
+    );
+
+    const data = "some data";
+    await fs.writeFile(path.join(source, "a-link2.txt"), data);
+    expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
+      data,
+    );
+  });
+  
 });

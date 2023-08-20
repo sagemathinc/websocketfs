@@ -239,6 +239,16 @@ export default class SftpFuse {
     log("rename", { src, dest });
     this.sftp.rename(src, dest, 0, fuseError(cb));
   }
+
+  link(src: string, dest: string, cb: Callback) {
+    log("link", { src, dest });
+    this.sftp.link(src, dest, fuseError(cb));
+  }
+
+  symlink(src: string, dest: string, cb: Callback) {
+    log("symlink", { src, dest });
+    this.sftp.symlink(src, dest, fuseError(cb));
+  }
 }
 
 function fuseError(cb) {

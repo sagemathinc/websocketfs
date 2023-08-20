@@ -26,7 +26,7 @@ README.md  examples  package.json    tsconfig.json
 TODO.md    lib       pnpm-lock.yaml  websocketfs.term
 ```
 
-Nothing else is implemented yet...
+You can do `ls -l`, and read and write files.
 
 ### A Note about Fuse
 

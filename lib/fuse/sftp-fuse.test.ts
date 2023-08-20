@@ -2,6 +2,8 @@ import * as tmp from "tmp-promise";
 import bind from "./bind";
 import fs from "fs/promises";
 import path from "path";
+import { execFile } from "child_process";
+import { callback } from "awaiting";
 
 let dir1, dir2, fuse, source, target;
 
@@ -117,11 +119,27 @@ describe("Check many functions...", () => {
       data,
     );
   });
+
   it("open -- write to a file in source filesystem and see reflected in fuse", async () => {
     const data = "Hello again";
     await fs.writeFile(path.join(source, "a.txt"), data);
     expect((await fs.readFile(path.join(target, "a.txt"))).toString()).toBe(
       data,
+    );
+  });
+
+  it("creates a file -- via touch", async () => {
+    const p = path.join(target, "new-file");
+    await callback(execFile, "touch", [p]);
+    expect((await fs.readFile(p)).toString()).toBe("");
+  });
+
+  it("creates a file via copy using the shell", async () => {
+    const s = path.join(source, "a.txt");
+    const p = path.join(target, "c.txt");
+    await callback(execFile, "cp", [s, p]);
+    expect((await fs.readFile(p)).toString()).toBe(
+      (await fs.readFile(s)).toString(),
     );
   });
 });

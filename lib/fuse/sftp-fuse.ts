@@ -168,8 +168,9 @@ export default class SftpFuse {
         fuseError(cb)(err);
         return;
       }
-      log("open succeeded", handle.toFileDescriptor());
-      cb(0, handle.toFileDescriptor());
+      const fd = handle.toFileDescriptor();
+      log("open succeeded", { fd });
+      cb(0, fd);
     });
   }
 
@@ -224,14 +225,19 @@ export default class SftpFuse {
 
   // releasedir(path, fd, cb)
 
-  //   create(path: string, mode: number, cb: Callback) {
-  //     log("create", { path, mode });
-  //     cb(0);
-  //   }
+  create(path: string, mode: number, cb: Callback) {
+    log("create", { path, mode });
+    this.open(path, "w", cb);
+  }
 
-  async unlink(path: string, cb: Callback) {
+  unlink(path: string, cb: Callback) {
     log("unlink", path);
     this.sftp.unlink(path, fuseError(cb));
+  }
+
+  rename(src: string, dest: string, cb: Callback) {
+    log("rename", { src, dest });
+    this.sftp.rename(src, dest, 0, fuseError(cb));
   }
 }
 

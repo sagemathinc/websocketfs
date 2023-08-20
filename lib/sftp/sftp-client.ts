@@ -643,9 +643,9 @@ class SftpClientCore implements IFilesystem {
     var command;
     var info = {
       command: "rename",
-      oldPath: oldPath,
-      newPath: newPath,
-      flags: flags,
+      oldPath,
+      newPath,
+      flags,
     };
     switch (flags) {
       case RenameFlags.OVERWRITE:

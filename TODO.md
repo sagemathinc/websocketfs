@@ -1,5 +1,8 @@
 ## Critical
 
+- [ ] "git log" on nontrivial content doesn't work, probably due to mmap?
+- [ ] "git clone" doesn't work
+- [ ] stat doesn't return blocks so "du" doesn't work.
 - [ ] make it work over the network
 - [ ] support api key auth
 

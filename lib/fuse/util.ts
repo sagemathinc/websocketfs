@@ -3,8 +3,6 @@ Various utilities
 
 */
 
-
-
 // See cocalc's packages/util/misc for comments
 function getMethods(obj: object): string[] {
   let properties = new Set<string>();

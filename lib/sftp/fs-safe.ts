@@ -1,3 +1,11 @@
+/*
+TODO: in this file "handle" really means "file descriptor".
+It would be nice to rename things appropriately.
+
+"Handle" is a notion defined in the sftp spec and file
+descriptor is a different notion in POSIX file systems.
+*/
+
 import Path = require("path");
 import api = require("./fs-api");
 import misc = require("./fs-misc");
@@ -36,7 +44,7 @@ export class SafeFilesystem implements IFilesystem {
 
   private _handles: HandleToHandleInfoMap;
   private _nextHandle: number;
-  private static MAX_HANDLE_COUNT = 512;
+  private static MAX_HANDLE_COUNT = 1024; // standard linux default
 
   constructor(
     fs: IFilesystem,
@@ -55,12 +63,14 @@ export class SafeFilesystem implements IFilesystem {
   }
 
   private createHandleInfo(): HandleInfo | null {
-    var count = SafeFilesystem.MAX_HANDLE_COUNT;
+    // This approach to handles doesn't leak because JS arrays are sparse,
+    // and also MAX_HANDLE_COUNT is small.
+    let count = SafeFilesystem.MAX_HANDLE_COUNT;
     while (count-- > 0) {
-      var safeHandle = this._nextHandle;
+      const safeHandle = this._nextHandle;
       this._nextHandle = (safeHandle % SafeFilesystem.MAX_HANDLE_COUNT) + 1;
       if (typeof this._handles[safeHandle] === "undefined") {
-        var info = new HandleInfo();
+        const info = new HandleInfo();
         info.real = null;
         info.safe = safeHandle;
         info.busy = false;
@@ -271,14 +281,15 @@ export class SafeFilesystem implements IFilesystem {
 
   open(
     path: string,
-    flags: string,
+    flags: string | number,
     attrs: IStats,
     callback: (err: Error, handle?: number) => any,
   ): void {
-    if (this.isReadOnly() && flags != "r")
+    if (this.isReadOnly() && flags != "r") {
       return FileUtil.fail("EROFS", callback);
+    }
 
-    var handleInfo = this.createHandleInfo();
+    const handleInfo = this.createHandleInfo();
     if (!handleInfo) {
       return FileUtil.fail("ENFILE", callback);
     }

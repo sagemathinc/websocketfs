@@ -39,12 +39,16 @@ class SftpRequest extends SftpPacketReader {
     super(buffer);
   }
 
+  // Read the number 4 followed by a 4-byte handle.
+  // Basically, we are assuming that a handle is always
+  // exactly 4 bytes, which is fine since we implement
+  // the client and the server.
   readHandle(): number | null {
-    // read a 4-byte handle
+    // first read that the handle will be 4 bytes long.
     if (this.readInt32() != 4) {
       return null;
     }
-
+    // Now read the actual handle.
     return this.readInt32();
   }
 }
@@ -529,7 +533,9 @@ export class SftpServerSession {
           }
           var position = request.readInt64();
           var count = request.readInt32();
-          if (count > 0x8000) count = 0x8000;
+          if (count > 0x8000) {
+            count = 0x8000;
+          }
 
           response.type = SftpPacketType.DATA;
           response.start();

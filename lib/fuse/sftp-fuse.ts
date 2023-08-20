@@ -48,17 +48,17 @@ export default class SftpFuse {
     cb(0);
   }
 
-//   access(path: string, mode: number, cb) {
-//     log("access", path, mode);
-//     // TODO
-//     cb(0);
-//   }
+  //   access(path: string, mode: number, cb) {
+  //     log("access", path, mode);
+  //     // TODO
+  //     cb(0);
+  //   }
 
-//   statfs(path: string, cb) {
-//     // this gets called when you do "df" on the mountpoint.
-//     log("statfs: TODO", path);
-//     cb(0, {});
-//   }
+  //   statfs(path: string, cb) {
+  //     // this gets called when you do "df" on the mountpoint.
+  //     log("statfs: TODO", path);
+  //     cb(0, {});
+  //   }
 
   getattr(path: string, cb) {
     log("getattr", path);
@@ -128,40 +128,87 @@ export default class SftpFuse {
     this.sftp.setstat(path, { mode }, fuseError(cb));
   }
 
+  // mknod(path, mode, dev, cb)
+
+  //   setxattr(path, name, value, position, flags, cb) {
+  //     log("setxattr", { path, name, value, position, flags });
+  //     cb(0);
+  //   }
+
+  //   getxattr(path, name, position, cb) {
+  //     log("getxattr", path, name, position);
+  //     cb(0, null);
+  //   }
+  // listxattr(path, cb)
+  // removexattr(path, name, cb)
+
+  open(path: string, flags: string | number, cb) {
+    log("open", { path, flags });
+    this.sftp.open(path, flags, {}, (err, handle) => {
+      if (err) {
+        fuseError(cb)(err);
+        return;
+      }
+      log("open succeeded", handle.toFileDescriptor());
+      cb(0, handle.toFileDescriptor());
+    });
+  }
+
+  // opendir(path, flags, cb)
+
   async read(
     path: string,
-    _fd: number,
+    fd: number,
     buf: Buffer,
     len: number,
     pos: number,
     cb: Callback,
   ) {
-    log("read", { path, len, pos });
-    let handle: any = undefined;
-    try {
-      handle = await callback(this.sftp.open, path, "r", {});
-      log("read - open got a handle", handle._handle);
-      this.sftp.read(handle, buf, 0, len, pos, (err, _buffer, bytesRead) => {
-        if (err) {
-          log("read -- error reading", err);
-          fuseError(cb)(err);
-        } else {
-          cb(bytesRead);
-        }
-      });
-    } catch (err) {
-      log("read -- error opening file", err);
-      fuseError(cb)(err);
-    } finally {
-      if (handle != null) {
-        try {
-          await callback(this.sftp.close, handle);
-        } catch (err) {
-          log("read -- error closing (ignoring)", err);
-        }
+    log("read", { path, fd, len, pos });
+    const handle = this.sftp.fileDescriptorToHandle(fd);
+    log("read - open got a handle", handle._handle);
+    this.sftp.read(handle, buf, 0, len, pos, (err, _buffer, bytesRead) => {
+      if (err) {
+        log("read -- error reading", err);
+        fuseError(cb)(err);
+      } else {
+        cb(bytesRead);
       }
-    }
+    });
   }
+
+  write(
+    path: string,
+    fd: number,
+    buffer: Buffer,
+    length: number,
+    position: number,
+    cb: Callback,
+  ) {
+    log("write", { path, fd });
+    const handle = this.sftp.fileDescriptorToHandle(fd);
+    this.sftp.write(handle, buffer, 0, length, position, (err) => {
+      if (err) {
+        log("write -- error writing", err);
+        fuseError(cb)(err);
+      } else {
+        cb(length);
+      }
+    });
+  }
+
+  release(path: string, fd: number, cb: Callback) {
+    log("release", { path, fd });
+    const handle = this.sftp.fileDescriptorToHandle(fd);
+    this.sftp.close(handle, fuseError(cb));
+  }
+
+  // releasedir(path, fd, cb)
+
+//   create(path: string, mode: number, cb: Callback) {
+//     log("create", { path, mode });
+//     cb(0);
+//   }
 
   async unlink(path: string, cb: Callback) {
     log("unlink", path);
@@ -175,7 +222,7 @@ function fuseError(cb) {
       if (err.code != null) {
         cb(Fuse[err.code] ?? err);
       } else {
-        console.warn(err);
+        console.warn("err.code not set!", err);
         cb(Fuse.ENOSYS);
       }
     } else {

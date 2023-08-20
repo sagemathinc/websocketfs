@@ -11,7 +11,7 @@ import IStats = api.IStats;
 import FileType = api.FileType;
 
 export class SftpFlags {
-  static toNumber(flags: string): SftpOpenFlags {
+  static toNumber(flags: string | number): SftpOpenFlags {
     if (typeof flags === "number")
       return (<SftpOpenFlags>(<any>flags)) & SftpOpenFlags.ALL;
 
@@ -267,7 +267,7 @@ export class SftpStatus {
 export class SftpOptions {
   encoding: string;
   handle: Buffer;
-  flags: string;
+  flags: string | number;
   mode: number;
   start: number;
   end: number;

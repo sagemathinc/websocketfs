@@ -61,7 +61,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   open(
     path: string,
-    flags: string,
+    flags: string | number,
     attrs?: IStats,
     callback?: (err: Error, handle: SftpHandle) => void,
   ): Task<any> {

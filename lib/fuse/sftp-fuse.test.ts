@@ -22,12 +22,12 @@ afterAll(async () => {
 });
 
 describe("Check many functions...", () => {
-  it("Directory listing is initially empty", async () => {
+  it("readdir starts empty", async () => {
     expect(await fs.readdir(source)).toEqual([]);
     expect(await fs.readdir(target)).toEqual([]);
   });
 
-  it("Writes a file, then checks that it is there", async () => {
+  it("readFile and readdir", async () => {
     await fs.writeFile(path.join(source, "a.txt"), "test");
     // make sure we wrote it properly
     expect((await fs.readFile(path.join(source, "a.txt"))).toString()).toBe(
@@ -41,7 +41,7 @@ describe("Check many functions...", () => {
     expect(await fs.readdir(target)).toEqual(["a.txt"]);
   });
 
-  it("Check stat of a path, which calls getattr", async () => {
+  it("stat (getattr)", async () => {
     const source_stat = await fs.stat(path.join(source, "a.txt"));
     const target_stat = await fs.stat(path.join(target, "a.txt"));
     //console.log({ source_stat, target_stat });
@@ -77,11 +77,23 @@ describe("Check many functions...", () => {
     expect(source_stat).toEqual(target_stat);
   });
 
-//   it("Check readlink", async () => {
-//     // create a symbolic link
-//     await fs.link(path.join(source, "a.txt"), path.join(source, "b.txt"));
-//     const link0 = await fs.readlink(path.join(source, "b.txt"));
-//     //const link = await fs.readlink(path.join(target, "b.txt"));
-//     console.log({ link0 });
-//   });
+  it("readlink", async () => {
+    // create a symbolic link
+    await fs.symlink("a.txt", path.join(source, "b.txt"));
+    const link = await fs.readlink(path.join(target, "b.txt"));
+    expect(link).toBe("a.txt");
+  });
+
+  it("chmod", async () => {
+    const { mode } = await fs.stat(path.join(source, "a.txt"));
+    await fs.chmod(path.join(target, "a.txt"), 33261); // -rwxr-xr-x
+    const { mode: mode0 } = await fs.stat(path.join(source, "a.txt"));
+    const { mode: mode1 } = await fs.stat(path.join(target, "a.txt"));
+    expect(mode0).toBe(33261);
+    expect(mode1).toBe(33261);
+    // set it back
+    await fs.chmod(path.join(target, "a.txt"), mode);
+  });
+
+
 });

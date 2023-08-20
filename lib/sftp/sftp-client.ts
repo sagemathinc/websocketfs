@@ -58,6 +58,8 @@ class SftpItem implements IItem {
   stats: SftpAttributes;
 }
 
+// In our implementation of the server, handles are 4-bytes, hence
+// can be represented as a 32-bit signed integer.
 export class SftpHandle {
   _handle: Buffer;
   _this: SftpClientCore;
@@ -67,12 +69,23 @@ export class SftpHandle {
     this._this = owner;
   }
 
+  toFileDescriptor(): number {
+    // handles are always 4 bytes in our implementation, so
+    // can represent as a 32-bit number.  In fact, the handle
+    // is an actual file descriptor (nonnegative number) as
+    // returned by the fs module.
+    // Using Int32BE to stay consistent with server side code.
+    return this._handle.readInt32BE(0);
+  }
+
   toString(): string {
-    var value = "0x";
+    let value = "0x";
     for (var i = 0; i < this._handle.length; i++) {
-      var b = this._handle[i];
-      var c = b.toString(16);
-      if (b < 16) value += "0";
+      const b = this._handle[i];
+      const c = b.toString(16);
+      if (b < 16) {
+        value += "0";
+      }
       value += c;
     }
     return value;
@@ -144,7 +157,7 @@ class SftpClientCore implements IFilesystem {
     this._extensions = {};
     this._features = {};
 
-    this._maxWriteBlockLength = 32 * 1024;
+    this._maxWriteBlockLength = 32 * 1024; // why?
     this._maxReadBlockLength = 256 * 1024;
 
     this._bytesReceived = 0;
@@ -376,9 +389,9 @@ class SftpClientCore implements IFilesystem {
 
   open(
     path: string,
-    flags: string,
+    flags: string | number,
     attrs: IStats,
-    callback: (err: Error, handle: any) => any,
+    callback: (err: Error, handle: SftpHandle) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -391,7 +404,7 @@ class SftpClientCore implements IFilesystem {
 
     this.execute(request, callback, this.parseHandle, {
       command: "open",
-      path: path,
+      path,
     });
   }
 
@@ -464,8 +477,9 @@ class SftpClientCore implements IFilesystem {
     this.checkBuffer(buffer, offset, length);
     this.checkPosition(position);
 
-    if (length > this._maxWriteBlockLength)
+    if (length > this._maxWriteBlockLength) {
       throw new Error("Length exceeds maximum allowed data block length");
+    }
 
     var request = this.getRequest(SftpPacketType.WRITE);
 
@@ -475,7 +489,7 @@ class SftpClientCore implements IFilesystem {
 
     this.execute(request, callback, this.parseStatus, {
       command: "write",
-      handle: handle,
+      handle,
     });
   }
 
@@ -1109,7 +1123,6 @@ class SftpClientCore implements IFilesystem {
     callback(null, items);
   }
 
-  // #if FULL
   private parseHash(
     response: SftpResponse,
     callback: (err: Error | null, hashes: Buffer, alg: string) => any,
@@ -1122,7 +1135,12 @@ class SftpClientCore implements IFilesystem {
 
     callback(null, hashes, alg);
   }
-  // #endif
+
+  fileDescriptorToHandle(fd: number): SftpHandle {
+    const handle = Buffer.alloc(4);
+    handle.writeInt32BE(fd, 0);
+    return new SftpHandle(handle, this);
+  }
 }
 
 export interface ISftpClientEvents<T> {
@@ -1162,6 +1180,10 @@ export class SftpClient extends FilesystemPlus {
     return super._task(callback, (callback) =>
       this._bind(channel, options, callback),
     );
+  }
+
+  fileDescriptorToHandle(fd: number) {
+    return (this._fs as SftpClientCore).fileDescriptorToHandle(fd);
   }
 
   protected _bind(

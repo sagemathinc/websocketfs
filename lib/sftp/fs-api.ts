@@ -42,7 +42,7 @@ export const enum RenameFlags {
 export interface IFilesystem {
   open(
     path: string,
-    flags: string,
+    flags: string | number,
     attrs: IStats | undefined,
     callback: (err: Error | null, handle: any) => any,
   ): void;

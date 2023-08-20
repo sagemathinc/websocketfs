@@ -225,12 +225,12 @@ export class Options {
 
 export class SftpError extends Error {
   public code?: string;
-  public errno?: string;
+  public errno?: number;
   public level?: string;
 
   constructor(
     message?: string,
-    extra: { code?: string; errno?: string; level?: string } = {},
+    extra: { code?: string; errno?: number; level?: string } = {},
   ) {
     super(message);
     this.code = extra.code;

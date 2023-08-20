@@ -320,7 +320,9 @@ export class SftpServerSession {
     response: SftpResponse,
     err: NodeJS.ErrnoException | null,
   ): boolean {
-    if (err == null || typeof err === "undefined") return false;
+    if (err == null || typeof err === "undefined") {
+      return false;
+    }
 
     this.sendError(response, err, false);
     return true;
@@ -330,7 +332,9 @@ export class SftpServerSession {
     response: SftpResponse,
     err: NodeJS.ErrnoException | null,
   ): void {
-    if (this.sendIfError(response, err)) return;
+    if (this.sendIfError(response, err)) {
+      return;
+    }
 
     SftpStatus.writeSuccess(response);
     this.send(response);

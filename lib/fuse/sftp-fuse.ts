@@ -93,7 +93,7 @@ export default class SftpFuse {
       const handle = await callback(this.sftp.opendir, path);
       log("readdir - opendir got a handle", handle._handle);
       const items = await callback(this.sftp.readdir, handle);
-      log("readdir - items", items);
+      //log("readdir - items", items);
       // todo: cache attrs from items (?)
       if (typeof items == "boolean") {
         throw Error("readdir fail");
@@ -249,17 +249,34 @@ export default class SftpFuse {
     log("symlink", { src, dest });
     this.sftp.symlink(src, dest, fuseError(cb));
   }
+
+  mkdir(path: string, mode: number, cb: Callback) {
+    log("mkdir", { path, mode });
+    this.sftp.mkdir(path, { mode }, fuseError(cb));
+  }
+
+  rmdir(path: string, cb: Callback) {
+    log("rmdir", { path });
+    this.sftp.rmdir(path, fuseError(cb));
+  }
 }
 
 function fuseError(cb) {
   return (err: SftpError, ...args) => {
     if (err) {
       if (err.code != null) {
-        cb(Fuse[err.code] ?? err);
-      } else {
-        console.warn("err.code not set!", err);
-        cb(Fuse.ENOSYS);
+        const errno = Fuse[err.code];
+        if (errno) {
+          cb(errno);
+          return;
+        }
+        if (err.errno != null) {
+          cb(-Math.abs(err.errno));
+          return;
+        }
       }
+      console.warn("err.code and err.errno not set -- ", err);
+      cb(Fuse.ENOSYS);
     } else {
       cb(0, ...args);
     }

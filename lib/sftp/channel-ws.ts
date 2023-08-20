@@ -216,7 +216,7 @@ class WebSocketChannel implements IChannel {
       } else {
         const err = new SftpError(
           "Connection failed due to unsupported packet type -- all messages must be binary",
-          { code: "EFAILURE", errno: "EFAILURE", level: "ws" },
+          { code: "EFAILURE", errno: -38, level: "ws" },
         );
         this._close(1, err);
         return;

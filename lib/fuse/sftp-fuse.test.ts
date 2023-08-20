@@ -175,5 +175,22 @@ describe("Check many functions...", () => {
       data,
     );
   });
-  
+
+  it("creates and removes a directory", async () => {
+    const p = path.join(target, "dir0");
+    await fs.mkdir(p);
+    await fs.rm(p, { recursive: true });
+  });
+
+  it("creates a directory -- and a file in it", async () => {
+    await fs.mkdir(path.join(target, "a dir"));
+    await fs.writeFile(path.join(target, "a dir", "a.txt"), "file in a subdir");
+    expect(
+      (await fs.readFile(path.join(target, "a dir", "a.txt"))).toString(),
+    ).toBe("file in a subdir");
+  });
+
+  it("removes the directory with a file we just created", async () => {
+    await fs.rm(path.join(target, "a dir"), { recursive: true });
+  });
 });

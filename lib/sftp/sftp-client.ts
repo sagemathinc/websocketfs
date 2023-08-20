@@ -593,7 +593,7 @@ class SftpClientCore implements IFilesystem {
 
     this.execute(request, callback, this.parseStatus, {
       command: "mkdir",
-      path: path,
+      path,
     });
   }
 
@@ -603,7 +603,7 @@ class SftpClientCore implements IFilesystem {
 
     this.command(SftpPacketType.RMDIR, [path], callback, this.parseStatus, {
       command: "rmdir",
-      path: path,
+      path,
     });
   }
 
@@ -830,7 +830,9 @@ class SftpClientCore implements IFilesystem {
     responseParser: (response: SftpResponse, callback: Function) => void,
     info: SftpCommandInfo,
   ): void {
-    if (typeof command !== "number") command = this._features[command];
+    if (typeof command !== "number") {
+      command = this._features[command];
+    }
 
     if (!command) {
       process.nextTick(() =>

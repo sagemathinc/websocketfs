@@ -44,7 +44,7 @@ export class SafeFilesystem implements IFilesystem {
 
   private _handles: HandleToHandleInfoMap;
   private _nextHandle: number;
-  private static MAX_HANDLE_COUNT = 1024; // standard linux default
+  private static MAX_HANDLE_COUNT = 1024; // 1024 = standard linux default...
 
   constructor(
     fs: IFilesystem,
@@ -586,6 +586,20 @@ export class SafeFilesystem implements IFilesystem {
     } catch (err) {
       callback(err);
     }
+  }
+
+  fsync(handle: number, callback: (err: Error | null) => void): void {
+    this._execute(
+      handle,
+      (handle, callback) => {
+        if (this.fs.fsync != null) {
+          this.fs.fsync(handle, callback);
+        } else {
+          FileUtil.fail("ENOSYS", callback);
+        }
+      },
+      callback,
+    );
   }
 
   fcopy(

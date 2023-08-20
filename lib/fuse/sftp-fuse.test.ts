@@ -23,7 +23,7 @@ afterAll(async () => {
   await fuse?.unmount();
 });
 
-describe("Check many functions...", () => {
+describe("Simple tests of each of the FUSE operations...", () => {
   it("readdir starts empty", async () => {
     expect(await fs.readdir(source)).toEqual([]);
     expect(await fs.readdir(target)).toEqual([]);
@@ -193,4 +193,24 @@ describe("Check many functions...", () => {
   it("removes the directory with a file we just created", async () => {
     await fs.rm(path.join(target, "a dir"), { recursive: true });
   });
+});
+
+describe("more stressful tests", () => {
+  let repo, logLength;
+  it("clones the websocketfs git repo", async () => {
+    repo = path.join(source, "websocketfs"); // easy for now!
+    await callback(execFile, "git", ["clone", ".", repo]);
+    const v = await callback(execFile, "git", ["log", "."], { cwd: repo });
+    logLength = v.split("\n").length;
+    expect(logLength).toBeGreaterThan(2500);
+    
+    repo = path.join(target, "websocketfs"); // make test below hard
+  });
+
+//   it("get the git log several times to make sure it is working and handles aren't leaking", async () => {
+//     for (let i = 0; i < 2; i++) {
+//       const v = await callback(execFile, "git", ["log", "."], { cwd: repo });
+//       expect(v.split("\n").length).toBe(logLength);
+//     }
+//   });
 });

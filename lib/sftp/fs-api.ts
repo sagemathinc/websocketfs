@@ -141,4 +141,5 @@ export interface IFilesystem {
     blockSize: number,
     callback: (err: Error | null, hashes?: Buffer, alg?: string) => any,
   ): void;
+  fsync?(handle: number, callback: (err: Error | null) => any): void;
 }

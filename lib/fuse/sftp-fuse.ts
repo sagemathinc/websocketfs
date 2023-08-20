@@ -71,38 +71,39 @@ export default class SftpFuse {
     this.getattr(path, fuseError(cb));
   }
 
-  //   flush(path: string, _fd: number, cb) {
-  //     log("flush", path);
-  //     // TODO: this will impact caching...?
-  //     cb(0);
-  //   }
+  flush(path: string, fd: number, cb) {
+    log("flush", { path, fd });
+    cb(0);
+  }
 
-  //   fsync(path: string, _fd: number, _datasync, cb) {
-  //     log("fsync", path);
-  //     cb(0);
-  //   }
+  fsync(path: string, dataSync: boolean, fd: number, cb: Callback) {
+    log("fsync", { path, dataSync, fd });
+    cb(0);
+  }
 
-  //   fsyncdir(path: string, _fd: number, _datasync, cb) {
-  //     log("fsyncdir", path);
-  //     cb(0);
-  //   }
+  fsyncdir(path: string, dataSync: boolean, fd: number, cb: Callback) {
+    log("fsyncdir", { path, dataSync, fd });
+    cb(0);
+  }
 
   async readdir(path: string, cb) {
     log("readdir", path);
     try {
-      const handle = await callback(this.sftp.opendir, path);
-      log("readdir - opendir got a handle", handle._handle);
-      const items = await callback(this.sftp.readdir, handle);
+      let handle, items;
+      try {
+        handle = await callback(this.sftp.opendir, path);
+        log("readdir - opendir got a handle", handle._handle);
+        items = await callback(this.sftp.readdir, handle);
+      } finally {
+        await callback(this.sftp.close, handle);
+      }
       //log("readdir - items", items);
       // todo: cache attrs from items (?)
       if (typeof items == "boolean") {
         throw Error("readdir fail");
       }
-      cb(
-        0,
-        items.map(({ filename }) => filename),
-      );
-      return items;
+      const filenames = items.map(({ filename }) => filename);
+      cb(0, filenames);
     } catch (err) {
       log("readdir - error", err);
       fuseError(cb)(err);
@@ -205,7 +206,8 @@ export default class SftpFuse {
     position: number,
     cb: Callback,
   ) {
-    log("write", { path, fd, buffer: buffer.toString(), length, position });
+    //log("write", { path, fd, buffer: buffer.toString(), length, position });
+    log("write", { path, fd, length, position });
     const handle = this.sftp.fileDescriptorToHandle(fd);
     this.sftp.write(handle, buffer, 0, length, position, (err) => {
       if (err) {
@@ -223,7 +225,11 @@ export default class SftpFuse {
     this.sftp.close(handle, fuseError(cb));
   }
 
-  // releasedir(path, fd, cb)
+  releasedir(path, fd, cb: Callback) {
+    log("releasedir", { path, fd });
+    const handle = this.sftp.fileDescriptorToHandle(fd);
+    this.sftp.close(handle, fuseError(cb));
+  }
 
   create(path: string, mode: number, cb: Callback) {
     log("create", { path, mode });

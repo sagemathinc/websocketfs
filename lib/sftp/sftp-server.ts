@@ -580,6 +580,15 @@ export class SftpServerSession {
           fs.write(handle, request.buffer, offset, count, position, (err) =>
             this.sendSuccess(response, err),
           );
+
+          // I was playing around with syncing on write:
+          //           fs.write(handle, request.buffer, offset, count, position, (err) => {
+          //             if (err || handle == null || fs.fsync == null) {
+          //               this.sendSuccess(response, err);
+          //             } else {
+          //               fs.fsync(handle, (err) => this.sendSuccess(response, err));
+          //             }
+          //           });
           return;
 
         case SftpPacketType.LSTAT:

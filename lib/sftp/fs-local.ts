@@ -50,6 +50,10 @@ export class LocalFilesystem implements IFilesystem {
     //LATER: pay attemtion to attrs other than mode (low priority - many SFTP servers ignore these as well)
   }
 
+  fsync(handle: number, callback: (err: Error | null) => any): void {
+    fs.fsync(handle, callback);
+  }
+
   close(handle: any, callback: (err: Error | null) => any): void {
     this.checkCallback(callback);
 

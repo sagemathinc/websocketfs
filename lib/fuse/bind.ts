@@ -24,7 +24,7 @@ export default async function bind(source: string, target: string) {
     },
     fuse,
     server,
-    client
+    client,
   };
 }
 

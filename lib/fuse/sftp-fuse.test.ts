@@ -69,6 +69,8 @@ describe("Check many functions...", () => {
       "atime",
       "mtime",
       "ctime",
+      "birthtimeMs",
+      "birthtime",
       "blocks", // blocks = not implemented (not part of base sftp?)
     ]) {
       delete source_stat[name];

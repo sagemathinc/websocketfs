@@ -274,10 +274,9 @@ interface IMetadata {
   [key: string]: any;
 }
 
-function writeMetadata(_writer: SftpPacketWriter, metadata: IMetadata): void {
-  var data = new SftpPacketWriter(0x4000);
-  for (var key in metadata) {
-    var value = metadata[key];
+function writeMetadata(data: SftpPacketWriter, metadata: IMetadata): void {
+  for (const key in metadata) {
+    const value = metadata[key];
     data.writeString(key);
     if (value === "null") {
       data.writeByte(0);
@@ -297,16 +296,15 @@ function writeMetadata(_writer: SftpPacketWriter, metadata: IMetadata): void {
   }
 }
 
-function readMetadata(reader: SftpPacketReader): IMetadata {
-  var data = reader.readStructuredData();
-  var metadata = {};
+function readMetadata(data: SftpPacketReader): IMetadata {
+  const metadata: IMetadata = {};
   while (data.position < data.length) {
-    var key = data.readString();
+    const key = data.readString();
     if (key.length == 0) {
       return metadata;
     }
-    var type = data.readByte();
-    var value;
+    const type = data.readByte();
+    let value;
     switch (type) {
       case 0:
         value = null;
@@ -331,7 +329,7 @@ function readMetadata(reader: SftpPacketReader): IMetadata {
     }
     metadata[key] = value;
   }
-  throw Error("fail");
+  return metadata;
 }
 
 export const enum SftpAttributeFlags {
@@ -407,9 +405,9 @@ export class SftpAttributes implements IStats {
 
     if (flags & SftpAttributeFlags.EXTENDED) {
       this.flags &= ~SftpAttributeFlags.EXTENDED;
-      var count = reader.readInt32();
-      for (var i = 0; i < count; i++) {
-        var name = reader.readString();
+      const count = reader.readInt32();
+      for (let i = 0; i < count; i++) {
+        const name = reader.readString();
         if (name == SftpExtensions.METADATA) {
           this.metadata = readMetadata(reader);
         } else {
@@ -456,7 +454,7 @@ export class SftpAttributes implements IStats {
     if (stats == null) {
       this.flags = 0;
     } else {
-      var flags = 0;
+      let flags = 0;
 
       if (typeof stats.size !== "undefined") {
         flags |= SftpAttributeFlags.SIZE;
@@ -491,6 +489,7 @@ export class SftpAttributes implements IStats {
       }
 
       if (typeof stats.metadata !== "undefined") {
+        flags |= SftpAttributeFlags.EXTENDED;
         this.metadata = stats.metadata;
       }
 

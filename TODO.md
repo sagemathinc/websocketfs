@@ -1,12 +1,6 @@
 ## Critical
 
-- [ ] stat doesn't return blocks so "du" doesn't work.
-- [ ] tar gets confused -- "file changed as we read it", I think because our timestamps are a mess for stat (1 second resolution and kind of random?)
-
-```sh
-tar cf /tmp/webosketfs.tar websocketfs/.git
-```
-
+- [ ] implement statfs so can do `df -h ...` 
 - [ ] make it work over the network
 - [ ] support api key auth
 
@@ -23,6 +17,8 @@ tar cf /tmp/webosketfs.tar websocketfs/.git
 
 ## DONE
 
+- [x] stat doesn't return blocks so "du" doesn't work.
+- [x] tar gets confused \-\- "file changed as we read it", I think because our timestamps are a mess for stat \(1 second resolution and kind of random?\)
 - [x] LARGE files \(above 32\*1024 characters\) are always corrupted when written \(or read?\). This probably causes many of the remaining problems. I don't know why this is yet, but the stress.test.ts illustrates it. Basically exactly the first 32\*1024 gets written and nothing more. I thought I wrote
 - [x] "git log" on nontrivial content doesn't work, probably due to mmap?
 - [x] "git clone" doesn't work
@@ -37,3 +33,4 @@ tar cf /tmp/webosketfs.tar websocketfs/.git
 - [x] enable noUnusedLocals
 - [x] enable noUnusedParameters
 - [x] enable strictNullChecks
+

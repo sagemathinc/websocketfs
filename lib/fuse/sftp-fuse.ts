@@ -72,11 +72,12 @@ export default class SftpFuse {
       if (err) {
         fuseError(cb)(err);
       } else {
+        // console.log({ path, attr });
         // ctime isn't part of the sftp protocol, so we set it to mtime, which
         // is what sshfs does.  This isn't necessarily correct, but it's what
         // we do, e.g., ctime should change if you change file permissions, but
-        // won't in this case.
-        cb(0, { ...attr, ctime: attr.mtime });
+        // won't in this case.  We could put ctime in the metadata though.
+        cb(0, processAttr(attr));
       }
     });
   }
@@ -89,7 +90,7 @@ export default class SftpFuse {
         fuseError(cb)(err);
       } else {
         // see comment about ctime above.
-        cb(0, { ...attr, ctime: attr.mtime });
+        cb(0, processAttr(attr));
       }
     });
   }
@@ -369,5 +370,13 @@ function fuseError(cb) {
     } else {
       cb(0, ...args);
     }
+  };
+}
+
+function processAttr(attr) {
+  return {
+    ...attr,
+    ctime: attr.mtime,
+    blocks: attr.metadata?.blocks ?? 0,
   };
 }

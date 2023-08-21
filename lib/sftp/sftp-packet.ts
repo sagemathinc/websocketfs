@@ -195,24 +195,23 @@ export class SftpPacketReader extends SftpPacket {
   }
 
   readData(clone: boolean): Buffer {
-    var length = this.readInt32();
+    const length = this.readInt32();
     this.check(length);
 
-    var start = this.position;
-    var end = start + length;
+    const start = this.position;
+    const end = start + length;
     this.position = end;
-    //WEB: var view = this.buffer.subarray(start, end);
     if (clone) {
-      var buffer = Buffer.alloc(length); //WEB: var buffer = new Uint8Array(length);
-      this.buffer.copy(buffer, 0, start, end); //WEB: buffer.set(view, 0);
+      const buffer = Buffer.alloc(length);
+      this.buffer.copy(buffer, 0, start, end);
       return buffer;
     } else {
-      return this.buffer.slice(start, end); //WEB: return view;
+      return this.buffer.slice(start, end);
     }
   }
 
   readStructuredData(): SftpPacketReader {
-    var data = this.readData(false);
+    const data = this.readData(false);
     return new SftpPacketReader(data, true);
   }
 }

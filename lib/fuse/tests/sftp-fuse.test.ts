@@ -73,7 +73,6 @@ describe("Simple tests of each of the FUSE operations...", () => {
       "ctime",
       "birthtimeMs",
       "birthtime",
-      "blocks", // blocks = not implemented (not part of base sftp?)
     ]) {
       delete source_stat[name];
       delete target_stat[name];

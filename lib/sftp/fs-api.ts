@@ -17,7 +17,8 @@ export interface IStats {
   size?: number;
   atime?: Date;
   mtime?: Date;
-  metadata?: { [key: string]: string };
+  blocks?: number; // only on server
+  metadata?: { [key: string]: any};
 
   isFile?(): boolean;
   isDirectory?(): boolean;

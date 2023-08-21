@@ -363,12 +363,15 @@ export class SftpServerSession {
     if (this.sendIfError(response, err)) {
       return;
     }
+    if (stats == null) {
+      throw Error("bug"); // for typescript
+    }
 
     response.type = SftpPacketType.ATTRS;
     response.start();
 
     const attr = new SftpAttributes();
-    attr.from(stats);
+    attr.from({ ...stats, metadata: { blocks: stats.blocks! } });
     attr.write(response);
     this.send(response);
   }

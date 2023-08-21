@@ -17,6 +17,8 @@ import IStats = api.IStats;
 import RenameFlags = api.RenameFlags;
 import FileUtil = misc.FileUtil;
 
+import { MAX_WRITE_BLOCK_LENGTH } from "./sftp-client";
+
 class HandleInfo {
   safe: number;
   real: any;
@@ -616,7 +618,7 @@ export class SafeFilesystem implements IFilesystem {
 
     var fs = this.fs;
     var same = fromHandle === toHandle;
-    var blockSize = 32 * 1024;
+    var blockSize = MAX_WRITE_BLOCK_LENGTH;
     length = length > 0 ? length : -1;
 
     var fh: any;

@@ -13,6 +13,10 @@ import { bindMethods } from "./util";
 import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
 import type { SftpError } from "../sftp/util";
+import {
+  MAX_WRITE_BLOCK_LENGTH,
+//  MAX_READ_BLOCK_LENGTH,
+} from "../sftp/sftp-client";
 
 import debug from "debug";
 
@@ -189,6 +193,8 @@ export default class SftpFuse {
     log("read", { path, fd, len, pos });
     const handle = this.sftp.fileDescriptorToHandle(fd);
     log("read - open got a handle", handle._handle);
+    // We *must* read in chunks of size at most MAX_READ_BLOCK_LENGTH,
+    // or the result will definitely be all corrupted (of course).
     this.sftp.read(handle, buf, 0, len, pos, (err, _buffer, bytesRead) => {
       if (err) {
         log("read -- error reading", err);
@@ -199,7 +205,7 @@ export default class SftpFuse {
     });
   }
 
-  write(
+  async write(
     path: string,
     fd: number,
     buffer: Buffer,
@@ -210,14 +216,25 @@ export default class SftpFuse {
     //log("write", { path, fd, buffer: buffer.toString(), length, position });
     log("write", { path, fd, length, position });
     const handle = this.sftp.fileDescriptorToHandle(fd);
-    this.sftp.write(handle, buffer, 0, length, position, (err) => {
-      if (err) {
-        log("write -- error writing", err);
-        fuseError(cb)(err);
-      } else {
-        cb(length);
+    // We *must* write in chunks of size at most MAX_WRITE_BLOCK_LENGTH,
+    // or the result will definitely be all corrupted (of course).
+    length = Math.min(length, buffer.length);
+    let bytesWritten = 0;
+    let offset = 0;
+    try {
+      while (length > 0) {
+        const n = Math.min(MAX_WRITE_BLOCK_LENGTH, length);
+        await callback(this.sftp.write, handle, buffer, offset, n, position);
+        length -= n;
+        bytesWritten += n;
+        offset += n;
+        position += n;
       }
-    });
+      cb(bytesWritten);
+    } catch (err) {
+      log("write -- error writing", err);
+      fuseError(cb)(err);
+    }
   }
 
   release(path: string, fd: number, cb: Callback) {

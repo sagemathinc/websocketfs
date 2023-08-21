@@ -30,6 +30,7 @@ import SftpAttributes = misc.SftpAttributes;
 import SftpExtensions = misc.SftpExtensions;
 import Path = fsmisc.Path;
 
+//export const MAX_WRITE_BLOCK_LENGTH = 32 * 1024;
 export const MAX_WRITE_BLOCK_LENGTH = 32 * 1024;
 export const MAX_READ_BLOCK_LENGTH = 256 * 1024;
 

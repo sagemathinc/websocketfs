@@ -1,5 +1,6 @@
 ## Critical
 
+- [ ] LARGE files  \(above 32\*1024 characters\) are always corrupted when written \(or read?\).  This probably causes many of the remaining problems.  I don't know why this is yet, but the stress.test.ts illustrates it.  Basically exactly the first 32\*1024 gets written and nothing more.  I thought I wrote
 - [ ] "git log" on nontrivial content doesn't work, probably due to mmap?
 - [ ] "git clone" doesn't work
 - [ ] stat doesn't return blocks so "du" doesn't work.

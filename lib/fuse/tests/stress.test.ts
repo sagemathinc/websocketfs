@@ -40,7 +40,7 @@ describe("stress writeFile(path, data[, options])", () => {
     String.fromCharCode(Math.floor(Math.random() * 26) + 97),
   ).join("");
 
-  it("Create a file at root (writeFile.txt)", async () => {
+  it(`Create a file at root (writeFile.txt) of length ${data.length}`, async () => {
     await clean();
     const path = join(target, "writeFile.txt");
     await fs.writeFile(path, data);

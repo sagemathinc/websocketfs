@@ -2,7 +2,8 @@
 
 - [ ] implement statfs so can do `df -h ...` 
 - [ ] make it work over the network
-- [ ] support api key auth
+  - it technically does already work over a network, but I've only been using localhost for testing/demos.  Need to try a real network situation.
+- [ ] support api key auth (maybe this is only at the cocalc level (?))
 
 ## Code Quality
 

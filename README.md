@@ -29,7 +29,7 @@ README.md  examples  package.json    tsconfig.json
 TODO.md    lib       pnpm-lock.yaml  websocketfs.term
 ```
 
-You can do `ls -l`, and read and write files, etc.  
+You can do `ls -l`, and read and write files, etc.
 
 ### A Note about Fuse
 
@@ -58,12 +58,12 @@ In the context of WebAssembly and WASI, it may of course actually provide a file
 without FUSE.
 
 **MacOS?:** I don't know if it will work or not. FUSE is weird on MacOS due to security constraints and commercial interests.
-_I'm developing this for Linux._ 
+_I'm developing this for Linux._
 
 ## Background
 
-I wish there was something like sshfs, but entirely over a websocket that doesn't use ssh at all. I found this [ancient and forgotten project from 8 years ago](https://github.com/lukaaash/vfs/tree/master), then rewrote it to not use sshfs at all and instead use libfuse2 bindings to nodejs. It is going to be like what sshfs provides, except entirely 100% using Typescript/Nodejs \+ a websocket for the transport and fuse bindings. This could also be extended to work in browser \(for WebAssembly with WASI\), providing basically "sshfs for the browser". The real work to make this possible is in [this also ancient forgotten implementation of the entire sftp protocol](https://github.com/lukaaash/sftp-ws) in Typescript from 8 years ago, as explained in [this blogpost](https://lukas.pokorny.eu/sftp-over-websockets/).    
+I wish there was something like sshfs, but entirely over a websocket that doesn't use ssh at all. I found this [ancient and forgotten project from 8 years ago](https://github.com/lukaaash/vfs/tree/master), then rewrote it to not use sshfs at all and instead use libfuse2 bindings to nodejs. It is going to be like what sshfs provides, except entirely 100% using Typescript/Nodejs \+ a websocket for the transport and fuse bindings. This could also be extended to work in browser \(for WebAssembly with WASI\), providing basically "sshfs for the browser". The real work to make this possible is in [this also ancient forgotten implementation of the entire sftp protocol](https://github.com/lukaaash/sftp-ws) in Typescript from 8 years ago, as explained in [this blogpost](https://lukas.pokorny.eu/sftp-over-websockets/).
 
-I've been working on this for a few days, and have got a pretty good understanding of the sftp\-ws codebase, rewrote much of it to support many modern strict typescript settings, fixed several subtle bugs, etc.  I've also written a lot of new unit tests.
+I've been working on this for a few days, and have got a pretty good understanding of the sftp\-ws codebase, rewrote much of it to support many modern strict typescript settings, fixed several subtle bugs, etc. I've also written a lot of new unit tests.
 
-Anyway, I so far have a pretty good proof of concept of this working.  The actual work feels similar to what was involved in building https://cowasm.org/ , but easier, since it's javascript instead of massive amounts of decades old C.
+Anyway, I so far have a pretty good proof of concept of this working. The actual work feels similar to what was involved in building https://cowasm.org/ , but easier, since it's javascript instead of massive amounts of decades old C.

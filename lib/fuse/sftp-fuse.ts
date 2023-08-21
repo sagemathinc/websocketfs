@@ -61,19 +61,37 @@ export default class SftpFuse {
   //   }
 
   //   statfs(path: string, cb) {
-  //     // this gets called when you do "df" on the mountpoint.
+  //     // this gets called when you do "df" on the mountpoint (?)
   //     log("statfs: TODO", path);
   //     cb(0, {});
   //   }
 
   getattr(path: string, cb) {
     log("getattr", path);
-    this.sftp.lstat(path, fuseError(cb));
+    this.sftp.lstat(path, (err, attr) => {
+      if (err) {
+        fuseError(cb)(err);
+      } else {
+        // ctime isn't part of the sftp protocol, so we set it to mtime, which
+        // is what sshfs does.  This isn't necessarily correct, but it's what
+        // we do, e.g., ctime should change if you change file permissions, but
+        // won't in this case.
+        cb(0, { ...attr, ctime: attr.mtime });
+      }
+    });
   }
 
-  fgetattr(path: string, _fd: number, cb) {
-    log("fgetattr", path);
-    this.getattr(path, fuseError(cb));
+  fgetattr(path: string, fd: number, cb) {
+    log("fgetattr", { path, fd });
+    const handle = this.sftp.fileDescriptorToHandle(fd);
+    this.sftp.fstat(handle, (err, attr) => {
+      if (err) {
+        fuseError(cb)(err);
+      } else {
+        // see comment about ctime above.
+        cb(0, { ...attr, ctime: attr.mtime });
+      }
+    });
   }
 
   flush(path: string, fd: number, cb) {
@@ -326,7 +344,7 @@ export default class SftpFuse {
 
 function fuseError(cb) {
   return (err: SftpError, ...args) => {
-    // console.log("fuseError", { err, args });
+    // console.log("response -- ", { err, args });
     if (err) {
       if (err.description != null) {
         const e = Fuse[err.description];

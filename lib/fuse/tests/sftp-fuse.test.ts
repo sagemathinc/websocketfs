@@ -46,7 +46,7 @@ describe("Simple tests of each of the FUSE operations...", () => {
   it("stat (getattr)", async () => {
     const source_stat = await fs.stat(path.join(source, "a.txt"));
     const target_stat = await fs.stat(path.join(target, "a.txt"));
-    //console.log({ source_stat, target_stat });
+    // console.log({ source_stat, target_stat });
     // check times are within 1000
     for (const name of [
       "atimeMs",
@@ -79,6 +79,14 @@ describe("Simple tests of each of the FUSE operations...", () => {
       delete target_stat[name];
     }
     expect(source_stat).toEqual(target_stat);
+  });
+
+  it("fstat -- use the file descriptor instead to stat a file", async () => {
+    const stat1 = await fs.stat(path.join(target, "a.txt"));
+    const fd = await fs.open(path.join(target, "a.txt"));
+    const stat2 = await fd.stat(); // stat using file descriptor
+    expect(stat1).toEqual(stat2);
+    await fd.close();
   });
 
   it("readlink", async () => {
@@ -203,7 +211,7 @@ describe("Simple tests of each of the FUSE operations...", () => {
 //     const v = await callback(execFile, "git", ["log", "."], { cwd: repo });
 //     logLength = v.split("\n").length;
 //     expect(logLength).toBeGreaterThan(2500);
-    
+
 //     repo = path.join(target, "websocketfs"); // make test below hard
 //   });
 

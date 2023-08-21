@@ -360,12 +360,14 @@ export class SftpServerSession {
     err: NodeJS.ErrnoException | null,
     stats?: IStats,
   ): void {
-    if (this.sendIfError(response, err)) return;
+    if (this.sendIfError(response, err)) {
+      return;
+    }
 
     response.type = SftpPacketType.ATTRS;
     response.start();
 
-    var attr = new SftpAttributes();
+    const attr = new SftpAttributes();
     attr.from(stats);
     attr.write(response);
     this.send(response);

@@ -8,7 +8,7 @@ This project is not done. See [the todo](./TODO.md).
 
 ## Quickstart
 
-So far we have only implemented running on localhost.
+So far we have only implemented running on localhost, but it is now _MOSTLY WORKING_, and the speed is not so bad either, for some benchmarks...
 
 ```sh
 ~$ git clone https://github.com/sagemathinc/websocketfs
@@ -29,12 +29,11 @@ README.md  examples  package.json    tsconfig.json
 TODO.md    lib       pnpm-lock.yaml  websocketfs.term
 ```
 
-You can do `ls -l`, and read and write files.
+You can do `ls -l`, and read and write files, etc.  
 
 ### A Note about Fuse
 
-FUSE is really weird on MacOS due to security constraints and commercial interests.
-I'm developing this for linux. To install or build, you need to have the fuse C library
+To install or build, you need to have the fuse C library
 available:
 
 ```sh
@@ -42,7 +41,7 @@ sudo apt-get install libfuse-dev
 ```
 
 Also, you need to be able to use FUSE at all under Linux, e.g., you can't
-use FUSE in a Docker container unless you run it with these options:
+use FUSE in a Docker container unless you create the Docker container with these options:
 
 ```
 --cap-add SYS_ADMIN --device /dev/fuse
@@ -58,8 +57,13 @@ without involving ssh at all.
 In the context of WebAssembly and WASI, it may of course actually provide a filesystem
 without FUSE.
 
+**MacOS?:** I don't know if it will work or not. FUSE is weird on MacOS due to security constraints and commercial interests.
+_I'm developing this for Linux._ 
+
 ## Background
 
-I wish there was something like sshfs, but entirely over a websocket that doesn't use ssh at all. I found this [ancient and forgotten project from 8 years ago](https://github.com/lukaaash/vfs/tree/master), then rewrote it to not use sshfs at all and instead use libfuse2 bindings to nodejs. It is going to be like what sshfs provides, except entirely 100% using Typescript/Nodejs \+ a websocket for the transport and fuse bindings. This could also be extended to work in browser \(for WebAssembly with WASI\), providing basically "sshfs for the browser". The real work to make this possible is in [this also ancient forgotten implementation of the entire sftp protocol](https://github.com/lukaaash/sftp-ws) in Typescript from 8 years ago, as explained in [this blogpost](https://lukas.pokorny.eu/sftp-over-websockets/).
+I wish there was something like sshfs, but entirely over a websocket that doesn't use ssh at all. I found this [ancient and forgotten project from 8 years ago](https://github.com/lukaaash/vfs/tree/master), then rewrote it to not use sshfs at all and instead use libfuse2 bindings to nodejs. It is going to be like what sshfs provides, except entirely 100% using Typescript/Nodejs \+ a websocket for the transport and fuse bindings. This could also be extended to work in browser \(for WebAssembly with WASI\), providing basically "sshfs for the browser". The real work to make this possible is in [this also ancient forgotten implementation of the entire sftp protocol](https://github.com/lukaaash/sftp-ws) in Typescript from 8 years ago, as explained in [this blogpost](https://lukas.pokorny.eu/sftp-over-websockets/).    
 
-Anyway, I so far have a proof of concept of this working, though to get this to be robust, I'll have to clean up and modernize this stuff, add some missing functionality, add more tests, etc. The actual work feels similar to what was involved in building https://cowasm.org/ , but easier, since it's javascript instead of massive amounts of decades old C.
+I've been working on this for a few days, and have got a pretty good understanding of the sftp\-ws codebase, rewrote much of it to support many modern strict typescript settings, fixed several subtle bugs, etc.  I've also written a lot of new unit tests.
+
+Anyway, I so far have a pretty good proof of concept of this working.  The actual work feels similar to what was involved in building https://cowasm.org/ , but easier, since it's javascript instead of massive amounts of decades old C.

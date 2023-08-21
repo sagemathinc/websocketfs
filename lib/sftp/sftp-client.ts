@@ -30,6 +30,9 @@ import SftpAttributes = misc.SftpAttributes;
 import SftpExtensions = misc.SftpExtensions;
 import Path = fsmisc.Path;
 
+export const MAX_WRITE_BLOCK_LENGTH = 32 * 1024;
+export const MAX_READ_BLOCK_LENGTH = 256 * 1024;
+
 interface SftpRequest {
   callback: Function;
   responseParser: (reply: SftpPacket, callback: Function) => void;
@@ -156,8 +159,8 @@ class SftpClientCore implements IFilesystem {
     this._extensions = {};
     this._features = {};
 
-    this._maxWriteBlockLength = 32 * 1024; // why?
-    this._maxReadBlockLength = 256 * 1024;
+    this._maxWriteBlockLength = MAX_WRITE_BLOCK_LENGTH;
+    this._maxReadBlockLength = MAX_READ_BLOCK_LENGTH;
 
     this._bytesReceived = 0;
     this._bytesSent = 0;

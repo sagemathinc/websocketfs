@@ -1,6 +1,5 @@
 /*
 Port of tests from https://github.com/streamich/memfs/tree/master/src/__tests__
-
 */
 
 import * as tmp from "tmp-promise";
@@ -353,63 +352,143 @@ describe("rename(fromPath, toPath)", () => {
     ).toEqual("hello");
     expect(await fs.readdir(target)).toEqual(["faa"]);
 
-    //     expect(fs.toJSON()).toEqual(
-    //       path.join(target, "faa/bar/qux/a.txt": "hello")
-    //     });
+    await fs.rename(
+      join(target, "faa/bar/qux/a.txt"),
+      join(target, "faa/bar/qux/b.txt"),
+    );
+    expect(await fs.readdir(join(target, "faa/bar/qux"))).toEqual(["b.txt"]);
+    expect(
+      await fs.readFile(join(target, "faa/bar/qux/b.txt"), "utf8"),
+    ).toEqual("hello");
 
-    //     await fs.rename(path.join(target, "faa/bar/qux/a.txt", path.join(target, "faa/bar/qux/b.txt");
-    //     expect(fs.toJSON()).toEqual({
-    //       path.join(target, "faa/bar/qux/b.txt": "hello")
-    //     });
+    await fs.rename(join(target, "faa/bar"), join(target, "faa/bur"));
+    expect(
+      await fs.readFile(join(target, "faa/bur/qux/b.txt"), "utf8"),
+    ).toEqual("hello");
+  });
+});
 
-    //     await fs.rename(path.join(target, "faa/", path.join(target, "fuu/");
-    //     expect(fs.toJSON()).toEqual({
-    //       path.join(target, "fuu/bar/qux/b.txt": "hello")
-    //     });
-
-    //     await fs.rename(path.join(target, "fuu/bar/", path.join(target, "fuu/bur/");
-    //     expect(fs.toJSON()).toEqual({
-    //       path.join(target, "fuu/bur/qux/b.txt": "hello")
-    //     });
+describe("rmSync", () => {
+  it("remove directory with two files", async () => {
+    await clean();
+    await fs.mkdir(join(target, "foo"));
+    await fs.writeFile(join(target, "foo", "bar"), "baz");
+    await fs.writeFile(join(target, "foo", "baz"), "qux");
+    await fs.writeFile(join(target, "oof"), "zab");
+    await fs.rm(join(target, "foo"), { force: true, recursive: true });
+    expect(await fs.readdir(target)).toEqual(["oof"]);
   });
 
+  it("removes a single file", async () => {
+    await clean();
+    await fs.mkdir(join(target, "foo"));
+    await fs.writeFile(join(target, "foo", "a.txt"), "zab");
+    await fs.rm(join(target, "foo", "a.txt"));
+    expect(await fs.readdir(join(target, "foo"))).toEqual([]);
+  });
+
+  describe("when file does not exist", () => {
+    it("throws by default", async () => {
+      await clean();
+      expect(async () => {
+        await fs.rm(join(target, "bar.txt"));
+      }).rejects.toThrow("ENOENT");
+    });
+
+    it('does not throw if "force" is set to true', async () => {
+      await fs.rm(join(target, "bar.txt"), { force: true });
+    });
+  });
+
+  describe("when deleting a directory", () => {
+    it("throws by default", async () => {
+      await clean();
+      await fs.mkdir(join(target, "foo"));
+      expect(async () => {
+        await fs.rm(join(target, "foo"));
+      }).rejects.toThrow("EISDIR");
+    });
+
+    it("throws when force flag is set", async () => {
+      expect(async () => {
+        await fs.rm(join(target, "foo"), { force: true });
+      }).rejects.toThrow("EISDIR");
+    });
+
+    it("deletes all directory contents when recursive flag is set", async () => {
+      await fs.writeFile(join(target, "foo", "a.txt"), "zab");
+      await fs.rm(join(target, "foo"), { recursive: true });
+      expect(await fs.readdir(target)).toEqual([]);
+    });
+
+    it("deletes all directory contents recursively when recursive flag is set", async () => {
+      await clean();
+      await fs.mkdir(join(target, "foo"));
+      await fs.mkdir(join(target, "foo/bar"));
+      await fs.mkdir(join(target, "foo/bar/c"));
+      await fs.mkdir(join(target, "foo/baz"));
+      await fs.rm(join(target, "foo"), { recursive: true });
+      expect(await fs.readdir(target)).toEqual([]);
+    });
+  });
+});
+
+describe(".stat(...)", () => {
+  it("works with symlinks", async () => {
+    await clean();
+    await fs.mkdir(join(target, "a"));
+    await fs.mkdir(join(target, "c"));
+    await fs.writeFile(join(target, "c", "index.js"), "alert(389+5077);");
+    await fs.symlink("../c", join(target, "a/b"));
+    const stats0 = await fs.stat(join(target, "c/index.js"));
+    const stats = await fs.stat(join(target, "a/b/index.js"));
+    expect(stats.size).toBe(stats0.size);
+    expect(stats.mode).toBe(stats0.mode);
+  });
+});
+
+describe("writeFile(path, data[, options])", () => {
+  const data = "asdfasidofjasdf";
+
+  it("Create a file at root (writeFile.txt)", async () => {
+    await clean();
+    const path = join(target, "writeFile.txt");
+    await fs.writeFile(path, data);
+    expect(await fs.readFile(path, "utf8")).toEqual(data);
+  });
   /*
-  
-  it('Rename file two levels deep', () => {
-    const vol = create({ '/1/2': 'foobar' });
-    vol.renameSync('/1/2', '/1/3');
-    expect(vol.toJSON()).toEqual({ '/1/3': 'foobar' });
-  });
-  it('Rename file three levels deep', () => {
-    const vol = create({
-      '/foo1': 'bar',
-      '/foo2/foo': 'bar',
-      '/foo3/foo/foo': 'bar',
-    });
-    vol.renameSync('/foo3/foo/foo', '/foo3/foo/foo2');
-    expect(vol.toJSON()).toEqual({
-      '/foo1': 'bar',
-      '/foo2/foo': 'bar',
-      '/foo3/foo/foo2': 'bar',
-    });
-  });
-  it('Throws on no params', () => {
+  it("Write to file by file descriptor", () => {
     const vol = create();
-    expect(() => {
-      (vol as any).renameSync();
-    }).toThrowErrorMatchingSnapshot();
+    const fd = vol.openSync("/writeByFd.txt", "w");
+    vol.writeFileSync(fd, data);
+    const node = tryGetChildNode(vol.root, "writeByFd.txt");
+    expect(node).toBeInstanceOf(Node);
+    expect(node.getString()).toBe(data);
   });
-  it('Throws on only one param', () => {
-    const vol = create({ '/foo': 'bar' });
-    expect(() => {
-      (vol as any).renameSync('/foo');
-    }).toThrowErrorMatchingSnapshot();
+  it("Write to two files (second by fd)", () => {
+    const vol = create();
+
+    // 1
+    vol.writeFileSync("/1.txt", "123");
+
+    // 2, 3, 4
+    const fd2 = vol.openSync("/2.txt", "w");
+    const fd3 = vol.openSync("/3.txt", "w");
+    const fd4 = vol.openSync("/4.txt", "w");
+
+    vol.writeFileSync(fd2, "456");
+
+    expect(tryGetChildNode(vol.root, "1.txt").getString()).toBe("123");
+    expect(tryGetChildNode(vol.root, "2.txt").getString()).toBe("456");
   });
-  it('Throws if path is of wrong type', () => {
-    const vol = create({ '/foo': 'bar' });
-    expect(() => {
-      (vol as any).renameSync('/foo', 123);
-    }).toThrowErrorMatchingSnapshot();
+  it("Write at relative path that does not exist throws correct error", () => {
+    const vol = create();
+    try {
+      vol.writeFileSync("a/b", "c");
+      throw new Error("not_this");
+    } catch (err) {
+      expect(err.code).toBe("ENOENT");
+    }
   });
   */
 });

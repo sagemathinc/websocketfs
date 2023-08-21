@@ -10,7 +10,10 @@ import * as tmp from "tmp-promise";
 import bind from "../bind";
 import { join } from "path";
 import fs from "fs/promises";
-import { MAX_WRITE_BLOCK_LENGTH } from "../../sftp/sftp-client";
+import {
+  MAX_WRITE_BLOCK_LENGTH,
+  MAX_READ_BLOCK_LENGTH,
+} from "../../sftp/sftp-client";
 
 let dir1, dir2, fuse, target;
 
@@ -35,15 +38,23 @@ async function clean() {
 
 describe("stress writeFile(path, data[, options])", () => {
   // Make the data big to also stress test writing/chunking!
-  const length = MAX_WRITE_BLOCK_LENGTH + 1;
-  const data = Array.from({ length }, () =>
-    String.fromCharCode(Math.floor(Math.random() * 26) + 97),
-  ).join("");
 
-  it(`Create a file at root (writeFile.txt) of length ${data.length}`, async () => {
+  async function stress(length: number) {
+    const data = Array.from({ length }, () =>
+      String.fromCharCode(Math.floor(Math.random() * 26) + 97),
+    ).join("");
     await clean();
     const path = join(target, "writeFile.txt");
     await fs.writeFile(path, data);
-    expect(await fs.readFile(path, "utf8")).toEqual(data);
+    const data2 = await fs.readFile(path, "utf8");
+    expect(data2).toEqual(data);
+  }
+
+  it(`Create and reading a file that is longer than MAX_WRITE_BLOCK_LENGTH`, async () => {
+    await stress(MAX_WRITE_BLOCK_LENGTH + 1);
+  });
+
+  it(`Create and reading a file that is much longer than MAX_READ_BLOCK_LENGTH`, async () => {
+    await stress(2*MAX_READ_BLOCK_LENGTH + 1);
   });
 });

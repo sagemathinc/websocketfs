@@ -15,7 +15,7 @@ import Fuse from "@cocalc/fuse-native";
 import type { SftpError } from "../sftp/util";
 import {
   MAX_WRITE_BLOCK_LENGTH,
-//  MAX_READ_BLOCK_LENGTH,
+  MAX_READ_BLOCK_LENGTH,
 } from "../sftp/sftp-client";
 
 import debug from "debug";
@@ -182,6 +182,26 @@ export default class SftpFuse {
 
   // opendir(path, flags, cb)
 
+  private _read(
+    handle,
+    buffer: Buffer,
+    offset: number,
+    length: number,
+    position: number,
+    callback: (err: Error | null, bytesRead?: number) => void,
+  ) {
+    this.sftp.read(
+      handle,
+      buffer,
+      offset,
+      length,
+      position,
+      (err, _buffer, bytesRead) => {
+        callback(err, bytesRead);
+      },
+    );
+  }
+
   async read(
     path: string,
     fd: number,
@@ -195,14 +215,33 @@ export default class SftpFuse {
     log("read - open got a handle", handle._handle);
     // We *must* read in chunks of size at most MAX_READ_BLOCK_LENGTH,
     // or the result will definitely be all corrupted (of course).
-    this.sftp.read(handle, buf, 0, len, pos, (err, _buffer, bytesRead) => {
-      if (err) {
-        log("read -- error reading", err);
-        fuseError(cb)(err);
-      } else {
-        cb(bytesRead);
+    let bytesRead = 0;
+    let offset = 0;
+    let position = pos;
+    try {
+      while (len > 0) {
+        let length = Math.min(MAX_READ_BLOCK_LENGTH, len);
+        const newBytesRead = await callback(
+          this._read,
+          handle,
+          buf,
+          offset,
+          length,
+          position,
+        );
+        if (newBytesRead == 0) {
+          break;
+        }
+        bytesRead += newBytesRead;
+        offset += newBytesRead;
+        len -= newBytesRead;
+        position += newBytesRead;
       }
-    });
+      cb(bytesRead);
+    } catch (err) {
+      log("read -- error reading", err);
+      fuseError(cb)(err);
+    }
   }
 
   async write(

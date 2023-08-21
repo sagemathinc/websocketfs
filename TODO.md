@@ -1,9 +1,12 @@
 ## Critical
 
-- [ ] LARGE files  \(above 32\*1024 characters\) are always corrupted when written \(or read?\).  This probably causes many of the remaining problems.  I don't know why this is yet, but the stress.test.ts illustrates it.  Basically exactly the first 32\*1024 gets written and nothing more.  I thought I wrote
-- [ ] "git log" on nontrivial content doesn't work, probably due to mmap?
-- [ ] "git clone" doesn't work
 - [ ] stat doesn't return blocks so "du" doesn't work.
+- [ ] tar gets confused -- "file changed as we read it", I think because our timestamps are a mess for stat (1 second resolution and kind of random?)
+
+```sh
+tar cf /tmp/webosketfs.tar websocketfs/.git
+```
+
 - [ ] make it work over the network
 - [ ] support api key auth
 
@@ -17,6 +20,12 @@
 - [ ] eliminate use of `var`
 - [ ] there are a bunch of TODO's in the code still.
 - [ ] support node v20
+
+## DONE
+
+- [x] LARGE files  \(above 32\*1024 characters\) are always corrupted when written \(or read?\).  This probably causes many of the remaining problems.  I don't know why this is yet, but the stress.test.ts illustrates it.  Basically exactly the first 32\*1024 gets written and nothing more.  I thought I wrote
+- [x] "git log" on nontrivial content doesn't work, probably due to mmap?
+- [x] "git clone" doesn't work
 - [x] get rid of all the #if macro preprocess comments \(maybe grunt used them\). We can solve these problems for the web later, e.g., using polyfills or better code.
 - [x] writing a LARGE file \-\- do we need to chunk it? Same question about reading.  It seems like we do. What about changing the params?
 - [x] promote the node\-fuse stuff to be part of the main library instead of an example

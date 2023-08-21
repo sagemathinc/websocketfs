@@ -30,7 +30,6 @@ import SftpAttributes = misc.SftpAttributes;
 import SftpExtensions = misc.SftpExtensions;
 import Path = fsmisc.Path;
 
-//export const MAX_WRITE_BLOCK_LENGTH = 32 * 1024;
 export const MAX_WRITE_BLOCK_LENGTH = 32 * 1024;
 export const MAX_READ_BLOCK_LENGTH = 256 * 1024;
 
@@ -436,7 +435,15 @@ class SftpClientCore implements IFilesystem {
     this.checkPosition(position);
 
     // make sure the length is within reasonable limits
-    if (length > this._maxReadBlockLength) length = this._maxReadBlockLength;
+    if (length > this._maxReadBlockLength) {
+      const error = Error(
+        `Length ${length} exceeds maximum allowed read data block length ${this._maxReadBlockLength}`,
+      );
+      error["code"] = "EIO";
+      error["errno"] = 55;
+      callback(error, buffer, 0);
+      return;
+    }
 
     var request = this.getRequest(SftpPacketType.READ);
 
@@ -476,7 +483,13 @@ class SftpClientCore implements IFilesystem {
     this.checkPosition(position);
 
     if (length > this._maxWriteBlockLength) {
-      throw new Error("Length exceeds maximum allowed data block length");
+      const error = Error(
+        `Length ${length} exceeds maximum allowed write data block length ${this._maxWriteBlockLength}`,
+      );
+      error["code"] = "EIO";
+      error["errno"] = 55;
+      callback(error);
+      return;
     }
 
     var request = this.getRequest(SftpPacketType.WRITE);

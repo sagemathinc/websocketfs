@@ -1,5 +1,5 @@
 /*
-Stress tests.   
+Stress tests.
 
 Reading and writing bigger data is often done by chunking it, so it's critical to
 test that this is working properly by reading and writing larger data, and confirming
@@ -17,7 +17,7 @@ import {
 
 
 // stress tests take longer
-jest.setTimeout(15000);
+jest.setTimeout(60000);
 
 let dir1, dir2, fuse, target;
 

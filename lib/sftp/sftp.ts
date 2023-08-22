@@ -153,7 +153,7 @@ module SFTP {
     hideUidGid?: boolean;
   }
 
-  export interface IServerOptions {
+  export interface IServerOptions extends WebSocketIServerOptions {
     filesystem?: IFilesystem;
     virtualRoot?: string;
     readOnly?: boolean;

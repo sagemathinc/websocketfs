@@ -1,11 +1,11 @@
-## Critical
+# Critical
 
-- [ ] benchmarking and make it a bit faster, e.g., maybe support some intense levels of caching...
+- [ ] benchmarking and make it a bit faster, e.g., maybe support some intense levels of caching...?
 - [ ] make it work over the network
   - it technically does already work over a network, but I've only been using localhost for testing/demos. Need to try a real network situation.
-- [ ] support api key auth (maybe this is only at the cocalc level (?))
+- [ ] support api key auth \(maybe this is only at the cocalc level \(?\)\)
 
-## Code Quality
+# Code Quality
 
 - [ ] delete the "WEB" comments in code...
 - [ ] redo all logging to use the debug module
@@ -16,7 +16,7 @@
 - [ ] there are a bunch of TODO's in the code still.
 - [ ] support node v20
 
-## DONE
+# DONE
 
 - [x] implement statfs so can do `df -h ...`
   - with luck, I just need to implement SftpVfsStats in sftp-misc.ts?!
@@ -37,3 +37,4 @@
 - [x] enable noUnusedLocals
 - [x] enable noUnusedParameters
 - [x] enable strictNullChecks
+

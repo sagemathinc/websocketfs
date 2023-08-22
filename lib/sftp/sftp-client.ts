@@ -31,7 +31,7 @@ import { SftpVfsStats } from "./sftp-misc";
 import SftpExtensions = misc.SftpExtensions;
 import Path = fsmisc.Path;
 
-export const MAX_WRITE_BLOCK_LENGTH = 32 * 1024;
+export const MAX_WRITE_BLOCK_LENGTH = 256 * 1024;
 export const MAX_READ_BLOCK_LENGTH = 256 * 1024;
 
 interface SftpRequest {
@@ -498,7 +498,7 @@ class SftpClientCore implements IFilesystem {
     var request = this.getRequest(SftpPacketType.WRITE);
 
     request.writeData(h);
-    request.writeInt64(position);
+    request.writeUInt64(position);
     request.writeData(buffer, offset, offset + length);
 
     this.execute(request, callback, this.parseStatus, {

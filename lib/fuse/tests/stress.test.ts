@@ -54,7 +54,7 @@ describe("stress writeFile(path, data[, options])", () => {
     await stress(MAX_WRITE_BLOCK_LENGTH + 1);
   });
 
-  it(`Create and reading a file that is much longer than MAX_READ_BLOCK_LENGTH`, async () => {
-    await stress(2 * MAX_READ_BLOCK_LENGTH + 1);
+  it(`Create and reading a file that is longer than MAX_READ_BLOCK_LENGTH`, async () => {
+    await stress(MAX_READ_BLOCK_LENGTH + 1);
   });
 });

@@ -503,22 +503,12 @@ export class SftpServerSession {
   }
 
   private processRequest(request: SftpRequest, response: SftpResponse) {
-    var fs = this._fs;
-    if (typeof fs === "undefined") {
+    const fs = this._fs;
+    if(fs == null) {
       // already disposed
       return;
     }
-
     try {
-      if (request.length > 66000) {
-        this.sendStatus(
-          response,
-          SftpStatusCode.BAD_MESSAGE,
-          "Packet too long",
-        );
-        return;
-      }
-
       switch (request.type) {
         case SftpPacketType.OPEN:
           var path = request.readString();
@@ -604,7 +594,7 @@ export class SftpServerSession {
                 return;
               }
 
-              response.writeInt32(bytesRead);
+              response.writeUInt32(bytesRead);
               response.skip(bytesRead);
               this.send(response);
             },
@@ -616,23 +606,14 @@ export class SftpServerSession {
           if (handle == null) {
             throw Error("handle must not be null");
           }
-          var position = request.readInt64();
-          var count = request.readInt32();
+          var position = request.readUInt64();
+          var count = request.readUInt32();
           var offset = request.position;
           request.skip(count);
 
           fs.write(handle, request.buffer, offset, count, position, (err) =>
             this.sendSuccess(response, err),
           );
-
-          // I was playing around with syncing on write:
-          //           fs.write(handle, request.buffer, offset, count, position, (err) => {
-          //             if (err || handle == null || fs.fsync == null) {
-          //               this.sendSuccess(response, err);
-          //             } else {
-          //               fs.fsync(handle, (err) => this.sendSuccess(response, err));
-          //             }
-          //           });
           return;
 
         case SftpPacketType.LSTAT:

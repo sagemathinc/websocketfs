@@ -179,7 +179,7 @@ export class SftpPacketReader extends SftpPacket {
   }
 
   readString(): string {
-    const length = this.readInt32();
+    const length = this.readUInt32();
     this.check(length);
     const end = this.position + length;
     const value = this.buffer.toString("utf8", this.position, end);
@@ -196,7 +196,7 @@ export class SftpPacketReader extends SftpPacket {
   }
 
   readData(clone: boolean): Buffer {
-    const length = this.readInt32();
+    const length = this.readUInt32();
     this.check(length);
 
     const start = this.position;
@@ -293,19 +293,24 @@ export class SftpPacketWriter extends SftpPacket {
     this.writeInt32(0); // will get overwritten later
 
     const bytesWritten = encodeUTF8(value, this.buffer, this.position);
-    if (bytesWritten < 0) throw new Error("Not enough space in the buffer");
+    if (bytesWritten < 0) {
+      console.warn("writeString: Not enough space in the buffer");
+      throw new Error("Not enough space in the buffer");
+    }
 
     // write number of bytes and seek back to the end
     this.position = offset;
-    this.writeInt32(bytesWritten);
+    this.writeUInt32(bytesWritten);
     this.position += bytesWritten;
   }
 
   writeData(data: Buffer, start?: number, end?: number): void {
-    if (typeof start !== "undefined") data = data.slice(start, end);
+    if (start != null) {
+      data = data.slice(start, end);
+    }
 
     const length = data.length;
-    this.writeInt32(length);
+    this.writeUInt32(length);
 
     this.check(length);
     data.copy(this.buffer, this.position, 0, length);

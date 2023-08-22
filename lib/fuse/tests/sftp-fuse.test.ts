@@ -212,3 +212,13 @@ describe("stat the filesystem (what df uses)", () => {
     expect(statsTarget).toEqual(statsSource);
   });
 });
+
+describe("filesystem name", () => {
+  // Disabled because it leaves a lock and can't unmount fs.  Maybe a "bug" in df...
+  // EBUSY: resource busy or locked, rmdir
+  // And there is no way to get this same info from nodejs directly via a library call.
+  xit("confirm that filesystem name is set (and starts with ws:// via df)", async () => {
+    const df = await callback(execFile, "df", [target], { cwd: "/" });
+    expect(df).toContain("ws://");
+  });
+});

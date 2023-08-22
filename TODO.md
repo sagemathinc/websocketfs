@@ -1,7 +1,6 @@
 ## Critical
 
-- [ ] implement statfs so can do `df -h ...`
-  - with luck, I just need to implement SftpVfsStats in sftp-misc.ts?!
+- [ ] benchmarking and make it a bit faster, e.g., maybe support some intense levels of caching...
 - [ ] make it work over the network
   - it technically does already work over a network, but I've only been using localhost for testing/demos. Need to try a real network situation.
 - [ ] support api key auth (maybe this is only at the cocalc level (?))
@@ -19,6 +18,9 @@
 
 ## DONE
 
+- [x] implement statfs so can do `df -h ...`
+  - with luck, I just need to implement SftpVfsStats in sftp-misc.ts?!
+- [x] set filesystem name
 - [x] stat doesn't return blocks so "du" doesn't work.
 - [x] tar gets confused \-\- "file changed as we read it", I think because our timestamps are a mess for stat \(1 second resolution and kind of random?\)
 - [x] LARGE files \(above 32\*1024 characters\) are always corrupted when written \(or read?\). This probably causes many of the remaining problems. I don't know why this is yet, but the stress.test.ts illustrates it. Basically exactly the first 32\*1024 gets written and nothing more. I thought I wrote

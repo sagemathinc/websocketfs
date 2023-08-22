@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import { execFile } from "child_process";
 import { callback } from "awaiting";
+import { statvfs } from "@wwa/statvfs";
 
 let dir1, dir2, fuse, source, target;
 
@@ -202,22 +203,12 @@ describe("Simple tests of each of the FUSE operations...", () => {
   });
 });
 
-// describe("more stressful tests", () => {
-//   let repo, logLength;
-//   it("clones the websocketfs git repo", async () => {
-//     repo = path.join(source, "websocketfs"); // easy for now!
-//     await callback(execFile, "git", ["clone", ".", repo]);
-//     const v = await callback(execFile, "git", ["log", "."], { cwd: repo });
-//     logLength = v.split("\n").length;
-//     expect(logLength).toBeGreaterThan(2500);
-
-//     repo = path.join(target, "websocketfs"); // make test below hard
-//   });
-
-// //   it("get the git log several times to make sure it is working and handles aren't leaking", async () => {
-// //     for (let i = 0; i < 2; i++) {
-// //       const v = await callback(execFile, "git", ["log", "."], { cwd: repo });
-// //       expect(v.split("\n").length).toBe(logLength);
-// //     }
-// //   });
-// });
+describe("stat the filesystem (what df uses)", () => {
+  it("stats the filesystem from fuse and native and get same thing (except type, which should differ)", async () => {
+    const statsTarget = await statvfs(target);
+    const statsSource = await statvfs(source);
+    expect(statsTarget.type == statsSource.type).toBe(false);
+    statsTarget.type = statsSource.type = 0;
+    expect(statsTarget).toEqual(statsSource);
+  });
+});

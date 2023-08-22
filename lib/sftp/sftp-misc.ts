@@ -132,8 +132,11 @@ export class SftpFlags {
 
 export class SftpExtensions {
   public static POSIX_RENAME = "posix-rename@openssh.com"; // "1"
-  public static STATVFS = "statvfs@openssh.com"; // "2"
-  public static FSTATVFS = "fstatvfs@openssh.com"; // "2"
+  // "2" -- I'm *not* implementing the same protocol as 
+  // statvfs@openssh.com, from 
+  // https://www.sftp.net/spec/openssh-sftp-extensions.txt).
+  public static STATVFS = "statvfs@sftp.ws"; 
+  public static FSTATVFS = "fstatvfs@openssh.com"; // not implemented...
   public static HARDLINK = "hardlink@openssh.com"; // "1"
   public static FSYNC = "fsync@openssh.com"; // "1"
   public static NEWLINE = "newline@sftp.ws"; // "\n"
@@ -187,25 +190,25 @@ export class SftpExtensions {
       case SftpExtensions.SUPPORTED2:
         reader = reader.readStructuredData();
         var res = {};
-        res["supportedAttributeMask"] = reader.readUint32();
-        res["supportedAttributeBits"] = reader.readUint32();
-        res["supportedOpenFlags"] = reader.readUint32();
-        res["supportedAccessMask"] = reader.readUint32();
-        res["maxReadSize"] = reader.readUint32();
+        res["supportedAttributeMask"] = reader.readUInt32();
+        res["supportedAttributeBits"] = reader.readUInt32();
+        res["supportedOpenFlags"] = reader.readUInt32();
+        res["supportedAccessMask"] = reader.readUInt32();
+        res["maxReadSize"] = reader.readUInt32();
 
         var extensionCount = -1;
         if (name === SftpExtensions.SUPPORTED2) {
-          res["supportedOpenBlockVector"] = reader.readUint16();
-          res["supportedBlockVector"] = reader.readUint16();
+          res["supportedOpenBlockVector"] = reader.readUInt16();
+          res["supportedBlockVector"] = reader.readUInt16();
 
-          var attribExtensionCount = reader.readUint32();
+          var attribExtensionCount = reader.readUInt32();
           var attribExtensionNames: string[] = (res["attribExtensionsNames"] =
             []);
           while (--attribExtensionCount >= 0) {
             attribExtensionNames.push(reader.readString());
           }
 
-          extensionCount = reader.readUint32();
+          extensionCount = reader.readUInt32();
         }
 
         var extensionNames: string[] = (res["extensionsNames"] = []);
@@ -219,13 +222,13 @@ export class SftpExtensions {
         reader = reader.readStructuredData();
         var res = {};
 
-        var flags = reader.readUint32();
+        var flags = reader.readUInt32();
         res["casePreserved"] = (flags & 1) != 0;
         res["caseSensitive"] = (flags & 2) != 0;
 
         res["illegalCharacters"] = reader.readString();
 
-        var count = reader.readUint32();
+        var count = reader.readUInt32();
         var values: string[] = (res["reservedNames"] = []);
         while (count > 0) {
           var name = reader.readString();
@@ -386,7 +389,7 @@ export class SftpAttributes implements IStats {
       return;
     }
 
-    var flags = (this.flags = reader.readUint32());
+    var flags = (this.flags = reader.readUInt32());
 
     if (flags & SftpAttributeFlags.SIZE) {
       this.size = reader.readInt64();
@@ -398,12 +401,12 @@ export class SftpAttributes implements IStats {
     }
 
     if (flags & SftpAttributeFlags.PERMISSIONS) {
-      this.mode = reader.readUint32();
+      this.mode = reader.readUInt32();
     }
 
     if (flags & SftpAttributeFlags.ACMODTIME) {
-      this.atime = new Date(1000 * reader.readUint32());
-      this.mtime = new Date(1000 * reader.readUint32());
+      this.atime = new Date(1000 * reader.readUInt32());
+      this.mtime = new Date(1000 * reader.readUInt32());
     }
 
     if (flags & SftpAttributeFlags.EXTENDED) {
@@ -502,27 +505,51 @@ export class SftpAttributes implements IStats {
 }
 
 // The STATVFS extension is documented at https://www.sftp.net/spec/openssh-sftp-extensions.txt
+// except I'm NOT returning the same data and calling the extension "statvfs@sftp.ws" instead.
+// Why? Because I want the filesystem type (?), and there's a bunch of fields that
+// statvfs@openssh.com has that I don't know how to get from Javascript.
 export class SftpVfsStats implements StatFs {
-  type: number;
   bsize: number;
   blocks: number;
   bfree: number;
   bavail: number;
   files: number;
   ffree: number;
+  type: number;
 
   constructor(reader?: SftpPacketReader) {
-    log("SftpVfsStats()", reader);
-    throw Error("TODO");
+    log("SftpVfsStats()");
+    if (reader == null) {
+      return;
+    }
+    this.bsize = reader.readUInt64();
+    this.blocks = reader.readUInt64();
+    this.bfree = reader.readUInt64();
+    this.bavail = reader.readUInt64();
+    this.files = reader.readUInt64();
+    this.ffree = reader.readUInt64();
+    this.type = reader.readUInt64();
   }
 
   write(response: SftpPacketWriter): void {
-    log("SftpVfsStats.write ", response);
-    throw Error("TODO");
+    log("SftpVfsStats.write ");
+    response.writeUInt64(this.bsize);
+    response.writeUInt64(this.blocks);
+    response.writeUInt64(this.bfree);
+    response.writeUInt64(this.bavail);
+    response.writeUInt64(this.files);
+    response.writeUInt64(this.ffree);
+    response.writeUInt64(this.type);
   }
 
-  from(stats?: StatFs): void {
+  from(stats: StatFs): void {
     log("SftpVfsStats.from", stats);
-    throw Error("TODO");
+    this.bsize = stats.bsize;
+    this.blocks = stats.blocks;
+    this.bfree = stats.bfree;
+    this.bavail = stats.bavail;
+    this.files = stats.files;
+    this.ffree = stats.ffree;
+    this.type = stats.type;
   }
 }

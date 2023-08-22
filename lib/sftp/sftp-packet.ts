@@ -107,7 +107,7 @@ export class SftpPacketReader extends SftpPacket {
     this.length = buffer.length;
 
     if (!raw) {
-      var length = this.readInt32() + 4;
+      const length = this.readInt32() + 4;
       if (length != this.length) throw new Error("Invalid packet received");
 
       this.type = this.readByte();
@@ -131,66 +131,67 @@ export class SftpPacketReader extends SftpPacket {
 
   readByte(): number {
     this.check(1);
-    var value = this.buffer.readUInt8(this.position++); //WEB: var value = this.buffer[this.position++] & 0xFF;
+    const value = this.buffer.readUInt8(this.position++);
     return value;
   }
 
   readInt16(): number {
-    this.check(2); //WEB: var value = this.readUint16();
-    var value = this.buffer.readInt16BE(this.position); //WEB: if (value & 0x8000) value -= 0x10000;
-    this.position += 2; //WEB: // removed
+    this.check(2);
+    const value = this.buffer.readInt16BE(this.position);
+    this.position += 2;
     return value;
   }
 
-  readUint16(): number {
+  readUInt16(): number {
     this.check(2);
-    var value = this.buffer.readUInt16BE(this.position); //WEB: // removed
-    this.position += 2; //WEB: var value = 0;
-    //WEB: value |= (this.buffer[this.position++] & 0xFF) << 8;
-    //WEB: value |= (this.buffer[this.position++] & 0xFF);
+    const value = this.buffer.readUInt16BE(this.position);
+    this.position += 2;
     return value;
   }
 
   readInt32(): number {
-    this.check(4); //WEB: var value = this.readUint32();
-    var value = this.buffer.readInt32BE(this.position); //WEB: if (value & 0x80000000) value -= 0x100000000;
-    this.position += 4; //WEB: // removed
+    this.check(4);
+    const value = this.buffer.readInt32BE(this.position);
+    this.position += 4;
     return value;
   }
 
-  readUint32(): number {
+  readUInt32(): number {
     this.check(4);
-    var value = this.buffer.readUInt32BE(this.position); //WEB: // removed
-    this.position += 4; //WEB: var value = 0;
-    //WEB: value |= (this.buffer[this.position++] & 0xFF) << 24;
-    //WEB: value |= (this.buffer[this.position++] & 0xFF) << 16;
-    //WEB: value |= (this.buffer[this.position++] & 0xFF) << 8;
-    //WEB: value |= (this.buffer[this.position++] & 0xFF);
+    const value = this.buffer.readUInt32BE(this.position);
+    this.position += 4;
     return value;
   }
 
   readInt64(): number {
-    var hi = this.readInt32();
-    var lo = this.readUint32();
+    const hi = this.readInt32();
+    const lo = this.readUInt32();
 
-    var value = hi * 0x100000000 + lo;
+    const value = hi * 0x100000000 + lo;
+    return value;
+  }
+
+  readUInt64(): number {
+    const hi = this.readUInt32();
+    const lo = this.readUInt32();
+    const value = hi * 0x100000000 + lo;
     return value;
   }
 
   readString(): string {
-    var length = this.readInt32();
+    const length = this.readInt32();
     this.check(length);
-    var end = this.position + length;
-    var value = this.buffer.toString("utf8", this.position, end); //WEB: var value = decodeUTF8(this.buffer, this.position, end);
+    const end = this.position + length;
+    const value = this.buffer.toString("utf8", this.position, end);
     this.position = end;
     return value;
   }
 
   skipString(): void {
-    var length = this.readInt32();
+    const length = this.readInt32();
     this.check(length);
 
-    var end = this.position + length;
+    const end = this.position + length;
     this.position = end;
   }
 
@@ -257,32 +258,41 @@ export class SftpPacketWriter extends SftpPacket {
 
   writeByte(value: number): void {
     this.check(1);
-    this.buffer.writeUInt8(value, this.position++); //WEB: this.buffer[this.position++] = value & 0xFF;
+    this.buffer.writeUInt8(value, this.position++);
   }
 
   writeInt32(value: number): void {
     this.check(4);
-    this.buffer.writeInt32BE(value, this.position); //WEB: // removed
-    this.position += 4; //WEB: // removed
-    //WEB: this.buffer[this.position++] = (value >> 24) & 0xFF;
-    //WEB: this.buffer[this.position++] = (value >> 16) & 0xFF;
-    //WEB: this.buffer[this.position++] = (value >> 8) & 0xFF;
-    //WEB: this.buffer[this.position++] = value & 0xFF;
+    this.buffer.writeInt32BE(value, this.position);
+    this.position += 4;
+  }
+
+  writeUInt32(value: number): void {
+    this.check(4);
+    this.buffer.writeUInt32BE(value, this.position);
+    this.position += 4;
   }
 
   writeInt64(value: number): void {
-    var hi = (value / 0x100000000) | 0;
-    var lo = (value & 0xffffffff) | 0;
+    const hi = (value / 0x100000000) | 0;
+    const lo = (value & 0xffffffff) | 0;
     this.writeInt32(hi);
     this.writeInt32(lo);
   }
 
+  writeUInt64(value: number): void {
+    const hi = (value / 0x100000000) | 0;
+    const lo = (value & 0xffffffff) | 0;
+    this.writeUInt32(hi);
+    this.writeUInt32(lo);
+  }
+
   writeString(value: string): void {
     if (typeof value !== "string") value = "" + value;
-    var offset = this.position;
+    const offset = this.position;
     this.writeInt32(0); // will get overwritten later
 
-    var bytesWritten = encodeUTF8(value, this.buffer, this.position);
+    const bytesWritten = encodeUTF8(value, this.buffer, this.position);
     if (bytesWritten < 0) throw new Error("Not enough space in the buffer");
 
     // write number of bytes and seek back to the end
@@ -292,13 +302,13 @@ export class SftpPacketWriter extends SftpPacket {
   }
 
   writeData(data: Buffer, start?: number, end?: number): void {
-    if (typeof start !== "undefined") data = data.slice(start, end); //WEB: data = data.subarray(start, end);
+    if (typeof start !== "undefined") data = data.slice(start, end);
 
-    var length = data.length;
+    const length = data.length;
     this.writeInt32(length);
 
     this.check(length);
-    data.copy(this.buffer, this.position, 0, length); //WEB: this.buffer.set(data, this.position);
+    data.copy(this.buffer, this.position, 0, length);
     this.position += length;
   }
 }

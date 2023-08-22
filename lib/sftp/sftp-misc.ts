@@ -9,6 +9,9 @@ import SftpStatusCode = enums.SftpStatusCode;
 import SftpOpenFlags = enums.SftpOpenFlags;
 import IStats = api.IStats;
 import FileType = api.FileType;
+import type { StatFs } from "./fs-api";
+import debug from "debug";
+const log = debug("websocketfs:sftp-client");
 
 export class SftpFlags {
   static toNumber(flags: string | number): SftpOpenFlags {
@@ -495,5 +498,31 @@ export class SftpAttributes implements IStats {
 
       this.flags = flags;
     }
+  }
+}
+
+// The STATVFS extension is documented at https://www.sftp.net/spec/openssh-sftp-extensions.txt
+export class SftpVfsStats implements StatFs {
+  type: number;
+  bsize: number;
+  blocks: number;
+  bfree: number;
+  bavail: number;
+  files: number;
+  ffree: number;
+
+  constructor(reader?: SftpPacketReader) {
+    log("SftpVfsStats()", reader);
+    throw Error("TODO");
+  }
+
+  write(response: SftpPacketWriter): void {
+    log("SftpVfsStats.write ", response);
+    throw Error("TODO");
+  }
+
+  from(stats?: StatFs): void {
+    log("SftpVfsStats.from", stats);
+    throw Error("TODO");
   }
 }

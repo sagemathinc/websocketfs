@@ -264,6 +264,12 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     });
   }
 
+  statvfs(path: string, callback?: (err: Error, stats) => any): Task<any> {
+    return this._task(callback, (callback) => {
+      this._fs.statvfs(path, callback);
+    });
+  }
+
   rename(
     oldPath: string,
     newPath: string,

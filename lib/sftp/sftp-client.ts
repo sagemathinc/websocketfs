@@ -27,6 +27,7 @@ import SftpPacketType = enums.SftpPacketType;
 import SftpStatusCode = enums.SftpStatusCode;
 import SftpFlags = misc.SftpFlags;
 import SftpAttributes = misc.SftpAttributes;
+import { SftpVfsStats } from "./sftp-misc";
 import SftpExtensions = misc.SftpExtensions;
 import Path = fsmisc.Path;
 
@@ -102,6 +103,7 @@ class SftpFeature {
   static COPY_DATA = "COPY_DATA";
   static CHECK_FILE_HANDLE = "CHECK_FILE_HANDLE";
   static CHECK_FILE_NAME = "CHECK_FILE_NAME";
+  static STATVFS = "STATVFS";
 }
 
 class SftpClientCore implements IFilesystem {
@@ -323,6 +325,7 @@ class SftpClientCore implements IFilesystem {
         this._features[SftpFeature.CHECK_FILE_HANDLE] =
           SftpExtensions.CHECK_FILE_HANDLE;
         this._features[SftpFeature.COPY_DATA] = SftpExtensions.COPY_DATA;
+        this._features[SftpFeature.STATVFS] = SftpExtensions.STATVFS;
 
         callback();
       },
@@ -637,6 +640,17 @@ class SftpClientCore implements IFilesystem {
     this.command(SftpPacketType.STAT, [path], callback, this.parseAttribs, {
       command: "stat",
       path: path,
+    });
+  }
+
+  statvfs(path: string, callback: (err: Error, stats) => any): void {
+    this.checkCallback(callback);
+    path = this.checkPath(path, "path");
+    log("statvfs", { path });
+
+    this.command(SftpPacketType.STATVFS, [path], callback, this.parseVfsStats, {
+      command: "statvfs",
+      path,
     });
   }
 
@@ -994,6 +1008,19 @@ class SftpClientCore implements IFilesystem {
     attrs.flags = 0;
 
     callback(null, attrs);
+  }
+
+  private parseVfsStats(
+    response: SftpResponse,
+    callback: (err: Error | null, attrs: IStats) => any,
+  ): void {
+    if (!this.checkResponse(response, SftpPacketType.VFSSTATS, callback)) {
+      return;
+    }
+
+    const stats = new SftpVfsStats(response);
+
+    callback(null, stats);
   }
 
   private parseHandle(

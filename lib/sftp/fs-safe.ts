@@ -529,6 +529,11 @@ export class SafeFilesystem implements IFilesystem {
     }
   }
 
+  statvfs(path: string, callback: (err: Error | null, stats?) => any): void {
+    path = this.toRealPath(path);
+    this.fs.statvfs(path, callback);
+  }
+
   rename(
     oldPath: string,
     newPath: string,

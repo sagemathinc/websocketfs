@@ -2,6 +2,12 @@ import fs = require("fs");
 import api = require("./fs-api");
 import misc = require("./fs-misc");
 
+// note that this is in node.js v 18.15 and later
+// as (fs/promises).statvfs (they are both wrapping
+// the same uv_fs_statfs).
+import { statvfs } from "@wwa/statvfs";
+import type { StatFs } from "./fs-api";
+
 import IFilesystem = api.IFilesystem;
 import IItem = api.IItem;
 import IStats = api.IStats;
@@ -381,7 +387,7 @@ export class LocalFilesystem implements IFilesystem {
 
   realpath(
     path: string,
-    callback: (err: Error | null, resolvedPath: string) => any,
+    callback: (err: Error | null, resolvedPath?: string) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
@@ -391,12 +397,24 @@ export class LocalFilesystem implements IFilesystem {
 
   stat(
     path: string,
-    callback: (err: Error | null, attrs: IStats) => any,
+    callback: (err: Error | null, attrs?: IStats) => any,
   ): void {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
     fs.stat(path, callback);
+  }
+
+  async statvfs(
+    path: string,
+    callback: (err: Error | null, stats?: StatFs) => void,
+  ): Promise<void> {
+    path = this.checkPath(path, "path");
+    try {
+      callback(null, await statvfs(path));
+    } catch (err) {
+      callback(err);
+    }
   }
 
   rename(

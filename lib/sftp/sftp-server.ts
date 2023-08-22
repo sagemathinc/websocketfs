@@ -8,6 +8,8 @@ import channel = require("./channel");
 import util = require("./util");
 import debug from "debug";
 const log = debug("websocketfs:sftp-server");
+import { SftpVfsStats } from "./sftp-misc";
+import type { StatFs } from "./fs-api";
 
 import SafeFilesystem = safe.SafeFilesystem;
 import IStats = api.IStats;
@@ -376,6 +378,27 @@ export class SftpServerSession {
     this.send(response);
   }
 
+  private sendVfsStats(
+    response: SftpResponse,
+    err: NodeJS.ErrnoException | null,
+    stats?: StatFs,
+  ): void {
+    if (this.sendIfError(response, err)) {
+      return;
+    }
+    if (stats == null) {
+      throw Error("bug"); // for typescript
+    }
+
+    response.type = SftpPacketType.VFSSTATS;
+    response.start();
+
+    const stats0 = new SftpVfsStats();
+    stats0.from(stats);
+    stats0.write(response);
+    this.send(response);
+  }
+
   private sendHandle(response: SftpResponse, handle: number): void {
     response.type = SftpPacketType.HANDLE;
     response.start();
@@ -469,6 +492,7 @@ export class SftpServerSession {
 
       SftpExtensions.write(response, SftpExtensions.HARDLINK, "1");
       SftpExtensions.write(response, SftpExtensions.POSIX_RENAME, "1");
+      SftpExtensions.write(response, SftpExtensions.STATVFS, "1");
 
       this.send(response);
       return;
@@ -628,6 +652,14 @@ export class SftpServerSession {
             this.sendAttribs(response, err, stats),
           );
           return;
+
+        case SftpPacketType.STATVFS: {
+          const path = request.readString();
+          fs.statvfs(path, (err, stats) =>
+            this.sendVfsStats(response, err, stats),
+          );
+          return;
+        }
 
         case SftpPacketType.SETSTAT:
           var path = request.readString();

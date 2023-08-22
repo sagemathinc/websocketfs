@@ -22,6 +22,7 @@ export const enum SftpPacketType {
   RENAME = 18,
   READLINK = 19,
   SYMLINK = 20,
+  STATVFS = 21,
   EXTENDED = 200,
 
   // responses
@@ -30,6 +31,7 @@ export const enum SftpPacketType {
   DATA = 103,
   NAME = 104,
   ATTRS = 105,
+  VFSSTATS = 106,
   EXTENDED_REPLY = 201,
 }
 

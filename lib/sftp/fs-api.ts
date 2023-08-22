@@ -18,11 +18,21 @@ export interface IStats {
   atime?: Date;
   mtime?: Date;
   blocks?: number; // only on server
-  metadata?: { [key: string]: any};
+  metadata?: { [key: string]: any };
 
   isFile?(): boolean;
   isDirectory?(): boolean;
   isSymbolicLink?(): boolean;
+}
+
+export interface StatFs {
+  type: number;
+  bsize: number;
+  blocks: number;
+  bfree: number;
+  bavail: number;
+  files: number;
+  ffree: number;
 }
 
 export interface IItem {
@@ -125,7 +135,7 @@ export interface IFilesystem {
     newPath: string,
     callback: (err: Error | null) => any,
   ): void;
-
+  statvfs(path: string, callback: (err: Error | null, stats?: StatFs) => void);
   fcopy?(
     fromHandle: any,
     fromPosition: number,

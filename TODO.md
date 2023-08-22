@@ -1,8 +1,9 @@
 ## Critical
 
-- [ ] implement statfs so can do `df -h ...` 
+- [ ] implement statfs so can do `df -h ...`
+  - with luck, I just need to implement SftpVfsStats in sftp-misc.ts?!
 - [ ] make it work over the network
-  - it technically does already work over a network, but I've only been using localhost for testing/demos.  Need to try a real network situation.
+  - it technically does already work over a network, but I've only been using localhost for testing/demos. Need to try a real network situation.
 - [ ] support api key auth (maybe this is only at the cocalc level (?))
 
 ## Code Quality
@@ -34,4 +35,3 @@
 - [x] enable noUnusedLocals
 - [x] enable noUnusedParameters
 - [x] enable strictNullChecks
-

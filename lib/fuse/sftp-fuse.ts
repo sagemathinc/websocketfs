@@ -60,11 +60,11 @@ export default class SftpFuse {
   //     cb(0);
   //   }
 
-  //   statfs(path: string, cb) {
-  //     // this gets called when you do "df" on the mountpoint (?)
-  //     log("statfs: TODO", path);
-  //     cb(0, {});
-  //   }
+  statfs(path: string, cb) {
+    // this gets called, e.g., when you do "df"
+    log("statfs", path);
+    this.sftp.statvfs(path, fuseError(cb));
+  }
 
   getattr(path: string, cb) {
     log("getattr", path);

@@ -31,8 +31,8 @@ import { SftpVfsStats } from "./sftp-misc";
 import SftpExtensions = misc.SftpExtensions;
 import Path = fsmisc.Path;
 
-export const MAX_WRITE_BLOCK_LENGTH = 256 * 1024;
-export const MAX_READ_BLOCK_LENGTH = 256 * 1024;
+export const MAX_WRITE_BLOCK_LENGTH = 4 * 1024 * 1024;
+export const MAX_READ_BLOCK_LENGTH = 4 * 1024 * 1024;
 
 interface SftpRequest {
   callback: Function;

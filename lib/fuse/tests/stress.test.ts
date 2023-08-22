@@ -15,6 +15,10 @@ import {
   MAX_READ_BLOCK_LENGTH,
 } from "../../sftp/sftp-client";
 
+
+// stress tests take longer
+jest.setTimeout(15000);
+
 let dir1, dir2, fuse, target;
 
 beforeAll(async () => {

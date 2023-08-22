@@ -209,6 +209,9 @@ describe("stat the filesystem (what df uses)", () => {
     const statsSource = await statvfs(source);
     expect(statsTarget.type == statsSource.type).toBe(false);
     statsTarget.type = statsSource.type = 0;
+    // free space can change slightly as a function of time.
+    expect(Math.abs(statsTarget.ffree - statsSource.ffree) < 100).toBe(true);
+    statsTarget.ffree = statsSource.ffree = 0;
     expect(statsTarget).toEqual(statsSource);
   });
 });

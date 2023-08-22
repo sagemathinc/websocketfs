@@ -27,6 +27,9 @@ type Callback = Function;
 export default class SftpFuse {
   private remote: string;
   private sftp: SftpClient;
+  private data: {
+    [fd: number]: { buffer: Buffer; position: number }[];
+  } = {};
 
   constructor(remote: string) {
     this.remote = remote;
@@ -95,9 +98,35 @@ export default class SftpFuse {
     });
   }
 
-  flush(path: string, fd: number, cb) {
-    log("flush", { path, fd });
-    cb(0);
+  async flush(path: string, fd: number, cb) {
+    let data = this.data[fd];
+    log("flush", { path, fd, packets: data?.length ?? 0 });
+    if (data == null) {
+      // nothing to do
+      cb(0);
+      return;
+    }
+    delete this.data[fd];
+    try {
+      while (data.length > 0) {
+        let { buffer, position } = data.shift()!;
+        //console.log("grabbed ", { n: buffer.length, position });
+        //console.log("next is ", { position: data[0]?.position });
+        while (
+          data.length > 0 &&
+          data[0].position == buffer.length + position
+        ) {
+          //console.log("combining...");
+          buffer = Buffer.concat([buffer, data[0].buffer]);
+          data.shift();
+        }
+        //console.log("now writing out");
+        await this.writeToDisk(fd, buffer, buffer.length, position);
+      }
+      cb(0);
+    } catch (err) {
+      fuseError(cb)(err);
+    }
   }
 
   fsync(path: string, dataSync: boolean, fd: number, cb: Callback) {
@@ -273,26 +302,51 @@ export default class SftpFuse {
   ) {
     //log("write", { path, fd, buffer: buffer.toString(), length, position });
     log("write", { path, fd, length, position });
+    if (this.data[fd] == null) {
+      this.data[fd] = [
+        { buffer: Buffer.from(buffer.slice(0, length)), position },
+      ];
+    } else {
+      this.data[fd].push({
+        buffer: Buffer.from(buffer.slice(0, length)),
+        position,
+      });
+      if (this.data[fd].length > 50) {
+        await this.flush(path, fd, (err) => {
+          if (err) {
+            fuseError(cb)(err);
+          } else {
+            cb(length);
+          }
+        });
+        return;
+      }
+    }
+    cb(length);
+  }
+
+  private async writeToDisk(
+    fd: number,
+    buffer: Buffer,
+    length: number,
+    position: number,
+  ): Promise<number> {
+    log("writeToDisk", { fd, length, position });
     const handle = this.sftp.fileDescriptorToHandle(fd);
     // We *must* write in chunks of size at most MAX_WRITE_BLOCK_LENGTH,
     // or the result will definitely be all corrupted (of course).
     length = Math.min(length, buffer.length);
     let bytesWritten = 0;
     let offset = 0;
-    try {
-      while (length > 0) {
-        const n = Math.min(MAX_WRITE_BLOCK_LENGTH, length);
-        await callback(this.sftp.write, handle, buffer, offset, n, position);
-        length -= n;
-        bytesWritten += n;
-        offset += n;
-        position += n;
-      }
-      cb(bytesWritten);
-    } catch (err) {
-      log("write -- error writing", err);
-      fuseError(cb)(err);
+    while (length > 0) {
+      const n = Math.min(MAX_WRITE_BLOCK_LENGTH, length);
+      await callback(this.sftp.write, handle, buffer, offset, n, position);
+      length -= n;
+      bytesWritten += n;
+      offset += n;
+      position += n;
     }
+    return bytesWritten;
   }
 
   release(path: string, fd: number, cb: Callback) {

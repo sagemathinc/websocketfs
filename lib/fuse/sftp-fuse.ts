@@ -17,6 +17,8 @@ import {
   MAX_WRITE_BLOCK_LENGTH,
   MAX_READ_BLOCK_LENGTH,
 } from "../sftp/sftp-client";
+import TTLCache from "@isaacs/ttlcache";
+import { join } from "path";
 
 import debug from "debug";
 
@@ -24,12 +26,15 @@ const log = debug("websocketfs:fuse:sftp");
 
 type Callback = Function;
 
+const TTL = 50;
+
 export default class SftpFuse {
   private remote: string;
   private sftp: SftpClient;
   private data: {
     [fd: number]: { buffer: Buffer; position: number }[];
   } = {};
+  private lstatCache = new TTLCache({ max: 10000, ttl: TTL });
 
   constructor(remote: string) {
     this.remote = remote;
@@ -71,6 +76,10 @@ export default class SftpFuse {
 
   getattr(path: string, cb) {
     log("getattr", path);
+    if (this.lstatCache.has(path)) {
+      cb(0, this.lstatCache.get(path));
+      return;
+    }
     this.sftp.lstat(path, (err, attr) => {
       if (err) {
         fuseError(cb)(err);
@@ -155,7 +164,13 @@ export default class SftpFuse {
       if (typeof items == "boolean") {
         throw Error("readdir fail");
       }
-      const filenames = items.map(({ filename }) => filename);
+      const filenames = items.map(({ filename, stats, longname }) => {
+        this.lstatCache.set(
+          join(path, filename),
+          processAttr({ ...stats, metadata: { blocks: parseInt(longname) } }),
+        );
+        return filename;
+      });
       cb(0, filenames);
     } catch (err) {
       log("readdir - error", err);
@@ -167,6 +182,7 @@ export default class SftpFuse {
   // we want later for speed purposes, right?
   truncate(path: string, size: number, cb) {
     log("truncate", { path, size });
+    this.lstatCache.delete(path);
     this.sftp.setstat(path, { size }, fuseError(cb));
   }
 
@@ -195,6 +211,7 @@ export default class SftpFuse {
 
   chmod(path: string, mode: number, cb) {
     log("chmod", { path, mode });
+    this.lstatCache.delete(path);
     this.sftp.setstat(path, { mode }, fuseError(cb));
   }
 

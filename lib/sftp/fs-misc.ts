@@ -230,6 +230,7 @@ export class FileUtil {
   }
 
   static toString(filename: string, stats: IStats): string {
+    return `${stats.blocks}`;
     let attrs = stats.mode ?? 0;
 
     let perms;

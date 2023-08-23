@@ -15,7 +15,7 @@ interface Options {
 
 export default async function mount(
   opts: Options,
-): Promise<{ fuse: Fuse; client: SftpFuse }> {
+): Promise<{ fuse: Fuse; client: SftpFuse; unmount: () => Promise<void> }> {
   log("mount", opts);
   const { path, remote, mountOpts } = opts;
 
@@ -30,5 +30,9 @@ export default async function mount(
     ...mountOpts,
   });
   await callback(fuse.mount.bind(fuse));
-  return { fuse, client };
+  const unmount = async () => {
+    await callback(fuse.unmount.bind(fuse));
+    client.end();
+  };
+  return { fuse, client, unmount };
 }

@@ -307,7 +307,7 @@ export class LocalFilesystem implements IFilesystem {
 
   readdir(
     handle: any,
-    callback: (err: Error | null, items: IItem[] | boolean) => any,
+    callback: (err: Error | null, items: IItem[] | false) => any,
   ): void {
     this.checkCallback(callback);
     if (

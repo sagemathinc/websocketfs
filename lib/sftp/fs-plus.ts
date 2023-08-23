@@ -197,15 +197,15 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
   readdir(
     path: string,
-    callback?: (err: Error, items: IItem[] | boolean) => any,
+    callback?: (err: Error, items: IItem[] | false) => any,
   ): Task<IItem[]>;
   readdir(
     handle: any,
-    callback?: (err: Error, items: IItem[] | boolean) => any,
+    callback?: (err: Error, items: IItem[] | false) => any,
   ): Task<IItem[] | boolean>;
   readdir(
     handle: any,
-    callback?: (err: Error, items: IItem[] | boolean) => any,
+    callback?: (err: Error, items: IItem[] | false) => any,
   ): Task<IItem[] | boolean> {
     return this._task(callback, (callback) => {
       if (typeof handle === "string") {

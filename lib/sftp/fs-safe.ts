@@ -441,18 +441,17 @@ export class SafeFilesystem implements IFilesystem {
 
   readdir(
     handle: number,
-    callback: (err: Error, items: IItem[] | boolean) => any,
+    callback: (err: Error, items: IItem[] | false) => any,
   ): void {
     this._execute(
       handle,
       (handle, callback) => this.fs.readdir(handle, callback),
-      (err: Error, items: IItem[] | boolean) => {
-        if (this.hideUidGid) {
-          if (Array.isArray(items))
-            (<IItem[]>items).forEach((item) => {
-              delete item.stats.uid;
-              delete item.stats.gid;
-            });
+      (err: Error, items: IItem[] | false) => {
+        if (this.hideUidGid && items !== false) {
+          items.forEach((item) => {
+            delete item.stats.uid;
+            delete item.stats.gid;
+          });
         }
         callback(err, items);
       },

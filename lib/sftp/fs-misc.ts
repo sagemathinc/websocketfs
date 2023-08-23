@@ -383,7 +383,7 @@ export class FileUtil {
     let requests = 1;
     fs.readdir(handle, read);
 
-    function read(err: Error, items: IItem[] | boolean): void {
+    function read(err: Error, items: IItem[] | false): void {
       try {
         requests--;
         error = error ?? err;

@@ -98,7 +98,7 @@ export interface IFilesystem {
   ): void;
   readdir(
     handle: any,
-    callback: (err: Error | null, items?: IItem[] | boolean) => any,
+    callback: (err: Error | null, items?: IItem[] | false) => any,
   ): void;
   unlink(path: string, callback: (err: Error | null) => any): void;
   mkdir(

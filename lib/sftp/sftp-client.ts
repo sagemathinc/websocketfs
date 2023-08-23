@@ -573,7 +573,7 @@ class SftpClientCore implements IFilesystem {
 
   readdir(
     handle: any,
-    callback: (err: Error, items: IItem[] | boolean) => any,
+    callback: (err: Error, items: IItem[] | false) => void,
   ): void {
     this.checkCallback(callback);
     const h = this.toHandle(handle);

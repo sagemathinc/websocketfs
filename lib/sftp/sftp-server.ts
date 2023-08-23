@@ -504,7 +504,7 @@ export class SftpServerSession {
 
   private processRequest(request: SftpRequest, response: SftpResponse) {
     const fs = this._fs;
-    if(fs == null) {
+    if (fs == null) {
       // already disposed
       return;
     }
@@ -673,17 +673,17 @@ export class SftpServerSession {
           });
           return;
 
-        case SftpPacketType.READDIR:
-          var handle = request.readHandle();
+        case SftpPacketType.READDIR: {
+          const handle = request.readHandle();
 
           response.type = SftpPacketType.NAME;
           response.start();
 
-          var count = 0;
-          var offset = response.position;
+          let count = 0;
+          const offset = response.position;
           response.writeInt32(0);
 
-          var done = () => {
+          const done = () => {
             if (count == 0) {
               this.sendStatus(response, SftpStatusCode.EOF, "EOF");
             } else {
@@ -692,16 +692,16 @@ export class SftpServerSession {
             }
           };
 
-          var next = (items: IItem[] | boolean) => {
+          const next = (items: IItem[] | false) => {
             if (items === false) {
               done();
               return;
             }
 
-            var list = <IItem[]>items;
+            const list: IItem[] = items;
 
             while (list.length > 0) {
-              var item = list.shift();
+              const item = list.shift();
               if (item == null) {
                 throw Error("bug");
               }
@@ -721,13 +721,14 @@ export class SftpServerSession {
             readdir();
           };
 
-          var readdir = () => {
+          const readdir = () => {
             if (handle == null) {
               throw Error("handle must not be null");
             }
             fs.readdir(handle, (err, items) => {
-              if (this.sendIfError(response, err)) return;
-
+              if (this.sendIfError(response, err)) {
+                return;
+              }
               next(items);
             });
           };
@@ -735,7 +736,7 @@ export class SftpServerSession {
           if (handle == null) {
             throw Error("handle must not be null");
           }
-          var previous = this._items[handle];
+          const previous = this._items[handle];
           if (previous && previous.length > 0) {
             this._items[handle] = [];
             next(previous);
@@ -744,6 +745,7 @@ export class SftpServerSession {
 
           readdir();
           return;
+        }
 
         case SftpPacketType.REMOVE:
           var path = request.readString();

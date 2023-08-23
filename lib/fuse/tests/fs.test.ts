@@ -324,8 +324,7 @@ describe(".realpath(...)", () => {
     await fs.mkdir(join(target, "b"));
     await fs.symlink("../a", join(target, "b", "b"));
     const path = await fs.realpath(join(target, "b", "b"));
-    // realpath resolves all the way to the source filesystem somehow.
-    expect(path).toBe(join(dir1.path, "a"));
+    expect(path).toBe(join(dir2.path, "a"));
   });
 
   it("returns the root correctly", async () => {

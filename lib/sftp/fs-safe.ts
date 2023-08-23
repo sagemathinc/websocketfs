@@ -571,10 +571,15 @@ export class SafeFilesystem implements IFilesystem {
     newPath: string,
     callback: (err: Error | null) => any,
   ): void {
-    if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
+    if (this.isReadOnly()) {
+      return FileUtil.fail("EROFS", callback);
+    }
 
     oldPath = this.toRealPath(oldPath);
-    newPath = this.toRealPath(newPath);
+    // We *only* resolve to the absolute path if the target of the symlink
+    // is given as an absolute path.  Otherwise it is a relative symlink,
+    // and we better not resolve that!  This is a bug in upstream.
+    newPath = Path.isAbsolute(newPath) ? this.toRealPath(newPath) : newPath;
 
     try {
       this.fs.symlink(oldPath, newPath, callback);

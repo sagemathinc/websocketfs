@@ -800,14 +800,15 @@ export class SftpServerSession {
           });
           return;
 
-        case SftpPacketType.SYMLINK:
-          var linkpath = request.readString();
-          var targetpath = request.readString();
+        case SftpPacketType.SYMLINK: {
+          const linkpath = request.readString();
+          const targetpath = request.readString();
 
           fs.symlink(targetpath, linkpath, (err) =>
             this.sendSuccess(response, err),
           );
           return;
+        }
 
         case SftpExtensions.HARDLINK:
           var oldpath = request.readString();

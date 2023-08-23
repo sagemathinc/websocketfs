@@ -91,7 +91,7 @@ describe("Simple tests of each of the FUSE operations...", () => {
 
   it("readlink", async () => {
     // create a symbolic link
-    await fs.symlink("a.txt", path.join(source, "b.txt"));
+    await fs.symlink("a.txt", path.join(target, "b.txt"));
     const link = await fs.readlink(path.join(target, "b.txt"));
     expect(link).toBe("a.txt");
   });

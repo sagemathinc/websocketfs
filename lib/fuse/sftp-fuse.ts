@@ -6,6 +6,8 @@ Some relevant docs:
 - https://filezilla-project.org/specs/draft-ietf-secsh-filexfer-02.txt
 //
 */
+
+import { join } from "path";
 import { Client as SftpClient } from "../sftp/sftp";
 import { RenameFlags } from "../sftp/fs-api";
 import { callback } from "awaiting";
@@ -17,12 +19,14 @@ import {
   MAX_WRITE_BLOCK_LENGTH,
   MAX_READ_BLOCK_LENGTH,
 } from "../sftp/sftp-client";
-
+import TTLCache from "@isaacs/ttlcache";
 import debug from "debug";
 
 const log = debug("websocketfs:fuse:sftp");
 
 type Callback = Function;
+
+const TTL = 1000;
 
 export default class SftpFuse {
   private remote: string;
@@ -30,6 +34,8 @@ export default class SftpFuse {
   private data: {
     [fd: number]: { buffer: Buffer; position: number }[];
   } = {};
+  private lstatCache = new TTLCache({ max: 10000, ttl: TTL });
+  //private readdirCache = new TTLCache({ max: 10000, ttl: TTL });
 
   constructor(remote: string) {
     this.remote = remote;
@@ -71,6 +77,10 @@ export default class SftpFuse {
 
   getattr(path: string, cb) {
     log("getattr", path);
+    if (this.lstatCache.has(path)) {
+      cb(0, this.lstatCache.get(path));
+      return;
+    }
     this.sftp.lstat(path, (err, attr) => {
       if (err) {
         fuseError(cb)(err);
@@ -80,7 +90,9 @@ export default class SftpFuse {
         // is what sshfs does.  This isn't necessarily correct, but it's what
         // we do, e.g., ctime should change if you change file permissions, but
         // won't in this case.  We could put ctime in the metadata though.
-        cb(0, processAttr(attr));
+        const stats = processAttr(attr);
+        this.lstatCache.set(path, stats);
+        cb(0, stats);
       }
     });
   }
@@ -141,6 +153,10 @@ export default class SftpFuse {
 
   async readdir(path: string, cb) {
     log("readdir", path);
+    //     if (this.readdirCache.has(path)) {
+    //       cb(0, this.readdirCache.get(path));
+    //       return;
+    //     }
     try {
       let handle, items;
       try {
@@ -155,7 +171,11 @@ export default class SftpFuse {
       if (typeof items == "boolean") {
         throw Error("readdir fail");
       }
-      const filenames = items.map(({ filename }) => filename);
+      const filenames = items.map(({ filename, stats }) => {
+        this.lstatCache.set(join(path, filename), processAttr(stats));
+        return filename;
+      });
+      //this.readdirCache.set(path, filenames);
       cb(0, filenames);
     } catch (err) {
       log("readdir - error", err);

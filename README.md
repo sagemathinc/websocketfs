@@ -10,14 +10,29 @@ This project is not done. See [the todo](./TODO.md).
 
 So far we have only implemented running on localhost, but it is now _MOSTLY WORKING_, and the speed is not so bad either, for some benchmarks...
 
+From NPM
+
+```sh
+pnpm install websocketfs
+require('websocketfs').serve({path, port, host})
+
+# then somewhere else:
+
+require('websocketfs').serve({path, remote:'ws://host:port'})
+
+```
+
+## Try bind mounting using the source code from github
+
 ```sh
 ~$ git clone https://github.com/sagemathinc/websocketfs
 ~/websocketfs$ pnpm install && pnpm build && pnpm test
 ~/websocketfs$ node
 Welcome to Node.js v16.20.1.
 Type ".help" for more information.
-> a = require('./dist/lib/fuse/bind')
-> await a.default(process.env.HOME,'/tmp/mnt'); null
+> a = require('.')
+> // serve HOME and mount it at /tmp/mnt all over websocketfs
+> await a.bind(process.env.HOME,'/tmp/mnt'); null
 ```
 
 Then in another terminal, type `ls /tmp/mnt`:
@@ -67,3 +82,4 @@ I wish there was something like sshfs, but entirely over a websocket that doesn'
 I've been working on this for a few days, and have got a pretty good understanding of the sftp\-ws codebase, rewrote much of it to support many modern strict typescript settings, fixed several subtle bugs, etc. I've also written a lot of new unit tests.
 
 Anyway, I so far have a pretty good proof of concept of this working. The actual work feels similar to what was involved in building https://cowasm.org/ , but easier, since it's javascript instead of massive amounts of decades old C.
+

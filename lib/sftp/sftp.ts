@@ -301,10 +301,15 @@ module SFTP {
         headers?: string[],
       ) => {
         if (!result) {
-          if (code == null || code < 200 || code > 599) code = 500;
-          if (typeof code === "undefined") code = 401;
-          if (typeof description === "undefined")
+          if (code == null || code < 200 || code > 599) {
+            code = 500;
+          }
+          if (typeof code === "undefined") {
+            code = 401;
+          }
+          if (typeof description === "undefined") {
             description = http.STATUS_CODES[code];
+          }
           this._log.debug(
             "Rejected connection from %s:%d (%d %s)",
             con?.remoteAddress,
@@ -313,8 +318,9 @@ module SFTP {
             description,
           );
 
-          if (typeof headers !== "undefined")
+          if (typeof headers !== "undefined") {
             description += "\r\n" + headers.join("\r\n");
+          }
           accept(false, code, description);
           return;
         }

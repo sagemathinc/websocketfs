@@ -11,6 +11,7 @@ interface Options {
   // NOTE: we change some options from the defaults, but you can set anything
   // explicitly via mountOpts, overriding our non-default options.
   mountOpts?: Fuse.OPTIONS;
+  auth?: string; // TODO
 }
 
 export default async function mount(

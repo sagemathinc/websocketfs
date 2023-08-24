@@ -1,9 +1,6 @@
 # Critical
 
-- [ ] benchmarking and make it a bit faster, e.g., maybe support some intense levels of caching...?
-- [ ] make it work over the network
-  - it technically does already work over a network, but I've only been using localhost for testing/demos. Need to try a real network situation.
-- [ ] support api key auth \(maybe this is only at the cocalc level \(?\)\)
+- [ ] support auth, i.e., an optional symmetric key that clients must present to be allowed to mount the filesystem. This is useful for "defense in depth".
 
 # Code Quality
 
@@ -18,6 +15,9 @@
 
 # DONE
 
+- [x] make it work over the network
+  - it technically does already work over a network, but I've only been using localhost for testing/demos. Need to try a real network situation.
+- [x] benchmarking and make it a bit faster, e.g., maybe support some intense levels of caching...?
 - [x] implement statfs so can do `df -h ...`
   - with luck, I just need to implement SftpVfsStats in sftp-misc.ts?!
 - [x] set filesystem name

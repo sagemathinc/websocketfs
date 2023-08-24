@@ -1,10 +1,7 @@
-import channel = require("./channel");
-import events = require("events");
+import { EventEmitter } from "events";
+import type { IChannel } from "./channel";
 
-export class StreamChannel
-  extends events.EventEmitter
-  implements channel.IChannel
-{
+export class StreamChannel extends EventEmitter implements IChannel {
   private stream: NodeJS.ReadWriteStream;
   private closed: boolean;
 

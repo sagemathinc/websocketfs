@@ -1,35 +1,26 @@
-import http = require("http");
-import path = require("path");
-import events = require("events");
-import client = require("./sftp-client");
-import server = require("./sftp-server");
-import safe = require("./fs-safe");
-import local = require("./fs-local");
-import api = require("./fs-api");
-import plus = require("./fs-plus");
-import misc = require("./fs-misc");
-import channel = require("./channel");
-import channel_ws = require("./channel-ws");
-import channel_stream = require("./channel-stream");
-import util = require("./util");
-
-import debug from "debug";
-const log = debug("websocketfs:sftp");
-
-import SafeFilesystem = safe.SafeFilesystem;
-import WebSocketChannelFactory = channel_ws.WebSocketChannelFactory;
-import CloseReason = channel.CloseReason;
-import SftpServerSession = server.SftpServerSession;
-import FileUtil = misc.FileUtil;
-import Task = plus.Task;
-import SftpClient = client.SftpClient;
-import ISftpClientEvents = client.ISftpClientEvents;
-
+import http from "http";
+import path from "path";
+import events from "events";
+import { SftpClient, ISftpClientEvents } from "./sftp-client";
+import { SftpServerSession } from "./sftp-server";
+import { SafeFilesystem } from "./fs-safe";
+import * as local from "./fs-local";
+import * as api from "./fs-api";
+import { Task } from "./fs-plus";
+import { FileUtil } from "./fs-misc";
+import { CloseReason, IChannel as IChannel0 } from "./channel";
+import { WebSocketChannelFactory } from "./channel-ws";
+import * as channel_ws from "./channel-ws";
+import * as channel_stream from "./channel-stream";
+import * as util from "./util";
 import {
   Server as WebSocketServer,
   IServerOptions as WebSocketIServerOptions,
 } from "ws";
 import type { WebSocket } from "ws";
+import debug from "debug";
+
+const log = debug("websocketfs:sftp");
 
 module SFTP {
   export interface IStats extends api.IStats {}
@@ -105,7 +96,7 @@ module SFTP {
 
   export var LocalFilesystem = local.LocalFilesystem;
 
-  export interface IChannel extends channel.IChannel {}
+  export interface IChannel extends IChannel0 {}
 
   export module Internals {
     export var StreamChannel = channel_stream.StreamChannel;

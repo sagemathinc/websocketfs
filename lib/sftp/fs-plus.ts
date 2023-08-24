@@ -1,41 +1,20 @@
-import api = require("./fs-api");
-import misc = require("./fs-misc");
-import sources = require("./fs-sources");
-import targets = require("./fs-targets");
-import glob = require("./fs-glob");
-import APromise = require("./promise");
-import events = require("events");
+import { IFilesystem, IItem, IStats, RenameFlags } from "./fs-api";
+import {
+  IDataSource,
+  IDataTarget,
+  FileUtil,
+  Path,
+  IEventEmitter,
+} from "./fs-misc";
+import { FileDataSource, toDataSource } from "./fs-sources";
+import {
+  FileDataTarget,
+  StringDataTarget,
+  BufferDataTarget,
+} from "./fs-targets";
+import { search, ISearchOptionsExt, ISearchOptions } from "./fs-glob";
+import { EventEmitter } from "events";
 import type { SftpHandle } from "./sftp-client";
-
-import IFilesystem = api.IFilesystem;
-import IItem = api.IItem;
-import IStats = api.IStats;
-import RenameFlags = api.RenameFlags;
-import IDataSource = misc.IDataSource;
-import IDataTarget = misc.IDataTarget;
-import FileUtil = misc.FileUtil;
-import Path = misc.Path;
-import IEventEmitter = misc.IEventEmitter;
-import FileDataTarget = targets.FileDataTarget;
-import StringDataTarget = targets.StringDataTarget;
-import BufferDataTarget = targets.BufferDataTarget;
-import FileDataSource = sources.FileDataSource;
-import toDataSource = sources.toDataSource;
-import EventEmitter = events.EventEmitter;
-import search = glob.search;
-import ISearchOptionsExt = glob.ISearchOptionsExt;
-import ISearchOptions = glob.ISearchOptions;
-
-var Promise = Promise || APromise;
-
-export interface Promise<T> {
-  then<U>(
-    onFulfilled?: (value: T) => U | Task<U>,
-    onRejected?: (reason: any) => U | Task<U>,
-  ): Task<U>;
-  catch<U>(onRejected: (reason: any) => U | Task<U>): Task<U>;
-  done?(): void;
-}
 
 export interface Task<T> extends Promise<T> {
   on(event: string, listener: Function): Task<T>;

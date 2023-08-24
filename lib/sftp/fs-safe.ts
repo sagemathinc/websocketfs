@@ -6,17 +6,10 @@ It would be nice to rename things appropriately.
 descriptor is a different notion in POSIX file systems.
 */
 
-import Path = require("path");
-import api = require("./fs-api");
-import misc = require("./fs-misc");
-import crypto = require("crypto");
-
-import IFilesystem = api.IFilesystem;
-import IItem = api.IItem;
-import IStats = api.IStats;
-import RenameFlags = api.RenameFlags;
-import FileUtil = misc.FileUtil;
-
+import Path from "path";
+import { IFilesystem, IItem, IStats, RenameFlags } from "./fs-api";
+import { FileUtil } from "./fs-misc";
+import crypto from "crypto";
 import { MAX_WRITE_BLOCK_LENGTH } from "./sftp-client";
 
 class HandleInfo {

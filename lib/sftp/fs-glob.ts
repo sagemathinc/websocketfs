@@ -1,11 +1,5 @@
-import api = require("./fs-api");
-import misc = require("./fs-misc");
-
-import IFilesystem = api.IFilesystem;
-import IItem = api.IItem;
-import FileUtil = misc.FileUtil;
-import Path = misc.Path;
-import IEventEmitter = misc.IEventEmitter;
+import { IFilesystem, IItem } from "./fs-api";
+import { FileUtil, Path, IEventEmitter } from "./fs-misc";
 
 interface IItemExt extends IItem {
   relativePath: string;

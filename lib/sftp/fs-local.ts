@@ -1,19 +1,12 @@
-import fs = require("fs");
-import api = require("./fs-api");
-import misc = require("./fs-misc");
+import fs from "fs";
+import { IFilesystem, IItem, IStats, RenameFlags } from "./fs-api";
+import { FileUtil, Path } from "./fs-misc";
 
 // note that this is in node.js v 18.15 and later
 // as (fs/promises).statvfs (they are both wrapping
 // the same uv_fs_statfs).
 import { statvfs } from "@wwa/statvfs";
 import type { StatFs } from "./fs-api";
-
-import IFilesystem = api.IFilesystem;
-import IItem = api.IItem;
-import IStats = api.IStats;
-import RenameFlags = api.RenameFlags;
-import Path = misc.Path;
-import FileUtil = misc.FileUtil;
 
 export class LocalFilesystem implements IFilesystem {
   private isWindows: boolean;

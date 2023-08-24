@@ -1,12 +1,11 @@
 import http from "http";
 import WebSocket from "ws";
 import Url from "url";
-import * as channel from "./channel";
+import type { IChannel } from "./channel";
 import { SftpError } from "./util";
 import debug from "debug";
-const log = debug("websocketfs:channel-ws");
 
-import IChannel = channel.IChannel;
+const log = debug("websocketfs:channel-ws");
 
 export class WebSocketChannelFactory {
   constructor() {}

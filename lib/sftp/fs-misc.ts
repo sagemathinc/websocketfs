@@ -1,9 +1,4 @@
-import api = require("./fs-api");
-
-import IFilesystem = api.IFilesystem;
-import IStats = api.IStats;
-import IItem = api.IItem;
-import FileType = api.FileType;
+import { IFilesystem, IStats, IItem, FileType } from "./fs-api";
 
 export interface IEventEmitter {
   emit(event: string, ...args: any[]): boolean;

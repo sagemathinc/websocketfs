@@ -28,5 +28,5 @@
     "watchDirectory": "useFsEvents",
     "watchFile": "useFsEvents"
   },
-  "exclude": ["node_modules", "dist", "examples"]
+  "exclude": ["node_modules", "dist"]
 }

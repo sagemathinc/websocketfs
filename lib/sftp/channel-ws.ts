@@ -13,41 +13,23 @@ export class WebSocketChannelFactory {
 
   connect(
     address: string,
-    options: any,
+    options,
     callback: (err: Error, channel?: IChannel) => any,
   ): void {
     log("connect", address, options);
-    options = options || {};
 
-    var url = Url.parse(address);
-    options.username = url.auth || options.username;
-    options.password = options.password || options.passphrase;
-    url.auth = null;
+    const url = Url.parse(address);
     address = Url.format(url);
 
-    this._connect(address, options, null, callback);
+    this._connect(address, options, callback);
   }
 
   private _connect(
     address: string,
-    options: any,
-    credentials: string | null,
+    options,
     callback: (err: Error | null, channel?: IChannel) => any,
   ): void {
     log("_connect", address, options);
-    var username = options.username;
-    var password = options.password;
-
-    if (username && password) {
-      credentials = getBasicAuthHeader(username, password);
-    }
-
-    if (credentials != null) {
-      options.headers = options.headers || {};
-      options.headers["Authorization"] = credentials;
-    }
-
-    let authenticate: string | null = null;
 
     log("create websocket");
     const ws = new WebSocket(address, options);
@@ -67,30 +49,11 @@ export class WebSocketChannelFactory {
         // abort the request
         req.abort();
 
-        var information = res.headers["sftp-authenticate-info"];
-
-        var message: string;
-        var code = "X_NOWS";
+        let message: string;
+        const code = "X_NOWS";
         switch (res.statusCode) {
           case 200:
             message = "Unable to upgrade to WebSocket protocol";
-            break;
-          case 401:
-            if (credentials == null) {
-              for (var i = 0; i < res.rawHeaders.length; i += 2) {
-                if (!res.rawHeaders[i].match(/^WWW-Authenticate$/i)) continue;
-                if (!res.rawHeaders[i + 1].match(/^Basic realm/)) continue;
-
-                authenticate = "Basic";
-                break;
-              }
-
-              message = "Authentication required";
-            } else {
-              message = "Authentication failed";
-            }
-
-            code = "X_NOAUTH";
             break;
           default:
             message =
@@ -102,71 +65,17 @@ export class WebSocketChannelFactory {
             break;
         }
 
-        var err = <any>new Error(message);
+        const err = <any>new Error(message);
         err.code = err.errno = code;
         err.level = "http";
-        if (information) err.info = information;
 
         channel._close(2, err);
       },
     );
 
-    function getBasicAuthHeader(username: string, password: string): string {
-      return (
-        "Basic " + Buffer.from(username + ":" + password).toString("base64")
-      );
-    }
-
     channel.on("close", (err) => {
       log("websocket close", err);
-      err = err || new Error("Connection closed");
-
-      if (
-        err.code === "X_NOAUTH" &&
-        authenticate &&
-        typeof options.authenticate === "function"
-      ) {
-        // prepare queries
-        var queries: { name: string; prompt: string; secret: boolean }[] = [];
-        if (!username)
-          queries.push({
-            name: "username",
-            prompt: "Username:",
-            secret: false,
-          });
-        queries.push({ name: "password", prompt: "Password:", secret: true });
-
-        var instructions = err.info;
-        var self = this;
-
-        // invoke client authentication callback
-        var auth = options.authenticate;
-        if (auth.length >= 3) {
-          return auth(instructions, queries, supply);
-        } else {
-          var result = auth(instructions, queries);
-          return supply(result);
-        }
-      }
-
-      function supply(values: { [name: string]: string }): void {
-        values = values || {};
-        if (!username) username = values["username"];
-        password = values["password"];
-
-        if (username && password) {
-          // try authenticating with the supplied credentials
-          credentials = getBasicAuthHeader(username, password);
-          options.username = null;
-          options.password = null;
-          self._connect(address, options, credentials, callback);
-        } else {
-          // fail if no credentials supplied
-          callback(err);
-        }
-      }
-
-      callback(err);
+      callback(err ?? new Error("Connection closed"));
     });
   }
 
@@ -174,7 +83,6 @@ export class WebSocketChannelFactory {
     if (ws.readyState != WebSocket.OPEN) {
       throw new Error("WebSocket is not open");
     }
-
     return new WebSocketChannel(ws, true, true);
   }
 }

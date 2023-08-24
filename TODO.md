@@ -1,6 +1,6 @@
 # Critical
 
-- [ ] support auth, i.e., an optional symmetric key that clients must present to be allowed to mount the filesystem. This is useful for "defense in depth".
+- [x] Remove all auth (was: support auth, i.e., an optional symmetric key that clients must present to be allowed to mount the filesystem. This is useful for "defense in depth".). It's better to do the auth at a different level.
 
 # Code Quality
 
@@ -37,4 +37,3 @@
 - [x] enable noUnusedLocals
 - [x] enable noUnusedParameters
 - [x] enable strictNullChecks
-

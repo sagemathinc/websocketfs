@@ -8,14 +8,11 @@ export default async function serve({
   path,
   host = "localhost",
   port,
-  // TODO -- auth: if given, client must send this string initially (i.e., have to mount with this option.)
-  auth,
   options,
 }: {
   path: string;
   host?: string;
   port?: number;
-  auth?: string; 
   options?: any;
 }): Promise<{ port: number; server: SftpServer }> {
   if (port == null) {
@@ -31,7 +28,6 @@ export default async function serve({
     ...options,
     host,
     port,
-    auth,
     virtualRoot: path,
   });
   log("SFTP server listening on port ", port);

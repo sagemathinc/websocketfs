@@ -172,6 +172,7 @@ describe("Basic Tests", function () {
       if (err.message == "Simulated callback error") {
         return;
       }
+      done(err);
       // jest seems to swallow uncaught errors, so we make them very explicit!
       console.error("Uncaught error:", err);
       process.exit(255);

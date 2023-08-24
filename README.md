@@ -27,12 +27,12 @@ require('websocketfs').serve({path, remote:'ws://host:port'})
 ```sh
 ~$ git clone https://github.com/sagemathinc/websocketfs
 ~/websocketfs$ pnpm install && pnpm build && pnpm test
+...
 ~/websocketfs$ node
 Welcome to Node.js v16.20.1.
 Type ".help" for more information.
-> a = require('.')
 > // serve HOME and mount it at /tmp/mnt all over websocketfs
-> await a.bind(process.env.HOME,'/tmp/mnt'); null
+> z = await require('.').bind(process.env.HOME,'/tmp/mnt'); null
 ```
 
 Then in another terminal, type `ls /tmp/mnt`:
@@ -66,7 +66,7 @@ The problem that this module will hopefully solve someday is "a FUSE filesystem
 implemented in Javascript over websockets that is similar to sshfs in its
 underlying wire protocol". It doesn't do anything at all, of course, to make
 it easier to use FUSE itself. The goal is to provide a foundation for network mounted
-POSIX filesystems that is _served_ and authenticated entirely through a website via HTTP,
+read/write POSIX filesystems that is _served_ entirely through a website via HTTP,
 without involving ssh at all.
 
 In the context of WebAssembly and WASI, it may of course actually provide a filesystem
@@ -82,4 +82,3 @@ I wish there was something like sshfs, but entirely over a websocket that doesn'
 I've been working on this for a few days, and have got a pretty good understanding of the sftp\-ws codebase, rewrote much of it to support many modern strict typescript settings, fixed several subtle bugs, etc. I've also written a lot of new unit tests.
 
 Anyway, I so far have a pretty good proof of concept of this working. The actual work feels similar to what was involved in building https://cowasm.org/ , but easier, since it's javascript instead of massive amounts of decades old C.
-

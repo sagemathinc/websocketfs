@@ -1,6 +1,6 @@
-import assert = require("assert");
-import SFTP = require("../sftp");
-import getPort = require("port-get");
+import assert from "assert";
+import * as SFTP from "../sftp";
+import getPort from "port-get";
 
 let port;
 

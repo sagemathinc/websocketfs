@@ -1,35 +1,20 @@
-import packet = require("./sftp-packet");
-import misc = require("./sftp-misc");
-import safe = require("./fs-safe");
-import api = require("./fs-api");
-import fsmisc = require("./fs-misc");
-import enums = require("./sftp-enums");
-import channel = require("./channel");
-import util = require("./util");
+import { SftpPacket, SftpPacketWriter, SftpPacketReader } from "./sftp-packet";
+import {
+  SftpAttributes,
+  SftpStatus,
+  SftpFlags,
+  SftpExtensions,
+} from "./sftp-misc";
+import { SafeFilesystem } from "./fs-safe";
+import { IStats, IItem, RenameFlags, StatFs } from "./fs-api";
+import { FileUtil } from "./fs-misc";
+import { ILogWriter, LogHelper, LogLevel } from "./util";
+import { IChannel } from "./channel";
+import { SftpPacketType, SftpStatusCode } from "./sftp-enums";
 import debug from "debug";
-const log = debug("websocketfs:sftp-server");
 import { SftpVfsStats } from "./sftp-misc";
-import type { StatFs } from "./fs-api";
 
-import SafeFilesystem = safe.SafeFilesystem;
-import IStats = api.IStats;
-import IItem = api.IItem;
-import RenameFlags = api.RenameFlags;
-import FileUtil = fsmisc.FileUtil;
-("");
-import ILogWriter = util.ILogWriter;
-import LogHelper = util.LogHelper;
-import LogLevel = util.LogLevel;
-import IChannel = channel.IChannel;
-import SftpPacket = packet.SftpPacket;
-import SftpPacketWriter = packet.SftpPacketWriter;
-import SftpPacketReader = packet.SftpPacketReader;
-import SftpPacketType = enums.SftpPacketType;
-import SftpStatusCode = enums.SftpStatusCode;
-import SftpAttributes = misc.SftpAttributes;
-import SftpStatus = misc.SftpStatus;
-import SftpFlags = misc.SftpFlags;
-import SftpExtensions = misc.SftpExtensions;
+const log = debug("websocketfs:sftp-server");
 
 class SftpResponse extends SftpPacketWriter {
   constructor() {

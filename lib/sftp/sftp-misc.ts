@@ -1,16 +1,8 @@
-import packet = require("./sftp-packet");
-import api = require("./fs-api");
-import enums = require("./sftp-enums");
-
-import SftpPacketWriter = packet.SftpPacketWriter;
-import SftpPacketReader = packet.SftpPacketReader;
-import SftpPacketType = enums.SftpPacketType;
-import SftpStatusCode = enums.SftpStatusCode;
-import SftpOpenFlags = enums.SftpOpenFlags;
-import IStats = api.IStats;
-import FileType = api.FileType;
-import type { StatFs } from "./fs-api";
+import { SftpPacketWriter, SftpPacketReader } from "./sftp-packet";
+import { SftpPacketType, SftpStatusCode, SftpOpenFlags } from "./sftp-enums";
+import { IStats, FileType, StatFs } from "./fs-api";
 import debug from "debug";
+
 const log = debug("websocketfs:sftp-client");
 
 export class SftpFlags {
@@ -132,10 +124,10 @@ export class SftpFlags {
 
 export class SftpExtensions {
   public static POSIX_RENAME = "posix-rename@openssh.com"; // "1"
-  // "2" -- I'm *not* implementing the same protocol as 
-  // statvfs@openssh.com, from 
+  // "2" -- I'm *not* implementing the same protocol as
+  // statvfs@openssh.com, from
   // https://www.sftp.net/spec/openssh-sftp-extensions.txt).
-  public static STATVFS = "statvfs@sftp.ws"; 
+  public static STATVFS = "statvfs@sftp.ws";
   public static FSTATVFS = "fstatvfs@openssh.com"; // not implemented...
   public static HARDLINK = "hardlink@openssh.com"; // "1"
   public static FSYNC = "fsync@openssh.com"; // "1"

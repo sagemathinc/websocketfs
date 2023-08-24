@@ -1,14 +1,7 @@
-import api = require("./fs-api");
-import misc = require("./fs-misc");
-import charsets = require("./charsets");
-import events = require("events");
-
-import IFilesystem = api.IFilesystem;
-import IDataTarget = misc.IDataTarget;
-import Path = misc.Path;
-import Encoding = charsets.Encoding;
-import IStringDecoder = charsets.IStringDecoder;
-import EventEmitter = events.EventEmitter;
+import { EventEmitter } from "events";
+import { IFilesystem } from "./fs-api";
+import { IDataTarget, Path } from "./fs-misc";
+import { Encoding, IStringDecoder } from "./charsets";
 
 interface IChunk extends Buffer {
   callback?: () => void;

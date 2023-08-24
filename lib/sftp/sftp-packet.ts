@@ -1,8 +1,5 @@
-import enums = require("./sftp-enums");
-import charsets = require("./charsets");
-
-import SftpPacketType = enums.SftpPacketType;
-import encodeUTF8 = charsets.encodeUTF8;
+import { SftpPacketType } from "./sftp-enums";
+import { encodeUTF8 } from "./charsets";
 
 export class SftpPacket {
   type: SftpPacketType | string | null = null;

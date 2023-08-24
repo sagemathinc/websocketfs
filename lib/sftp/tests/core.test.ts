@@ -1,9 +1,9 @@
-import assert = require("assert");
-import Path = require("path");
-import fs = require("fs");
-import SFTP = require("../sftp");
-import misc = require("../sftp-misc");
-import getPort = require("port-get");
+import assert from "assert";
+import Path from "path";
+import fs from "fs";
+import * as SFTP from "../sftp";
+import * as misc from "../sftp-misc";
+import getPort from "port-get";
 
 import IItem = SFTP.IItem;
 
@@ -62,14 +62,11 @@ if (!fs.existsSync(tmp)) {
   };
 })();
 
-//require("fs").stat("c:/bagr.txt", <any>9);
-
 fs.writeFileSync(Path.join(tmp, "readme.txt"), "This is a readme file.");
 fs.writeFileSync(Path.join(tmp, "sample.txt"), "This is a sample file.");
 fs.mkdirSync(Path.join(tmp, "empty"));
 fs.mkdirSync(Path.join(tmp, "full"));
 fs.mkdirSync(Path.join(tmp, "full/subdir01"));
-//fs.symlinkSync(Path.join(tmp, "readme.txt"), Path.join(tmp, "readme2.txt"));
 
 for (var n = 0; n < 200; n++) {
   fs.writeFileSync(

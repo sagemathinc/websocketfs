@@ -1,35 +1,15 @@
-import packet = require("./sftp-packet");
-import misc = require("./sftp-misc");
-import enums = require("./sftp-enums");
-import api = require("./fs-api");
-import plus = require("./fs-plus");
-import fsmisc = require("./fs-misc");
-import channel = require("./channel");
-import util = require("./util");
+import { SftpPacket, SftpPacketWriter, SftpPacketReader } from './sftp-packet';
+import { SftpFlags, SftpAttributes, SftpExtensions } from './sftp-misc';
+import { SftpPacketType, SftpStatusCode } from './sftp-enums';
+import { IStats, IItem, RenameFlags, IFilesystem } from './fs-api';
+import { FilesystemPlus, Task } from './fs-plus';
+import { Path } from './fs-misc';
+import { IChannel } from './channel';
+import { ILogWriter, LogHelper, LogLevel } from './util';
+import debug from 'debug';
 
-import debug from "debug";
 const log = debug("websocketfs:sftp-client");
-
-import IStats = api.IStats;
-import IItem = api.IItem;
-import RenameFlags = api.RenameFlags;
-import IFilesystem = api.IFilesystem;
-import FilesystemPlus = plus.FilesystemPlus;
-import Task = plus.Task;
-import IChannel = channel.IChannel;
-import ILogWriter = util.ILogWriter;
-import LogHelper = util.LogHelper;
-import LogLevel = util.LogLevel;
-import SftpPacket = packet.SftpPacket;
-import SftpPacketWriter = packet.SftpPacketWriter;
-import SftpPacketReader = packet.SftpPacketReader;
-import SftpPacketType = enums.SftpPacketType;
-import SftpStatusCode = enums.SftpStatusCode;
-import SftpFlags = misc.SftpFlags;
-import SftpAttributes = misc.SftpAttributes;
 import { SftpVfsStats } from "./sftp-misc";
-import SftpExtensions = misc.SftpExtensions;
-import Path = fsmisc.Path;
 
 export const MAX_WRITE_BLOCK_LENGTH = 1024 * 1024;
 export const MAX_READ_BLOCK_LENGTH = 1024 * 1024;

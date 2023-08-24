@@ -1,15 +1,7 @@
-import api = require("./fs-api");
-import misc = require("./fs-misc");
-import glob = require("./fs-glob");
-import events = require("events");
-
-import IFilesystem = api.IFilesystem;
-import IStats = api.IStats;
-import Path = misc.Path;
-import IEventEmitter = misc.IEventEmitter;
-import IDataSource = misc.IDataSource;
-import search = glob.search;
-import EventEmitter = events.EventEmitter;
+import { EventEmitter } from "events";
+import { IFilesystem, IStats } from "./fs-api";
+import { IDataSource, IEventEmitter, Path } from "./fs-misc";
+import { search } from "./fs-glob";
 
 interface IChunk extends Buffer {
   position: number;

@@ -139,8 +139,8 @@ class WebSocketChannel implements IChannel {
     this.established = established;
 
     ws.on("close", (reason, description) => {
-      var message = "Connection failed";
-      var code = "EFAILURE";
+      let message = "Connection failed";
+      let code = "EFAILURE";
       switch (reason) {
         case 1000:
           return this._close(reason, null);
@@ -178,7 +178,7 @@ class WebSocketChannel implements IChannel {
           break;
       }
 
-      var err = <any>new Error(message);
+      const err = <any>new Error(message);
       err.code = err.errno = code;
       err.level = "ws";
       err.nativeCode = reason;
@@ -187,25 +187,22 @@ class WebSocketChannel implements IChannel {
     });
 
     ws.on("error", (err) => {
-      var code = (<any>err).code;
+      const code = err.code;
 
       switch (code) {
         case "HPE_INVALID_CONSTANT":
           err.message = "Server uses invalid protocol";
-          (<any>err).level = "http";
+          err.level = "http";
           break;
         case "UNABLE_TO_VERIFY_LEAF_SIGNATURE":
           err.message =
             "Unable to verify leaf certificate (possibly due to missing intermediate CA certificate)";
-          (<any>err).level = "ssl";
+          err.level = "ssl";
           break;
       }
 
-      if (
-        typeof (<any>err).code !== "undefined" &&
-        typeof (<any>err).errno === "undefined"
-      )
-        (<any>err).errno = code;
+      if (typeof err.code !== "undefined" && typeof err.errno === "undefined")
+        err.errno = code;
 
       this._close(0, err);
     });
@@ -218,7 +215,7 @@ class WebSocketChannel implements IChannel {
 
   _close(_kind: number, err: Error | any): void {
     if (this.closed) return;
-    var onclose = this.onclose;
+    const onclose = this.onclose;
     this.close();
 
     if (!err && !this.established) {
@@ -229,7 +226,9 @@ class WebSocketChannel implements IChannel {
     if (typeof onclose === "function") {
       process.nextTick(() => onclose?.(err));
     } else {
-      if (err) throw err;
+      if (err) {
+        throw err;
+      }
     }
   }
 

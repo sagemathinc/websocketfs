@@ -4,7 +4,7 @@ export interface IStringDecoder extends StringDecoder {}
 
 export class Encoding {
   constructor(name: string = "utf8") {
-    var encoding = (name + "").toLowerCase().replace("-", "");
+    const encoding = (name + "").toLowerCase().replace("-", "");
     if (encoding != "utf8") {
       throw Error("Encoding not supported: " + name);
       //TODO: support ASCII and other encodings in addition to UTF-8
@@ -63,9 +63,9 @@ export function encodeUTF8(
 ): number {
   end = end || buffer.length;
 
-  var code: number;
-  var length: number;
-  var position: number;
+  let code: number;
+  let length: number;
+  let position: number;
   if (state) {
     code = state._code ?? 0;
     length = state._length ?? 0;
@@ -76,8 +76,8 @@ export function encodeUTF8(
     position = 0;
   }
 
-  var done = false;
-  var start = offset;
+  let done = false;
+  const start = offset;
 
   while (true) {
     if (length > 0) {
@@ -114,7 +114,7 @@ export function encodeUTF8(
 
     if (offset >= end) break;
 
-    var c = value.charCodeAt(position++);
+    const c = value.charCodeAt(position++);
     if (code == 0) {
       code = c;
 
@@ -188,7 +188,7 @@ class StringDecoder {
   write(buffer: Buffer, offset: number, end: number): void {
     // I think decodeUTF8 mutates this:
     decodeUTF8(buffer, offset, end, <any>this);
-    var text = this._text;
+    const text = this._text;
 
     if (this._removeBom && text.length > 0) {
       if (text.charCodeAt(0) == UnicodeChars.BOM) {
@@ -207,9 +207,9 @@ export function decodeUTF8(
 ): string {
   end = end || buffer.length;
 
-  var text: string;
-  var code: number;
-  var length: number;
+  let text: string;
+  let code: number;
+  let length: number;
   if (state) {
     text = state._text || "";
     code = state._code ?? 0;
@@ -221,7 +221,7 @@ export function decodeUTF8(
   }
 
   while (offset < end) {
-    var b = buffer[offset++];
+    const b = buffer[offset++];
 
     if (length > 0) {
       if ((b & 0xc0) != 0x80) {

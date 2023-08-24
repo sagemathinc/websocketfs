@@ -15,13 +15,15 @@ export class LocalFilesystem implements IFilesystem {
     this.isWindows = process.platform === "win32";
   }
 
-  private checkPath(path: string, name: string): string {
-    var localPath = Path.create(path, this, name);
-    var path = localPath.path;
+  private checkPath(path0: string, name: string): string {
+    const localPath = Path.create(path0, this, name);
+    let path = localPath.path;
 
     if (path[0] == "~") {
-      var home = <string>(process.env.HOME || process.env.USERPROFILE || ".");
-      if (path.length == 1) return home;
+      const home = <string>(process.env.HOME || process.env.USERPROFILE || ".");
+      if (path.length == 1) {
+        return home;
+      }
       if (path[1] === "/" || (path[1] === "\\" && this.isWindows)) {
         path = localPath.join(home, path.substr(2)).path;
       }
@@ -126,7 +128,7 @@ export class LocalFilesystem implements IFilesystem {
   ): void {
     this.checkCallback(callback);
 
-    var write = () => {
+    const write = () => {
       fs.write(
         handle,
         buffer,
@@ -178,9 +180,9 @@ export class LocalFilesystem implements IFilesystem {
       return;
     }
 
-    var action = actions.shift();
+    let action = actions.shift();
 
-    var next = (err?: NodeJS.ErrnoException) => {
+    const next = (err?: NodeJS.ErrnoException) => {
       if (typeof err !== "undefined" && err != null) {
         callback(err);
         return;
@@ -206,7 +208,7 @@ export class LocalFilesystem implements IFilesystem {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
-    var actions = new Array<Function>();
+    const actions = new Array<Function>();
 
     if (!isNaN(attrs.uid ?? NaN) || !isNaN(attrs.gid ?? NaN))
       actions.push(function (next: Function) {
@@ -223,13 +225,13 @@ export class LocalFilesystem implements IFilesystem {
         fs.truncate(path, attrs.size ?? 0, (err) => next(err));
       });
 
-    if (typeof attrs.atime === "object" || typeof attrs.mtime === "object") {
-      //var atime = (typeof attrs.atime.getTime === 'function') ? attrs.atime.getTime() : undefined;
-      //var mtime = (typeof attrs.mtime.getTime === 'function') ? attrs.mtime.getTime() : undefined;
-      var atime = attrs.atime;
-      var mtime = attrs.mtime;
+    if (attrs.atime != null || attrs.mtime != null) {
+      // note that for utimes in node both atime and mtime must be given.
+      const atime = attrs.atime;
+      const mtime = attrs.mtime;
       actions.push(function (next: Function) {
-        fs.utimes(path, <any>atime, <any>mtime, (err) => next(err));
+        // it handles null input fine
+        fs.utimes(path, atime!, mtime!, (err) => next(err));
       });
     }
 
@@ -243,7 +245,7 @@ export class LocalFilesystem implements IFilesystem {
   ): void {
     this.checkCallback(callback);
 
-    var actions = new Array<Function>();
+    const actions = new Array<Function>();
 
     if (!isNaN(attrs.uid ?? NaN) || !isNaN(attrs.gid ?? NaN))
       actions.push(function (next: Function) {
@@ -260,13 +262,12 @@ export class LocalFilesystem implements IFilesystem {
         fs.ftruncate(handle, attrs.size ?? 0, (err) => next(err));
       });
 
-    if (typeof attrs.atime === "object" || typeof attrs.mtime === "object") {
-      //var atime = (typeof attrs.atime.getTime === 'function') ? attrs.atime.getTime() : undefined;
-      //var mtime = (typeof attrs.mtime.getTime === 'function') ? attrs.mtime.getTime() : undefined;
-      var atime = attrs.atime;
-      var mtime = attrs.mtime;
+    if (attrs.atime != null || attrs.mtime != null) {
+      const atime = attrs.atime;
+      const mtime = attrs.mtime;
       actions.push(function (next: Function) {
-        fs.futimes(handle, <any>atime, <any>mtime, (err) => next(err));
+        // it handles null input fine
+        fs.futimes(handle, atime!, mtime!, (err) => next(err));
       });
     }
 
@@ -315,8 +316,8 @@ export class LocalFilesystem implements IFilesystem {
     const items: IItem[] = [];
 
     // @ts-ignore
-    var path = <Path>handle.path;
-    var paths = (<string[]>handle).splice(0, 64);
+    const path = <Path>handle.path;
+    const paths = (<string[]>handle).splice(0, 64);
 
     if (paths.length == 0) {
       process.nextTick(() => callback(null, false));
@@ -324,14 +325,14 @@ export class LocalFilesystem implements IFilesystem {
     }
 
     function next(): void {
-      var name = paths.shift();
+      const name = paths.shift();
 
       if (!name) {
         callback(null, items.length > 0 ? items : false);
         return;
       }
 
-      var itemPath = path.join(name).path;
+      const itemPath = path.join(name).path;
 
       fs.lstat(itemPath, (err, stats) => {
         if (typeof err !== "undefined" && err != null) {
@@ -341,7 +342,7 @@ export class LocalFilesystem implements IFilesystem {
           items.push({
             filename: name ?? "", // name will be defined because of check above
             longname: FileUtil.toString(name ?? "", stats),
-            stats: stats,
+            stats,
           });
         }
         next();
@@ -366,7 +367,7 @@ export class LocalFilesystem implements IFilesystem {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
-    var mode = attrs && typeof attrs === "object" ? attrs.mode : undefined;
+    const mode = attrs && typeof attrs === "object" ? attrs.mode : undefined;
     fs.mkdir(path, mode, callback);
     //LATER: pay attemtion to attrs other than mode (low priority - many SFTP servers ignore these as well)
   }

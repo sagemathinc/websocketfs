@@ -49,7 +49,7 @@ export class Path {
   }
 
   isTop(): boolean {
-    var path = this.path;
+    const path = this.path;
     if (path.length == 0 || path == "/") return true;
     if (this._windows()) {
       if (path == "\\") return true;
@@ -61,19 +61,25 @@ export class Path {
   }
 
   getName(): string {
-    var path = this.path;
-    var windows = this._windows();
-    var n = path.lastIndexOf("/");
-    if (n < 0 && windows) n = path.lastIndexOf("\\");
-    if (n < 0) return path;
+    const path = this.path;
+    const windows = this._windows();
+    let n = path.lastIndexOf("/");
+    if (n < 0 && windows) {
+      n = path.lastIndexOf("\\");
+    }
+    if (n < 0) {
+      return path;
+    }
     return path.substr(n + 1);
   }
 
   getParent(): Path {
-    var path = this.path;
-    var windows = this._windows();
-    var n = path.lastIndexOf("/");
-    if (n < 0 && windows) n = path.lastIndexOf("\\");
+    let path = this.path;
+    const windows = this._windows();
+    let n = path.lastIndexOf("/");
+    if (n < 0 && windows) {
+      n = path.lastIndexOf("\\");
+    }
     if (n < 0) {
       path = "";
     } else if (n == 0) {
@@ -87,29 +93,29 @@ export class Path {
 
   startsWith(value: string) {
     if (value.length == 0) return false;
-    var path = this.path;
+    const path = this.path;
     if (path.length < value.length) return false;
     if (value.length == 1) return path[0] === value;
-    for (var i = 0; i < value.length; i++) {
+    for (let i = 0; i < value.length; i++) {
       if (value[i] !== path[i]) return false;
     }
     return true;
   }
 
   endsWithSlash(): boolean {
-    var last = this.path[this.path.length - 1];
+    const last = this.path[this.path.length - 1];
     if (last == "/") return true;
     if (last == "\\" && this._windows()) return true;
     return false;
   }
 
   removeTrailingSlash(): Path {
-    var path = this.path;
-    var windows = this._windows();
+    let path = this.path;
+    const windows = this._windows();
 
-    var len = path.length;
+    const len = path.length;
     if (len > 1) {
-      var last = path[len - 1];
+      const last = path[len - 1];
       if (last == "/" || (last == "\\" && windows))
         path = path.substr(0, len - 1);
     }
@@ -118,7 +124,7 @@ export class Path {
   }
 
   normalize(): Path {
-    var path = this.path;
+    let path = this.path;
 
     // replace slashes with backslashes with on Windows filesystems
     if (this._windows()) {
@@ -137,8 +143,8 @@ export class Path {
   join(...paths: string[]): Path;
   join(...paths: Path[]): Path;
   join(...paths: any[]): Path {
-    var path = "" + this.path;
-    var windows = this._windows();
+    let path = "" + this.path;
+    const windows = this._windows();
 
     (<string[]>paths).forEach((segment) => {
       if (typeof segment === "undefined") return;
@@ -165,7 +171,7 @@ export class Path {
         }
       }
 
-      var last = path[path.length - 1];
+      const last = path[path.length - 1];
       if (last === "/" || (windows && last === "\\")) {
         path = path + segment;
       } else {
@@ -257,20 +263,23 @@ export class FileUtil {
 
     attrs &= 0x1ff;
 
-    for (var j = 0; j < 3; j++) {
-      var mask = (attrs >> ((2 - j) * 3)) & 0x7;
+    for (let j = 0; j < 3; j++) {
+      const mask = (attrs >> ((2 - j) * 3)) & 0x7;
       perms += mask & 4 ? "r" : "-";
       perms += mask & 2 ? "w" : "-";
       perms += mask & 1 ? "x" : "-";
     }
 
-    var len = (stats.size ?? 0).toString();
-    if (len.length < 9) len = "         ".slice(len.length - 9) + len;
-    else len = " " + len;
+    let len = (stats.size ?? 0).toString();
+    if (len.length < 9) {
+      len = "         ".slice(len.length - 9) + len;
+    } else {
+      len = " " + len;
+    }
 
-    var modified = stats.mtime ?? new Date(0);
-    var diff = (new Date().getTime() - modified.getTime()) / (3600 * 24);
-    var date = [
+    const modified = stats.mtime ?? new Date(0);
+    const diff = (new Date().getTime() - modified.getTime()) / (3600 * 24);
+    let date = [
       "Jan",
       "Feb",
       "Mar",
@@ -284,18 +293,20 @@ export class FileUtil {
       "Nov",
       "Dec",
     ][modified.getUTCMonth()];
-    var day = modified.getUTCDate();
+    const day = modified.getUTCDate();
     date += (day <= 9 ? "  " : " ") + day;
 
-    if (diff < -30 || diff > 180) date += "  " + modified.getUTCFullYear();
-    else
+    if (diff < -30 || diff > 180) {
+      date += "  " + modified.getUTCFullYear();
+    } else {
       date +=
         " " +
         ("0" + modified.getUTCHours()).slice(-2) +
         ":" +
         ("0" + modified.getUTCMinutes()).slice(-2);
+    }
 
-    var nlink =
+    const nlink =
       typeof (<any>stats).nlink === "undefined" ? 1 : (<any>stats).nlink;
 
     return (
@@ -315,8 +326,8 @@ export class FileUtil {
     code: string,
     callback?: (err: Error | null, ...args: any[]) => any,
   ): void {
-    var message;
-    var errno;
+    let message;
+    let errno;
     switch (code) {
       case "EOF":
         message = "End of file";
@@ -339,7 +350,7 @@ export class FileUtil {
         break;
     }
 
-    var error = <any>new Error(message);
+    const error = <any>new Error(message);
     if (errno) {
       error.code = code;
       error.errno = errno;
@@ -355,15 +366,19 @@ export class FileUtil {
   }
 
   static toItemInfo(source: IDataSource, target: IDataTarget): IItem {
-    var name = source.name;
-    if (typeof name === "undefined") name = "" + target.name;
-    var path = source.relativePath;
-    if (typeof path === "undefined") path = name;
+    let name = source.name;
+    if (typeof name === "undefined") {
+      name = "" + target.name;
+    }
+    let path = source.relativePath;
+    if (typeof path === "undefined") {
+      path = name;
+    }
 
     return {
       filename: name,
       stats: source.stats || { size: source.length },
-      path: path,
+      path,
     };
   }
 
@@ -440,7 +455,7 @@ export class FileUtil {
     dotdirs: boolean,
     callback: (err: Error | null, items?: IItem[]) => any,
   ): void {
-    var items = <IItem[]>[];
+    const items: IItem[] = [];
 
     FileUtil.listPath(fs, path, undefined, process, (err) => {
       if (err) return callback(err);
@@ -470,7 +485,7 @@ export class FileUtil {
         if (items == null) {
           throw Error("bug"); // can't happen since only happens when there is an err.
         }
-        var item = items.shift();
+        const item = items.shift();
         if (!item) {
           fs.rmdir(path, (err) => {
             if (err && err["code"] === "ENOENT") err = null;
@@ -479,7 +494,7 @@ export class FileUtil {
           return;
         }
 
-        var itemPath = new Path(path, fs).join(item.filename).path;
+        const itemPath = new Path(path, fs).join(item.filename).path;
         if (FileUtil.isDirectory(item.stats)) {
           FileUtil.purge(fs, itemPath, next);
         } else {
@@ -507,7 +522,9 @@ export class FileUtil {
         if (overwrite) {
           // delete non-directory item
           fs.unlink(path, (err) => {
-            if (err) return callback(err, false);
+            if (err) {
+              return callback(err, false);
+            }
             fs.mkdir(path, undefined, (err) => callback(err, !err));
           });
           return;
@@ -516,7 +533,9 @@ export class FileUtil {
         return callback(new Error("Path is not a directory"), false); //TODO: better error
       }
 
-      if ((<any>err).code != "ENOENT") return callback(err, false);
+      if ((<any>err).code != "ENOENT") {
+        return callback(err, false);
+      }
 
       fs.mkdir(path, undefined, (err) => callback(err, !err));
     });
@@ -597,8 +616,10 @@ export class FileUtil {
     }
 
     function copy(): boolean {
-      var chunk = source.read();
-      if (!chunk) return false;
+      const chunk = source.read();
+      if (!chunk) {
+        return false;
+      }
 
       empty = false;
       writable = target.write(chunk, () => {

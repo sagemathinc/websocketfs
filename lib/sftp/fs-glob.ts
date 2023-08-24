@@ -49,31 +49,31 @@ export function search(
 
   // prepare options
   options = options ?? {};
-  var matchFiles = !(options.onlydir || false);
-  var matchDirectories = !(options.nodir || false);
-  var ignoreGlobstars = options.noglobstar || false;
-  var maxDepth = options.depth ?? 0;
-  var matchDotDirs = options.dotdirs || false;
-  var expectDir = options.onedir || false;
-  var expandDir = !(options.noexpand || false);
-  var all = options.all || false;
+  const matchFiles = !(options.onlydir || false);
+  const matchDirectories = !(options.nodir || false);
+  const ignoreGlobstars = options.noglobstar || false;
+  const maxDepth = options.depth ?? 0;
+  const matchDotDirs = options.dotdirs || false;
+  let expectDir = options.onedir || false;
+  const expandDir = !(options.noexpand || false);
+  const all = options.all || false;
 
   // sanity checks
   if (!matchFiles && !matchDirectories)
     throw new Error("Not matching anything with the specified options");
 
   // on windows, normalize backslashes
-  var windows = (<any>fs).isWindows == true;
+  const windows = (<any>fs).isWindows == true;
   path = new Path(path).normalize().path;
 
   // resulting item list
-  var results = <IItemExt[]>[];
+  const results = <IItemExt[]>[];
 
   // important variables
-  var basePath: Path;
-  var glob: RegExp;
-  var queue = <IDirInfo[]>[];
-  var patterns = <(RegExp | null)[]>[];
+  let basePath: Path;
+  let glob: RegExp;
+  const queue = <IDirInfo[]>[];
+  const patterns = <(RegExp | null)[]>[];
 
   if (path == "/") {
     if (expandDir) return start("", "*");
@@ -89,9 +89,9 @@ export function search(
   }
 
   // search for the first wildcard
-  var w1 = path.indexOf("*");
-  var w2 = path.indexOf("?");
-  var w = w1 < 0 ? w2 : w2 < 0 ? w1 : w2;
+  const w1 = path.indexOf("*");
+  const w2 = path.indexOf("?");
+  let w = w1 < 0 ? w2 : w2 < 0 ? w1 : w2;
 
   if (w >= 0) {
     // wildcard present -> split the path into base path and mask
@@ -100,13 +100,13 @@ export function search(
       throw new Error("Wildcards not allowed");
 
     if (options.onedir) {
-      var s = path.indexOf("/", w);
+      const s = path.indexOf("/", w);
       if (s > w)
         throw new Error("Wildcards only allowed in the last path segment");
     }
 
     w = path.lastIndexOf("/", w);
-    var mask = path.substr(w + 1);
+    const mask = path.substr(w + 1);
     if (w >= 0) {
       path = path.substr(0, w);
     } else {
@@ -146,7 +146,7 @@ export function search(
 
         // determine item name
         w = path.lastIndexOf("/");
-        var name;
+        let name;
         if (w < 0) {
           name = path;
           path = "./" + name;
@@ -155,7 +155,7 @@ export function search(
         }
 
         // push item to the results
-        var item = {
+        const item = {
           filename: name,
           stats: stats,
           path: path,
@@ -181,10 +181,10 @@ export function search(
 
     mask = "/" + mask;
 
-    var globmask: null | string = null;
+    let globmask: null | string = null;
     if (!ignoreGlobstars) {
       // determine glob mask (if any)
-      var gs = mask.indexOf("/**");
+      const gs = mask.indexOf("/**");
       if (gs >= 0) {
         if (gs == mask.length - 3) {
           globmask = "*";
@@ -196,11 +196,11 @@ export function search(
       }
     }
 
-    var masks = mask.split("/");
+    const masks = mask.split("/");
 
-    for (var i = 1; i < masks.length; i++) {
-      var mask = masks[i];
-      var regex = toRegExp(mask, false);
+    for (let i = 1; i < masks.length; i++) {
+      const mask = masks[i];
+      const regex = toRegExp(mask, false);
       patterns.push(regex);
     }
 
@@ -219,7 +219,7 @@ export function search(
     if (err) return callback(err);
 
     // get next directory to traverse
-    var current = queue.shift();
+    const current = queue.shift();
 
     // if no more to process, we are done
     if (!current) {
@@ -235,14 +235,14 @@ export function search(
       return callback(null, results);
     }
 
-    var relativePath: Path;
-    var index: number;
-    var regex: RegExp | null;
-    var depth: number;
+    let relativePath: Path;
+    let index: number;
+    let regex: RegExp | null;
+    let depth: number;
 
-    var nextIndex;
-    var matchItems;
-    var enterDirs;
+    let nextIndex;
+    let matchItems;
+    let enterDirs;
 
     try {
       // prepare vars
@@ -254,7 +254,7 @@ export function search(
       if (regex) {
         //console.log("Matching (r): ", basePath, path, regex.source);
         nextIndex = index + 1;
-        var isLast = nextIndex == patterns.length;
+        const isLast = nextIndex == patterns.length;
         matchItems = isLast && glob == null;
         enterDirs = !isLast;
       } else {
@@ -270,7 +270,7 @@ export function search(
       }
 
       // prepare full path
-      var fullPath = basePath.join(relativePath).normalize().path;
+      const fullPath = basePath.join(relativePath).normalize().path;
 
       // list items and proceed to directory
       FileUtil.listPath(fs, fullPath, emitter, process, next);
@@ -280,15 +280,15 @@ export function search(
 
     // process a single item
     function process(item: IItemExt): void {
-      var isDir = FileUtil.isDirectory(item.stats);
-      var isFile = FileUtil.isFile(item.stats);
+      const isDir = FileUtil.isDirectory(item.stats);
+      const isFile = FileUtil.isFile(item.stats);
 
-      var isDotDir = item.filename == "." || item.filename == "..";
+      const isDotDir = item.filename == "." || item.filename == "..";
       if (isDotDir && !matchDotDirs) return;
 
       if (!all && !isDir && !isFile) return;
 
-      var itemPath = relativePath.join(item.filename);
+      const itemPath = relativePath.join(item.filename);
 
       // add subdirectory to queue if desired
       if (enterDirs && isDir && !isDotDir) {
@@ -311,7 +311,7 @@ export function search(
       }
 
       // add matched file to the list
-      var relative = new Path(itemPath.path, fs).normalize();
+      const relative = new Path(itemPath.path, fs).normalize();
       item.path = basePath.join(relative).path;
       item.relativePath = relative.path;
       results.push(item);
@@ -321,13 +321,13 @@ export function search(
 
   // convert mask pattern to regular expression
   function toRegExp(mask: string, globstar: boolean): RegExp {
-    var pattern = "^";
+    let pattern = "^";
     if (globstar) pattern += ".*";
-    for (var i = 0; i < mask.length; i++) {
-      var c = mask[i];
+    for (let i = 0; i < mask.length; i++) {
+      const c = mask[i];
       switch (c) {
-        case "/":
-          var gm = mask.substr(i, 4);
+        case "/": {
+          const gm = mask.substr(i, 4);
           if (gm == "/**/" || gm == "/**") {
             pattern += ".*";
             i += 3;
@@ -335,6 +335,7 @@ export function search(
             pattern += "/";
           }
           break;
+        }
         case "*":
           if (globstar) {
             pattern += "[^/]*";
@@ -361,7 +362,7 @@ export function search(
     pattern += "$";
 
     // case insensitive on Windows
-    var flags = windows ? "i" : "";
+    const flags = windows ? "i" : "";
 
     return new RegExp(pattern, flags);
   }

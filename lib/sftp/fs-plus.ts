@@ -188,8 +188,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   ): Task<IItem[] | boolean> {
     return this._task(callback, (callback) => {
       if (typeof handle === "string") {
-        var path = Path.check(<string>handle, "path");
-
+        const path = Path.check(<string>handle, "path");
         FileUtil.list(this._fs, path, true, callback);
         return;
       }
@@ -304,7 +303,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   }
 
   join(..._paths: string[]): string {
-    var path = new Path("", this._fs);
+    const path = new Path("", this._fs);
     return path.join.apply(path, arguments).normalize().path;
   }
 
@@ -325,7 +324,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     return this._task(callback, (callback, emitter) => {
       remotePath = Path.check(remotePath, "remotePath");
 
-      var options = <ISearchOptionsExt>{
+      const options = <ISearchOptionsExt>{
         directories: true,
         files: true,
         nosort: false,
@@ -363,7 +362,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     return this._task(callback, (callback, emitter) => {
       remotePath = Path.check(remotePath, "remotePath");
 
-      var options = <ISearchOptionsExt>{
+      const options = <ISearchOptionsExt>{
         oneitem: true,
       };
 
@@ -394,12 +393,12 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     }
 
     return this._task(callback, (callback, emitter) => {
-      var remote = Path.create(remotePath, this._fs, "remotePath");
+      const remote = Path.create(remotePath, this._fs, "remotePath");
 
       // process options
       options = options ?? {};
-      var type = options.type;
-      var encoding = options.encoding;
+      let type = options.type;
+      let encoding = options.encoding;
       if (type) {
         type = (type + "").toLowerCase();
         if (type == "string" || type == "text") {
@@ -410,7 +409,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       }
 
       // create appropriate target
-      var target: IDataTarget;
+      let target: IDataTarget;
       switch (type) {
         case "text":
         case "string":
@@ -431,7 +430,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       if (remote.fs == null) {
         throw Error("bug");
       }
-      var source = new FileDataSource(remote.fs, remote.path);
+      const source = new FileDataSource(remote.fs, remote.path);
 
       // copy file data
       FileUtil.copy(source, target, emitter, (err) => {
@@ -447,8 +446,8 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback, emitter) => {
-      var local = Path.create(localPath, this._local, "localPath");
-      var remote = Path.create(remotePath, this._fs, "remotePath");
+      const local = Path.create(localPath, this._local, "localPath");
+      const remote = Path.create(remotePath, this._fs, "remotePath");
 
       this._copyFile(local, remote, emitter, callback);
     });
@@ -460,8 +459,8 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     callback?: (err: Error) => any,
   ): Task<void> {
     return this._task(callback, (callback, emitter) => {
-      var remote = Path.create(remotePath, this._fs, "remotePath");
-      var local = Path.create(localPath, this._local, "localPath");
+      const remote = Path.create(remotePath, this._fs, "remotePath");
+      const local = Path.create(localPath, this._local, "localPath");
 
       this._copyFile(remote, local, emitter, callback);
     });
@@ -475,7 +474,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
   ): void {
     // append filename if target path ens with slash
     if (targetPath.endsWithSlash()) {
-      var filename = sourcePath.getName();
+      const filename = sourcePath.getName();
       targetPath = targetPath.join(filename);
     }
 
@@ -517,7 +516,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     }
 
     return this._task(callback, (callback, emitter) => {
-      var remote = Path.create(remotePath, this._fs, "remotePath");
+      const remote = Path.create(remotePath, this._fs, "remotePath");
 
       this._copy(input, this._local, remote, options, emitter, callback);
     });
@@ -535,7 +534,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     }
 
     return this._task(callback, (callback, emitter) => {
-      var local = Path.create(localPath, this._local, "localPath");
+      const local = Path.create(localPath, this._local, "localPath");
 
       this._copy(remotePath, this._fs, local, options, emitter, callback);
     });
@@ -549,9 +548,9 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     emitter: IEventEmitter | undefined,
     callback: (err: Error | null, ...args: any[]) => any,
   ): void {
-    var sources: undefined | IDataSource[] = undefined;
+    let sources: undefined | IDataSource[] = undefined;
 
-    var toFs = toPath.fs;
+    const toFs = toPath.fs;
     if (toFs == null) {
       throw Error("toPath.fs must not be null");
     }
@@ -559,7 +558,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
     toFs.stat(toPath.path, prepare);
 
-    var directories = <PathToExists>{};
+    const directories = <PathToExists>{};
 
     function prepare(err: Error, stats: IStats): void {
       if (err) return callback(err);
@@ -589,13 +588,13 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     }
 
     function next(): void {
-      var source = sources?.shift();
+      const source = sources?.shift();
       if (!source) {
         return finish();
       }
 
-      var relativePath: Path | null;
-      var targetPath: string;
+      let relativePath: Path | null;
+      let targetPath: string;
       if (typeof source.relativePath === "string") {
         relativePath = new Path(source.relativePath, fromFs);
         targetPath = toPath.join(relativePath).normalize().path;
@@ -619,7 +618,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
             transferred(err),
           );
         } else {
-          var target = new FileDataTarget(toFs, targetPath);
+          const target = new FileDataTarget(toFs, targetPath);
           FileUtil.copy(source, target, emitter, transferred);
         }
 
@@ -633,13 +632,15 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
     }
 
     function checkParent(path: Path, callback: (err: Error | null) => void) {
-      var parent = path.getParent();
+      const parent = path.getParent();
 
-      var parentPath = parent.path;
+      let parentPath = parent.path;
       parentPath = parentPath.length > 0 ? parentPath : "/";
 
-      var exists = directories[parentPath];
-      if (exists) return callback(null);
+      const exists = directories[parentPath];
+      if (exists) {
+        return callback(null);
+      }
 
       if (parent.isTop()) return callback(null);
 
@@ -648,7 +649,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
           return callback(err);
         }
 
-        var targetPath = toPath.join(parent).path;
+        const targetPath = toPath.join(parent).path;
         if (toFs == null) {
           throw Error("bug");
         }
@@ -677,7 +678,7 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       emitter?: IEventEmitter,
     ) => void,
   ): any {
-    var emitter;
+    let emitter;
     if (action.length >= 2) emitter = new EventEmitter();
 
     if (typeof callback === "function") {
@@ -685,20 +686,17 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
       return emitter;
     }
 
-    var promise = this._promise ?? Promise;
-    var task = <any>new promise(executor);
-
-    task.on = on;
-    task.once = once;
-    return task;
-
     function on(event: string, listener: Function): Task<T> {
-      if (emitter) emitter.on(event, listener);
+      if (emitter) {
+        emitter.on(event, listener);
+      }
       return task;
     }
 
     function once(event: string, listener: Function): Task<T> {
-      if (emitter) emitter.on(event, listener);
+      if (emitter) {
+        emitter.on(event, listener);
+      }
       return task;
     }
 
@@ -715,11 +713,11 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
 
       function finish(err: Error, ...args: any[]): void;
       function finish(): void {
-        var error = arguments[0];
+        const error = arguments[0];
         try {
           if (error) {
             if (emitter) {
-              var err = error;
+              let err = error;
               if (EventEmitter.listenerCount(task, "error")) {
                 emitter.emit("error", err);
                 err = null;
@@ -765,5 +763,12 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
         }
       }
     }
+
+    const promise = this._promise ?? Promise;
+    const task = <any>new promise(executor);
+
+    task.on = on;
+    task.once = once;
+    return task;
   }
 }

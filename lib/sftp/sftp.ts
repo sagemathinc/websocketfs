@@ -94,14 +94,14 @@ module SFTP {
     }
   }
 
-  export var LocalFilesystem = local.LocalFilesystem;
+  export const LocalFilesystem = local.LocalFilesystem;
 
   export interface IChannel extends IChannel0 {}
 
   export module Internals {
-    export var StreamChannel = channel_stream.StreamChannel;
-    export var WebSocketChannelFactory = channel_ws.WebSocketChannelFactory;
-    export var LogHelper = util.LogHelper;
+    export const StreamChannel = channel_stream.StreamChannel;
+    export const WebSocketChannelFactory = channel_ws.WebSocketChannelFactory;
+    export const LogHelper = util.LogHelper;
   }
 
   export class RequestInfo {
@@ -145,17 +145,17 @@ module SFTP {
       super();
 
       options = options || {};
-      var serverOptions: WebSocketIServerOptions = {};
+      const serverOptions: WebSocketIServerOptions = {};
 
-      var virtualRoot = options.virtualRoot;
-      var filesystem = options.filesystem;
+      let virtualRoot = options.virtualRoot;
+      let filesystem = options.filesystem;
       this._log = util.LogHelper.toLogWriter(options.log);
-      var noServer = options.noServer;
+      const noServer = options.noServer;
 
       serverOptions.handleProtocols = this.handleProtocols;
 
-      for (var option in options) {
-        if ((<Object>options).hasOwnProperty(option)) {
+      for (const option in options) {
+        if (options.hasOwnProperty(option)) {
           switch (option) {
             case "filesystem":
             case "virtualRoot":
@@ -255,7 +255,7 @@ module SFTP {
         const sessionInfo = this._sessionInfo;
         log("accept", sessionInfo);
 
-        const virtualRoot = sessionInfo.virtualRoot;
+        let virtualRoot = sessionInfo.virtualRoot;
         if (virtualRoot == null) {
           throw Error("virtualRoot must not be null");
         }

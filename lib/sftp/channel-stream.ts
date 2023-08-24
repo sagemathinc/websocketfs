@@ -11,9 +11,9 @@ export class StreamChannel extends EventEmitter implements IChannel {
     this.stream = stream;
     this.closed = false;
 
-    var buffer = Buffer.alloc(65 * 1024);
-    var offset = 0;
-    var packetLength = 0;
+    const buffer = Buffer.alloc(65 * 1024);
+    let offset = 0;
+    let packetLength = 0;
 
     this.stream.on("end", () => {
       this._close();
@@ -28,7 +28,7 @@ export class StreamChannel extends EventEmitter implements IChannel {
       if (this.closed) return;
 
       try {
-        var data = <Buffer>d;
+        let data = <Buffer>d;
         //console.info("->", data.length);
 
         while (data.length > 0) {
@@ -70,7 +70,7 @@ export class StreamChannel extends EventEmitter implements IChannel {
           }
 
           // copy expected data to the buffer
-          var n = Math.min(packetLength - offset, data.length);
+          const n = Math.min(packetLength - offset, data.length);
           data.copy(buffer, offset, 0, n);
           offset += n;
           data = data.slice(n);

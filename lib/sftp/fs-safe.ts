@@ -27,7 +27,7 @@ interface HashAlgToHashSizeMap {
   [alg: string]: number;
 }
 
-var _hashSizes = <HashAlgToHashSizeMap>{};
+const _hashSizes: HashAlgToHashSizeMap = {};
 
 export class SafeFilesystem implements IFilesystem {
   isSafe: boolean;
@@ -85,8 +85,8 @@ export class SafeFilesystem implements IFilesystem {
   }
 
   private toVirtualPath(fullPath: string): string {
-    var i = 0;
-    var path: string;
+    let i = 0;
+    let path: string;
     while (true) {
       if (i >= this.root.length) {
         path = fullPath.substr(this.root.length);
@@ -146,7 +146,7 @@ export class SafeFilesystem implements IFilesystem {
       callback(err ?? Error("bug -- handleInfo must be specified"));
       return;
     }
-    var safeHandle = handleInfo.safe;
+    const safeHandle = handleInfo.safe;
     if (err) {
       delete this._handles[safeHandle];
       callback(err);
@@ -178,8 +178,8 @@ export class SafeFilesystem implements IFilesystem {
 
     //TODO: make sure all pending operations either complete or fail gracefully
 
-    for (var handle = 1; handle <= SafeFilesystem.MAX_HANDLE_COUNT; handle++) {
-      var handleInfo = this.toHandleInfo(handle);
+    for (let handle = 1; handle <= SafeFilesystem.MAX_HANDLE_COUNT; handle++) {
+      const handleInfo = this.toHandleInfo(handle);
       if (handleInfo && handleInfo.real !== null) {
         try {
           this.fs.close(handleInfo.real, (_err) => {
@@ -204,20 +204,20 @@ export class SafeFilesystem implements IFilesystem {
     ) => void,
     callback?: (err: Error | null, ...args) => any,
   ): void {
-    var handleInfo = this.toHandleInfo(safeHandle);
+    const handleInfo = this.toHandleInfo(safeHandle);
 
     if (!handleInfo) {
       return FileUtil.fail("Invalid handle", callback);
     }
 
-    var finished = false;
-    var asynchronous = false;
+    let finished = false;
+    let asynchronous = false;
 
     if (!handleInfo.busy) {
       handleInfo.busy = true;
       run();
     } else {
-      var queue = handleInfo.actions;
+      let queue = handleInfo.actions;
       if (!queue) {
         queue = [];
         handleInfo.actions = queue;
@@ -255,7 +255,7 @@ export class SafeFilesystem implements IFilesystem {
       if (handleInfo == null) {
         throw Error("bug");
       }
-      var queue = handleInfo.actions;
+      const queue = handleInfo.actions;
       if (!queue || queue.length == 0) {
         handleInfo.busy = false;
       } else {
@@ -418,7 +418,7 @@ export class SafeFilesystem implements IFilesystem {
   ): void {
     path = this.toRealPath(path);
 
-    var handleInfo = this.createHandleInfo();
+    const handleInfo = this.createHandleInfo();
     if (!handleInfo) {
       return FileUtil.fail("ENFILE", callback);
     }
@@ -618,17 +618,17 @@ export class SafeFilesystem implements IFilesystem {
   ): void {
     if (this.isReadOnly()) return FileUtil.fail("EROFS", callback);
 
-    var fs = this.fs;
-    var same = fromHandle === toHandle;
-    var blockSize = MAX_WRITE_BLOCK_LENGTH;
+    const fs = this.fs;
+    const same = fromHandle === toHandle;
+    const blockSize = MAX_WRITE_BLOCK_LENGTH;
     length = length > 0 ? length : -1;
 
-    var fh: any;
-    var th: any;
-    var fc: Function;
-    var tc: Function | null;
-    var fr = false;
-    var tr = false;
+    let fh: any;
+    let th: any;
+    let fc: Function;
+    let tc: Function | null;
+    let fr = false;
+    let tr = false;
 
     //TODO: add argument checks
     //TODO: fail on overlapping ranges in a single file
@@ -672,7 +672,7 @@ export class SafeFilesystem implements IFilesystem {
     }
 
     function copy() {
-      var bytesToRead = length >= 0 ? Math.min(blockSize, length) : blockSize;
+      const bytesToRead = length >= 0 ? Math.min(blockSize, length) : blockSize;
       if (bytesToRead == 0) {
         return done(null);
       }
@@ -684,18 +684,26 @@ export class SafeFilesystem implements IFilesystem {
         bytesToRead,
         fromPosition,
         (err, buffer, bytesRead) => {
-          if (err) return done(err);
+          if (err) {
+            return done(err);
+          }
 
           if (bytesRead == 0) {
-            if (length == 0) return done(null);
+            if (length == 0) {
+              return done(null);
+            }
             return FileUtil.fail("EOF", done);
           }
 
-          if (length >= 0) length -= bytesRead;
+          if (length >= 0) {
+            length -= bytesRead;
+          }
           fromPosition += bytesRead;
 
           fs.write(th, buffer, 0, bytesRead, toPosition, (err) => {
-            if (err) return done(err);
+            if (err) {
+              return done(err);
+            }
 
             toPosition += bytesRead;
             copy();
@@ -739,9 +747,9 @@ export class SafeFilesystem implements IFilesystem {
     }
 
     // determine hash size
-    var hashSize = alg ? _hashSizes[alg] : 0;
+    let hashSize = alg ? _hashSizes[alg] : 0;
     if (typeof hashSize === "undefined" && alg) {
-      var hasher;
+      let hasher;
       try {
         hasher = crypto.createHash(alg);
       } catch (err) {
@@ -760,14 +768,14 @@ export class SafeFilesystem implements IFilesystem {
     }
 
     // calculate block count
-    var count = ((length + blockSize - 1) / blockSize) | 0;
+    const count = ((length + blockSize - 1) / blockSize) | 0;
 
     // prepare buffers
-    var block = Buffer.alloc(blockSize);
-    var hashes = Buffer.alloc(count * hashSize);
-    var hashesOffset = 0;
+    const block = Buffer.alloc(blockSize);
+    const hashes = Buffer.alloc(count * hashSize);
+    let hashesOffset = 0;
 
-    var fs = this.fs;
+    const fs = this.fs;
 
     this._execute(
       handle,
@@ -775,7 +783,7 @@ export class SafeFilesystem implements IFilesystem {
         next();
 
         function next() {
-          var bytesToRead = Math.min(blockSize, length);
+          let bytesToRead = Math.min(blockSize, length);
 
           if (bytesToRead == 0) {
             return callback(null, hashes.slice(0, hashesOffset), alg);
@@ -803,9 +811,9 @@ export class SafeFilesystem implements IFilesystem {
               length -= bytesRead;
 
               // calculate hash
-              var hasher = crypto.createHash(alg);
+              const hasher = crypto.createHash(alg);
               hasher.update(block.slice(0, bytesRead));
-              var hash = hasher.digest();
+              const hash = hasher.digest();
 
               // copy hash to results
               hash.copy(hashes, hashesOffset);

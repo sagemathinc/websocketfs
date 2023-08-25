@@ -430,7 +430,9 @@ export class SftpServerSession {
   end(): void {
     this._channel.close();
 
-    if (typeof this._fs === "undefined") return;
+    if (this._fs === null) {
+      return;
+    }
 
     // close all handles
     this._fs.end();

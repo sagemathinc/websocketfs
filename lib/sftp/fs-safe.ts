@@ -12,6 +12,7 @@ import { FileUtil } from "./fs-misc";
 import crypto from "crypto";
 import { MAX_WRITE_BLOCK_LENGTH } from "./sftp-client";
 import debug from "debug";
+import { callback } from "awaiting";
 
 const log = debug("websocketfs:fs-fsafe");
 
@@ -181,18 +182,19 @@ export class SafeFilesystem implements IFilesystem {
     return !(this.readOnly === false);
   }
 
-  end() {
+  async end() {
     if (!this.fs) {
       return;
     }
 
+    log("fs-safe: end - closing all open file handles");
+    const close = this.fs.close.bind(this.fs);
     for (let handle = 1; handle <= SafeFilesystem.MAX_HANDLE_COUNT; handle++) {
       const handleInfo = this.toHandleInfo(handle);
       if (handleInfo && handleInfo.real !== null) {
         try {
-          this.fs.close(handleInfo.real, (err) => {
-            log("end: error closing one file handle", err);
-          });
+          log("fs-safe: close ", handleInfo.real);
+          await callback(close, handleInfo.real);
         } catch (err) {
           log("end: error closing one file handle", err);
         }
@@ -812,7 +814,7 @@ export class SafeFilesystem implements IFilesystem {
                 return callback(err, null, alg);
               }
 
-              //TODO: when we got incomplete data, read again (the functionality is already 
+              //TODO: when we got incomplete data, read again (the functionality is already
               // in fs-local and should be moved to fs-safe)
 
               // make sure we got the requested data

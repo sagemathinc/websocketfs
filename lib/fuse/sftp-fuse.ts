@@ -44,7 +44,7 @@ export default class SftpFuse {
   }
 
   end() {
-    log("ending connectiong to", this.remote);
+    log("ending connection to", this.remote);
     this.sftp.end();
   }
 

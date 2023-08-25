@@ -223,23 +223,24 @@ module SFTP {
     }
 
     end() {
-      if (typeof this._wss === "object") {
-        const count = this._wss.clients.length;
+      if (this._wss != null) {
+        const count = this._wss.clients.size;
         if (count > 0) {
           this._log.debug("Stopping %d SFTP sessions ...", count);
 
           // end all active sessions
-          this._wss.clients.forEach((ws) => {
+          for (const ws of this._wss.clients) {
             const session = <SftpServerSession>(<any>ws).session;
             if (typeof session === "object") {
               session.end();
               delete (<any>ws).session;
             }
-          });
+          }
         }
 
         // stop accepting connections
         this._wss.close();
+        delete this._wss;
 
         this._log.info("SFTP server stopped");
       }

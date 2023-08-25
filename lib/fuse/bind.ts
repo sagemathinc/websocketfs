@@ -16,8 +16,8 @@ export default async function bind(source: string, target: string) {
   log("mounted websocketfs on localhost:", source, "-->", target);
   return {
     unmount: async () => {
-      await unmount();
       server.end();
+      await unmount();
     },
     fuse,
     server,

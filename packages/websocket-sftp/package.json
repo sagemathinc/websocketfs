@@ -1,0 +1,60 @@
+{
+  "name": "websocket-sftp",
+  "version": "0.1.0",
+  "description": "The sftp protocol, over a WebSocket",
+  "main": "./dist/lib/index.js",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm",
+    "prepublishOnly": "pnpm audit && pnpm test-all",
+    "build": "pnpm exec tsc",
+    "clean": "rm -rf dist node_modules",
+    "prettier-all": "pnpm exec prettier -w .",
+    "test": "pnpm exec jest dist",
+    "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
+  },
+  "files": ["dist/**", "README.md", "package.json"],
+  "engines": {
+    "node": ">=0.16.0"
+  },
+  "author": {
+    "name": "William Stein (SageMath, Inc.)",
+    "email": "wstein@sagemath.com",
+    "url": "https://wstein.org"
+  },
+  "contributors": [
+    {
+      "name": "Lukas Pokorny",
+      "email": "lukas@nuane.com",
+      "url": "http://lukas.pokorny.eu/"
+    },
+    {
+      "name": "Guy Elsmore-Paddock",
+      "email": "guy@inveniem.com"
+    }
+  ],
+  "dependencies": {
+    "websocket-sftp": "workspace:*",
+    "@wwa/statvfs": "^1.1.17",
+    "awaiting": "^3.0.0",
+    "debug": "^4.3.4",
+    "port-get": "^1.0.0",
+    "ws": "^8.13.0"
+  },
+  "keywords": ["sftp", "server", "client", "ws"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sagemathinc/websocketfs.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^20.5.0",
+    "@types/jest": "^29.5.3",
+    "jest": "^29.6.2",
+    "prettier": "^3.0.2",
+    "tmp-promise": "^3.0.3",
+    "typescript": "^5.1.6"
+  }
+}

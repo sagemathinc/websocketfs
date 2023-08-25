@@ -1,49 +1,62 @@
 import assert from "assert";
 import Path from "path";
 import fs from "fs";
-import * as SFTP from "../sftp";
-import * as misc from "../sftp-misc";
+import { Client, IItem, IStats, Server } from "../sftp";
+import { SftpFlags } from "../sftp-misc";
 import getPort from "port-get";
+import { dir as createTmpDir } from "tmp-promise";
+import { callback } from "awaiting";
 
-import IItem = SFTP.IItem;
+let tmpdir;
+let tmp: string;
 
-var tmp = Path.resolve("./tmp");
+async function initTmp() {
+  tmpdir = await createTmpDir({ unsafeCleanup: true });
+  tmp = tmpdir.path;
+  fs.writeFileSync(Path.join(tmp, "readme.txt"), "This is a readme file.");
+  fs.writeFileSync(Path.join(tmp, "sample.txt"), "This is a sample file.");
+  fs.mkdirSync(Path.join(tmp, "empty"));
+  fs.mkdirSync(Path.join(tmp, "full"));
+  fs.mkdirSync(Path.join(tmp, "full/subdir01"));
 
-if (!fs.existsSync(tmp)) {
-  fs.mkdirSync(tmp);
-} else {
-  function clear(path: string) {
-    var items: string[] = fs.readdirSync(path);
-    for (var i = 0; i < items.length; i++) {
-      var itemPath = Path.join(path, items[i]);
-      //console.log("deleting ", itemPath);
-
-      var stats = fs.statSync(itemPath);
-
-      if (stats.isFile() || stats.isSymbolicLink()) {
-        fs.unlinkSync(itemPath);
-      } else if (stats.isDirectory()) {
-        clear(itemPath);
-        fs.rmdirSync(itemPath);
-      } else {
-        throw "unable to delete " + itemPath;
-      }
-    }
+  for (var n = 0; n < 200; n++) {
+    fs.writeFileSync(
+      Path.join(tmp, "full", "file" + n + "-quite-long-name.txt"),
+      "This is a sample file number " + n,
+    );
   }
-
-  clear(tmp);
 }
 
-(function () {
-  var iti = it;
-  it = <any>function (expectation, assertion: Function) {
+let server, client, port;
+function initClient(cb) {
+  client = new Client();
+
+  client.connect(`ws://localhost:${port}`, {});
+
+  client.on("error", (err) => {
+    if (err.message == "Simulated callback error") {
+      return;
+    }
+    cb(err);
+    // jest seems to swallow uncaught errors, so we make them very explicit!
+    console.error("Uncaught error:", err);
+    process.exit(255);
+  });
+
+  client.on("ready", cb);
+}
+
+function patchIt() {
+  const iti = it;
+  // @ts-ignore
+  it = (expectation, assertion: Function) => {
     if (assertion.length == 0) {
-      (<Function>iti)(expectation, function () {
+      iti(expectation, function () {
         // @ts-ignore
         return assertion.call(this);
       });
     } else if (assertion.length == 1) {
-      (<Function>iti)(expectation, function (done) {
+      iti(expectation, function (done) {
         // @ts-ignore
         return assertion.call(this, done);
       });
@@ -52,36 +65,33 @@ if (!fs.existsSync(tmp)) {
     }
   };
 
-  it.only = <any>function () {
+  // @ts-ignore
+  it.only = () => {
     // @ts-ignore
     return iti.only.apply(this, arguments);
   };
-  it.skip = <any>function () {
+  // @ts-ignore
+  it.skip = () => {
     // @ts-ignore
     return iti.skip.apply(this, arguments);
   };
-})();
-
-fs.writeFileSync(Path.join(tmp, "readme.txt"), "This is a readme file.");
-fs.writeFileSync(Path.join(tmp, "sample.txt"), "This is a sample file.");
-fs.mkdirSync(Path.join(tmp, "empty"));
-fs.mkdirSync(Path.join(tmp, "full"));
-fs.mkdirSync(Path.join(tmp, "full/subdir01"));
-
-for (var n = 0; n < 200; n++) {
-  fs.writeFileSync(
-    Path.join(tmp, "full", "file" + n + "-quite-long-name.txt"),
-    "This is a sample file number " + n,
-  );
 }
 
-let server, port;
 beforeAll(async () => {
+  patchIt();
+  await initTmp();
   port = await getPort();
-  server = new SFTP.Server({
+  server = new Server({
     port,
     virtualRoot: tmp,
   });
+  await callback(initClient);
+});
+
+afterAll(async () => {
+  client.end();
+  server.end();
+  await tmpdir?.cleanup();
 });
 
 function check(err: Error, done: Function, cb: Function) {
@@ -125,7 +135,7 @@ function error(
   }
 }
 
-function equalStats(attrs: SFTP.IStats, stats: fs.Stats): void {
+function equalStats(attrs: IStats, stats: fs.Stats): void {
   assert.equal(attrs.size, stats.size, "size mismatch");
   if (attrs.mtime == null) {
     throw Error("bug");
@@ -158,37 +168,11 @@ var getFileName = (function () {
 })();
 
 describe("Basic Tests", function () {
-  let client;
-
-  beforeAll((done) => {
-    client = new SFTP.Client();
-
-    client.connect(`ws://localhost:${port}`, {});
-
-    client.on("error", (err) => {
-      if (err.message == "Simulated callback error") {
-        return;
-      }
-      done(err);
-      // jest seems to swallow uncaught errors, so we make them very explicit!
-      console.error("Uncaught error:", err);
-      process.exit(255);
-    });
-
-    client.on("ready", done);
-  });
-
-  afterAll((done) => {
-    client.end();
-    server.end();
-    done();
-  });
-
   it("flags", () => {
     for (var flags = 0; flags < 64; flags++) {
-      var aflags = misc.SftpFlags.fromNumber(flags)[0];
-      var nflags = misc.SftpFlags.toNumber(aflags);
-      var sflags = misc.SftpFlags.fromNumber(nflags)[0];
+      var aflags = SftpFlags.fromNumber(flags)[0];
+      var nflags = SftpFlags.toNumber(aflags);
+      var sflags = SftpFlags.fromNumber(nflags)[0];
       assert.equal(aflags, sflags);
     }
   });

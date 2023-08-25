@@ -1,8 +1,8 @@
-import { Server as SftpServer } from "../sftp/sftp";
+import { Server as SftpServer } from "websocket-sftp/lib/sftp";
 import getPort from "port-get";
 import debug from "debug";
 
-const log = debug("websocketfs:fuse:serve");
+const log = debug("websocketfs:serve");
 
 export default async function serve({
   path,

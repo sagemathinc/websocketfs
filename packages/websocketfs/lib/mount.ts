@@ -3,7 +3,7 @@ import SftpFuse from "./sftp-fuse";
 import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
 
-const log = debug("websocketfs:fuse:mount");
+const log = debug("websocketfs:mount");
 
 interface Options {
   path: string; // e.g., ./mnt

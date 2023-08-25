@@ -6,21 +6,20 @@ Some relevant docs:
 - https://filezilla-project.org/specs/draft-ietf-secsh-filexfer-02.txt
 //
 */
-import { Client as SftpClient } from "../sftp/sftp";
-import { RenameFlags } from "../sftp/fs-api";
+import { Client as SftpClient } from "websocket-sftp/lib/sftp";
+import { RenameFlags } from "websocket-sftp/lib/fs-api";
+import type { SftpError } from "websocket-sftp/lib/util";
+import {
+  MAX_WRITE_BLOCK_LENGTH,
+  MAX_READ_BLOCK_LENGTH,
+} from "websocket-sftp/lib/sftp-client";
 import { callback } from "awaiting";
 import { bindMethods } from "./util";
 import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
-import type { SftpError } from "../sftp/util";
-import {
-  MAX_WRITE_BLOCK_LENGTH,
-  MAX_READ_BLOCK_LENGTH,
-} from "../sftp/sftp-client";
-
 import debug from "debug";
 
-const log = debug("websocketfs:fuse:sftp");
+const log = debug("websocketfs:sftp");
 
 type Callback = Function;
 
@@ -373,6 +372,7 @@ export default class SftpFuse {
 
   rename(src: string, dest: string, cb: Callback) {
     log("rename", { src, dest });
+    // @ts-ignore
     this.sftp.rename(src, dest, RenameFlags.OVERWRITE, fuseError(cb));
   }
 

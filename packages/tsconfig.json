@@ -18,15 +18,12 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "target": "es2020",
-    "module": "commonjs",
-    "outDir": "dist",
-    "rootDir": "./"
+    "module": "commonjs"
   },
   "watchOptions": {
     "fallbackPolling": "dynamicPriority",
     "synchronousWatchDirectory": true,
     "watchDirectory": "useFsEvents",
     "watchFile": "useFsEvents"
-  },
-  "exclude": ["node_modules", "dist"]
+  }
 }

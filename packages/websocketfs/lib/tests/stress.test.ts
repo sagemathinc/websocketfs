@@ -13,8 +13,7 @@ import fs from "fs/promises";
 import {
   MAX_WRITE_BLOCK_LENGTH,
   MAX_READ_BLOCK_LENGTH,
-} from "../../sftp/sftp-client";
-
+} from "websocket-sftp/lib/sftp-client";
 
 // stress tests take longer
 jest.setTimeout(60000);

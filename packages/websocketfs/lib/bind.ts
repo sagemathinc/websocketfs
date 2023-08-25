@@ -2,7 +2,7 @@ import mount from "./mount";
 import serve from "./serve";
 import debug from "debug";
 
-const log = debug("websocketfs:fuse:bind");
+const log = debug("websocketfs:bind");
 
 export default async function bind(source: string, target: string) {
   const { port, server } = await serve({ path: source });

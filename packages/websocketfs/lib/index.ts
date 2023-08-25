@@ -1,8 +1,8 @@
-import mount from "./fuse/mount";
+import mount from "./mount";
 export { mount };
 
-import serve from "./fuse/serve";
+import serve from "./serve";
 export { serve };
 
-import bind from "./fuse/bind";
+import bind from "./bind";
 export { bind };

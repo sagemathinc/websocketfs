@@ -2,7 +2,10 @@
   "name": "websocket-sftp",
   "version": "0.1.0",
   "description": "The sftp protocol, over a WebSocket",
-  "main": "./dist/lib/index.js",
+  "exports": {
+    ".": "./dist/lib/sftp.js",
+    "./*": "./dist/*.js"
+  },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "prepublishOnly": "pnpm audit && pnpm test-all",
@@ -33,7 +36,6 @@
     }
   ],
   "dependencies": {
-    "websocket-sftp": "workspace:*",
     "@wwa/statvfs": "^1.1.17",
     "awaiting": "^3.0.0",
     "debug": "^4.3.4",

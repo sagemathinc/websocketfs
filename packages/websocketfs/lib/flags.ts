@@ -41,7 +41,7 @@ in CoWasm)...
 */
 
 import { constants } from "fs";
-import { SftpOpenFlags } from "../sftp/sftp-enums";
+import { SftpOpenFlags } from "websocket-sftp/lib/sftp-enums";
 
 const FLAG_MAP = {
   O_RDONLY: SftpOpenFlags.READ,

@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+const websocketfs = require("..");
+
+const [source, target] = process.argv.slice(2);
+
+if (!source || !target) {
+  console.error("Usage: websocketfs-bind <source> <target>");
+  process.exit(1);
+}
+
+websocketfs.bind(source, target);

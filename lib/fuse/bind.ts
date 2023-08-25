@@ -1,8 +1,3 @@
-/*
-Implement a inefficient version of "bind" over wsftp and a websocket,
-for testing and dev purposes only.
-*/
-
 import mount from "./mount";
 import serve from "./serve";
 import debug from "debug";
@@ -14,10 +9,22 @@ export default async function bind(source: string, target: string) {
   const remote = `ws://localhost:${port}`;
   const { fuse, client, unmount } = await mount({ path: target, remote });
   log("mounted websocketfs on localhost:", source, "-->", target);
+
+  const exitHandler = async () => {
+    server.end();
+    await unmount();
+    process.exit();
+  };
+
+  process.on("exit", exitHandler);
+  process.on("SIGINT", exitHandler);
+  process.on("SIGTERM", exitHandler);
+
   return {
     unmount: async () => {
       server.end();
       await unmount();
+      process.exit();
     },
     fuse,
     server,

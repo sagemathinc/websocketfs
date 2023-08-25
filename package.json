@@ -12,14 +12,12 @@
     "test": "pnpm exec jest dist",
     "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
-  "files": [
-    "dist/**",
-    "LICENSE",
-    "README.md",
-    "package.json"
-  ],
+  "files": ["dist/**", "LICENSE", "README.md", "package.json"],
   "engines": {
     "node": ">=0.16.0"
+  },
+  "bin": {
+    "websocketfs-bind": "./bin/websocketfs-bind"
   },
   "author": {
     "name": "William Stein (SageMath, Inc.)",
@@ -47,12 +45,7 @@
     "port-get": "^1.0.0",
     "ws": "^8.13.0"
   },
-  "keywords": [
-    "sftp",
-    "server",
-    "client",
-    "ws"
-  ],
+  "keywords": ["sftp", "server", "client", "ws"],
   "license": "MIT",
   "repository": {
     "type": "git",

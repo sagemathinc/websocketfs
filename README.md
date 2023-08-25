@@ -22,7 +22,26 @@ require('websocketfs').serve({path, remote:'ws://host:port'})
 
 ```
 
-## Try bind mounting using the source code from github
+You can also run a script to do bind on localhost as a demo:
+
+```sh
+/tmp$ mkdir zz; cd zz
+/tmp/zz$ pnpm init
+/tmp/zz$ pnpm install websocketfs
+/tmp/zz$ mkdir /tmp/mnt
+/tmp/zz$ pnpm exec websocketfs-bind $HOME /tmp/mnt
+... (hit control+c when done)
+```
+
+and in another terminal:
+
+```sh
+/tmp$ cd /tmp/mnt
+/tmp/mnt$ ls
+...
+```
+
+## Try building and bind mounting using the source code from github
 
 ```sh
 ~$ git clone https://github.com/sagemathinc/websocketfs
@@ -45,6 +64,13 @@ TODO.md    lib       pnpm-lock.yaml  websocketfs.term
 ```
 
 You can do `ls -l`, and read and write files, etc.
+
+## Nodejs 20 Support
+
+Do NOT try to run both the client and server in the same nodejs
+process, since [it will deadlock](https://github.com/sagemathinc/websocketfs/issues/1).
+This is not something you would want to do except maybe for
+unit testing.
 
 ### A Note about Fuse
 

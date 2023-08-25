@@ -6,6 +6,8 @@ settings:
 
 importers:
 
+  .: {}
+
   websocket-sftp:
     dependencies:
       '@wwa/statvfs':

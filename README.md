@@ -51,7 +51,7 @@ and in another terminal:
 Welcome to Node.js v16.20.1.
 Type ".help" for more information.
 > // serve HOME and mount it at /tmp/mnt all over websocketfs
-> z = await require('.').bind(process.env.HOME,'/tmp/mnt'); null
+> await require('./websocketfs').bind(process.env.HOME,'/tmp/mnt'); null
 ```
 
 Then in another terminal, type `ls /tmp/mnt`:
@@ -100,6 +100,12 @@ without FUSE.
 
 **MacOS?:** I don't know if it will work or not. FUSE is weird on MacOS due to security constraints and commercial interests.
 _I'm developing this for Linux._
+
+### Installing just the sftp protocol
+
+You can install the module `websocket-sftp` alone, which doesn't depend
+on fuse-native, and provides the client and server for communicating over
+sftp, but not the FUSE bindings.
 
 ## Background
 

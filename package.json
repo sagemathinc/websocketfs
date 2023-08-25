@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "build": "pnpm --filter=* build",
+    "test": "pnpm --filter=* test",
+    "clean": "pnpm --filter=* clean",
+    "test-all": "pnpm --filter=* clean && pnpm install && pnpm --filter=* build && pnpm --filter=* test"
+  }
+}

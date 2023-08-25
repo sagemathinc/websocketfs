@@ -1,6 +1,6 @@
 {
   "name": "websocket-sftp",
-  "version": "0.1.0",
+  "version": "0.5.0",
   "description": "The sftp protocol, over a WebSocket",
   "exports": {
     ".": "./dist/lib/sftp.js",

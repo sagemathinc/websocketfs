@@ -125,13 +125,16 @@ module SFTP {
 
     log?: ILogWriter | any;
 
+    // use a provided WebSocketServer instead of the one created with the options below.
+    wss?: WebSocketServer;
+
     // options for WebSocket server
+    noServer?: boolean;
     host?: string;
     port?: number;
     server?: http.Server;
     handleProtocols?: any;
     path?: string;
-    noServer?: boolean;
     disableHixie?: boolean;
     clientTracking?: boolean;
   }
@@ -150,7 +153,7 @@ module SFTP {
       let virtualRoot = options.virtualRoot;
       let filesystem = options.filesystem;
       this._log = util.LogHelper.toLogWriter(options.log);
-      const noServer = options.noServer;
+      const { noServer, wss } = options;
 
       serverOptions.handleProtocols = this.handleProtocols;
 
@@ -189,7 +192,7 @@ module SFTP {
 
       if (!noServer) {
         log("Creating WebSocketServer");
-        this._wss = new WebSocketServer(serverOptions);
+        this._wss = wss ?? new WebSocketServer(serverOptions);
         this._wss.on("error", console.error);
         this._wss.on("connection", (ws, upgradeReq) => {
           log("WebSocketServer received a new connection");

@@ -4,9 +4,10 @@
 
 - [ ] #now redo logging to use the debug module
 - [ ] support node v20
+  - See https://github.com/sagemathinc/websocketfs/issues/1 
+  - May be entirely an issue for unit testing.
 
 # DONE
-
 
 - [x] there are a bunch of TODO's in the code still -- read them; delete ones that aren't relevant or address, or leave ones that may matter later.  Result: most of the worrisome ones are in copy functions that FUSE doesn't use.
 - [x] Remove all auth (was: support auth, i.e., an optional symmetric key that clients must present to be allowed to mount the filesystem. This is useful for "defense in depth".). It's better to do the auth at a different level.

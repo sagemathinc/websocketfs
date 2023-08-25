@@ -13,7 +13,9 @@ export default async function bind(source: string, target: string) {
   const exitHandler = async () => {
     server.end();
     await unmount();
-    process.exit();
+    if (process.env.JEST_WORKER_ID == null) {
+      process.exit();
+    }
   };
 
   process.on("exit", exitHandler);
@@ -24,7 +26,6 @@ export default async function bind(source: string, target: string) {
     unmount: async () => {
       server.end();
       await unmount();
-      process.exit();
     },
     fuse,
     server,

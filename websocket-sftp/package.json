@@ -1,10 +1,11 @@
 {
   "name": "websocket-sftp",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "The sftp protocol, over a WebSocket",
+  "main": "./dist/lib/sftp.js",
   "exports": {
     ".": "./dist/lib/sftp.js",
-    "./*": "./dist/*.js"
+    "./lib/*": "./dist/lib/*.js"
   },
   "scripts": {
     "preinstall": "npx only-allow pnpm",

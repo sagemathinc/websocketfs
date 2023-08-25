@@ -171,7 +171,6 @@ module SFTP {
       }
 
       if (typeof virtualRoot === "undefined") {
-        // TODO: serve a dummy filesystem in this case to prevent revealing any files accidently
         virtualRoot = process.cwd();
       } else {
         virtualRoot = path.resolve(virtualRoot);
@@ -187,8 +186,6 @@ module SFTP {
         readOnly: true && options.readOnly,
         hideUidGid: true && options.hideUidGid,
       };
-
-      // TODO: when no _fs and no _virtualRoot is specified, serve a dummy filesystem as well
 
       if (!noServer) {
         log("Creating WebSocketServer");

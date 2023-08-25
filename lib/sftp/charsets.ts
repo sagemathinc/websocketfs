@@ -38,7 +38,6 @@ export class StringEncoder {
   private _value: string;
   private _done: boolean;
 
-  //TODO: add write():bool, change finish() to end():void, then expect read()
   finished(): boolean {
     return this._done;
   }

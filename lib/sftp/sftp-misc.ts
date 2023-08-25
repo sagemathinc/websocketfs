@@ -482,8 +482,8 @@ export class SftpAttributes implements IStats {
         typeof stats.mtime !== "undefined"
       ) {
         flags |= SftpAttributeFlags.ACMODTIME;
-        this.atime = stats.atime ?? new Date(0); //TODO: make sure its Date
-        this.mtime = stats.mtime ?? new Date(0); //TODO: make sure its Date
+        this.atime = new Date(stats.atime ?? 0);
+        this.mtime = new Date(stats.mtime ?? 0);
       }
 
       if (typeof (<any>stats).nlink !== "undefined") {

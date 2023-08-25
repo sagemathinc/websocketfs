@@ -530,7 +530,7 @@ export class FileUtil {
           return;
         }
 
-        return callback(new Error("Path is not a directory"), false); //TODO: better error
+        return callback(new Error("Path is not a directory"), false);
       }
 
       if ((<any>err).code != "ENOENT") {

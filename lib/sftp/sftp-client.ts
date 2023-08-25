@@ -336,7 +336,8 @@ class SftpClientCore implements IFilesystem {
       }
     }
 
-    // @ts-ignore -- TODO: id is sometimes null in unit tests
+    // @ts-ignore -- id is sometimes null in the unit tests during init, 
+    // so this needs to be supported
     const request = this._requests[response.id];
     if (request == null) {
       throw Error("Unknown response ID");
@@ -759,8 +760,6 @@ class SftpClientCore implements IFilesystem {
     this.checkCallback(callback);
     const h = this.toHandle(handle);
     this.checkPosition(position);
-
-    //TODO: reject requests with oversize response
 
     const request = this.getRequest(SftpExtensions.CHECK_FILE_HANDLE);
 

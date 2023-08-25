@@ -2,13 +2,13 @@
 
 # Code Quality
 
-- [ ] redo logging to use the debug module
-- [ ] there are a bunch of TODO's in the code still.
+- [ ] #now redo logging to use the debug module
 - [ ] support node v20
 
 # DONE
 
 
+- [x] there are a bunch of TODO's in the code still -- read them; delete ones that aren't relevant or address, or leave ones that may matter later.  Result: most of the worrisome ones are in copy functions that FUSE doesn't use.
 - [x] Remove all auth (was: support auth, i.e., an optional symmetric key that clients must present to be allowed to mount the filesystem. This is useful for "defense in depth".). It's better to do the auth at a different level.
 - [x] delete the "WEB" comments in code...
 - [x] require require's to use static import syntax instead

@@ -11,6 +11,9 @@ import { IFilesystem, IItem, IStats, RenameFlags } from "./fs-api";
 import { FileUtil } from "./fs-misc";
 import crypto from "crypto";
 import { MAX_WRITE_BLOCK_LENGTH } from "./sftp-client";
+import debug from "debug";
+
+const log = debug("websocketfs:fs-fsafe");
 
 class HandleInfo {
   safe: number;
@@ -39,7 +42,8 @@ export class SafeFilesystem implements IFilesystem {
 
   private _handles: HandleToHandleInfoMap;
   private _nextHandle: number;
-  private static MAX_HANDLE_COUNT = 1024; // 1024 = standard linux default...
+  // 1024 = standard linux default...
+  private static MAX_HANDLE_COUNT = 1024;
 
   constructor(
     fs: IFilesystem,
@@ -108,9 +112,13 @@ export class SafeFilesystem implements IFilesystem {
       i++;
     }
 
-    if (this.isWindows) path = path.replace(/\\/g, "/");
+    if (this.isWindows) {
+      path = path.replace(/\\/g, "/");
+    }
 
-    if (path.length == 0) path = "/";
+    if (path.length == 0) {
+      path = "/";
+    }
 
     return path;
   }
@@ -174,19 +182,19 @@ export class SafeFilesystem implements IFilesystem {
   }
 
   end() {
-    if (!this.fs) return;
-
-    //TODO: make sure all pending operations either complete or fail gracefully
+    if (!this.fs) {
+      return;
+    }
 
     for (let handle = 1; handle <= SafeFilesystem.MAX_HANDLE_COUNT; handle++) {
       const handleInfo = this.toHandleInfo(handle);
       if (handleInfo && handleInfo.real !== null) {
         try {
-          this.fs.close(handleInfo.real, (_err) => {
-            //TODO: report this
+          this.fs.close(handleInfo.real, (err) => {
+            log("end: error closing one file handle", err);
           });
-        } catch (_err) {
-          //TODO: report this
+        } catch (err) {
+          log("end: error closing one file handle", err);
         }
       }
       delete this._handles[handle];
@@ -239,7 +247,11 @@ export class SafeFilesystem implements IFilesystem {
 
     function done(err: Error) {
       if (finished) {
-        //TODO: callback called more than once - this is a fatal error and should not be ignored
+        // callback called more than once - must be an internal bug
+        console.trace();
+        log(
+          "BUG in done -- a callback was called more than once - this indicates a bug in SFTP",
+        );
         return;
       }
       finished = true;
@@ -800,7 +812,8 @@ export class SafeFilesystem implements IFilesystem {
                 return callback(err, null, alg);
               }
 
-              //TODO: when we got incomplete data, read again (the functionality is already in fs-local and should be moved to fs-safe)
+              //TODO: when we got incomplete data, read again (the functionality is already 
+              // in fs-local and should be moved to fs-safe)
 
               // make sure we got the requested data
               if (bytesRead != bytesToRead) {

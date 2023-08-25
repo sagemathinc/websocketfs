@@ -1,12 +1,14 @@
 import fs from "fs";
 import { IFilesystem, IItem, IStats, RenameFlags } from "./fs-api";
 import { FileUtil, Path } from "./fs-misc";
-
 // note that this is in node.js v 18.15 and later
 // as (fs/promises).statvfs (they are both wrapping
 // the same uv_fs_statfs).
 import { statvfs } from "@wwa/statvfs";
 import type { StatFs } from "./fs-api";
+import debug from "debug";
+
+const log = debug("websocketfs:fs-local");
 
 export class LocalFilesystem implements IFilesystem {
   private isWindows: boolean;
@@ -336,7 +338,7 @@ export class LocalFilesystem implements IFilesystem {
 
       fs.lstat(itemPath, (err, stats) => {
         if (typeof err !== "undefined" && err != null) {
-          //TODO: log unsuccessful stat?
+          log("readdir -- Failed to compute lstat of ", itemPath, err);
         } else {
           //
           items.push({
@@ -456,9 +458,6 @@ export class LocalFilesystem implements IFilesystem {
     this.checkCallback(callback);
     oldPath = this.checkPath(oldPath, "oldPath");
     newPath = this.checkPath(newPath, "newPath");
-
-    //TODO: make sure the order is correct (beware - other SFTP client and server vendors are confused as well)
-    //TODO: make sure this work on Windows
     fs.symlink(newPath, oldPath, "file", callback);
   }
 

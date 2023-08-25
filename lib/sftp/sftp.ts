@@ -193,6 +193,7 @@ module SFTP {
       if (!noServer) {
         log("Creating WebSocketServer");
         this._wss = new WebSocketServer(serverOptions);
+        this._wss.on("error", console.error);
         this._wss.on("connection", (ws, upgradeReq) => {
           log("WebSocketServer received a new connection");
           ws.upgradeReq = upgradeReq;

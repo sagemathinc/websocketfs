@@ -27,7 +27,7 @@ export const enum LogLevel {
 
 export class LogHelper {
   static getLevel(log: ILogWriter): LogLevel {
-    var value = log.level();
+    const value = log.level();
     if (typeof value === "number") {
       return value;
     }
@@ -46,7 +46,7 @@ export class LogHelper {
         return 60;
     }
 
-    var level = <any>value ?? 0;
+    let level = <any>value ?? 0;
     if (level <= 0 || level >= 100) {
       level = 60;
     }
@@ -54,7 +54,7 @@ export class LogHelper {
   }
 
   static isTrace(log: ILogWriter): boolean {
-    var level = log.level();
+    const level = log.level();
     return (typeof level == "number" && level <= 10) || level === "trace";
   }
 
@@ -62,18 +62,18 @@ export class LogHelper {
     function check(names: string[]) {
       if (typeof writer !== "object") return false;
 
-      for (var i = 0; i < names.length; i++) {
+      for (let i = 0; i < names.length; i++) {
         if (typeof writer[names[i]] !== "function") return false;
       }
 
       return true;
     }
 
-    var levels = ["trace", "debug", "info", "warn", "error", "fatal"];
+    const levels = ["trace", "debug", "info", "warn", "error", "fatal"];
 
     if (writer == null || typeof writer === "undefined") {
       // no writer specified, create a dummy writer
-      var proxy = <ILogWriter>new Object();
+      const proxy = <ILogWriter>new Object();
 
       levels.forEach((level) => {
         proxy[level] = (
@@ -97,16 +97,16 @@ export class LogHelper {
 
     if (check(["log", "debug", "info", "warn", "error", "query"])) {
       // looks like winston, lets's create a proxy for it
-      var proxy = <ILogWriter>new Object();
+      const proxy = <ILogWriter>new Object();
 
       levels.forEach((level) => {
         proxy[level] = (obj?: Object, format?: any, ...params: any[]): void => {
           // log(level: string, msg: string, meta: any, callback ?: (err: Error, level: string, msg: string, meta: any) => void): LoggerInstance;
           if (typeof obj === "string") {
-            var msg = util.format(obj, format, params);
+            const msg = util.format(obj, format, params);
             (<any>writer).log(level, msg);
           } else {
-            var msg = util.format(format, params);
+            const msg = util.format(format, params);
             (<any>writer).log(level, msg, obj);
           }
         };
@@ -121,16 +121,16 @@ export class LogHelper {
 
     if (check(["log", "info", "warn", "error", "dir"])) {
       // looks like console, lets's create a proxy for it
-      var proxy = <ILogWriter>new Object();
-      var console = <Console>(<any>writer);
-      var levelObj;
-      var levelNum = LogLevel.DEBUG;
+      const proxy = <ILogWriter>new Object();
+      const console = <Console>(<any>writer);
+      let levelObj;
+      let levelNum = LogLevel.DEBUG;
 
-      var funcs = ["log", "log", "info", "warn", "error", "error"];
-      var names = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"];
+      const funcs = ["log", "log", "info", "warn", "error", "error"];
+      const names = ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"];
 
       [10, 20, 30, 40, 50, 60].forEach((level) => {
-        var index = level / 10 - 1;
+        const index = level / 10 - 1;
 
         proxy[levels[index]] = function (
           obj?: Object,
@@ -147,9 +147,9 @@ export class LogHelper {
           if (level < levelNum) return;
 
           // convert to actual console "log levels"
-          var func = funcs[index];
+          const func = funcs[index];
 
-          var array = params;
+          let array = params;
           if (typeof format !== "undefined") array.unshift(format);
           if (typeof obj === "string" || obj === null) {
             array.unshift(obj);
@@ -173,7 +173,6 @@ export class LogHelper {
     throw new TypeError("Unsupported log writer");
   }
 }
-
 
 export class SftpError extends Error {
   public code?: string;

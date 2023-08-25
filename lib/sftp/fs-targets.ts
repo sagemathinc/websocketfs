@@ -76,8 +76,10 @@ export class FileDataTarget extends EventEmitter implements IDataTarget {
 
       // otherwise, write more chunks while possible
       while (this.requests < 4) {
-        var chunk = this.queue.shift();
-        if (!chunk) break;
+        const chunk = this.queue.shift();
+        if (!chunk) {
+          break;
+        }
 
         this._next(chunk, this.position);
         this.position += chunk.length;
@@ -96,7 +98,7 @@ export class FileDataTarget extends EventEmitter implements IDataTarget {
   }
 
   private _next(chunk: IChunk, position: number): void {
-    var bytesToWrite = chunk.length;
+    const bytesToWrite = chunk.length;
 
     //console.log("write", position, bytesToWrite);
     this.requests++;
@@ -105,9 +107,13 @@ export class FileDataTarget extends EventEmitter implements IDataTarget {
         this.requests--;
         //console.log("write done", err || position);
 
-        if (err) return this._error(err);
+        if (err) {
+          return this._error(err);
+        }
 
-        if (typeof chunk.callback === "function") chunk.callback();
+        if (typeof chunk.callback === "function") {
+          chunk.callback();
+        }
 
         this._flush(false);
       });
@@ -165,7 +171,7 @@ export class FileDataTarget extends EventEmitter implements IDataTarget {
   private _close(): void {
     if (!this.handle) return;
 
-    var handle = this.handle;
+    const handle = this.handle;
     this.handle = null;
     try {
       this.fs.close(handle, (err) => {
@@ -246,8 +252,7 @@ export class BlobDataTarget extends DataTarget {
   }
 
   protected _end(): void {
-    var options;
-    if (this._mimeType) options = { type: this._mimeType };
+    const options = this._mimeType ? { type: this._mimeType } : undefined;
     this._blob = new Blob(this._chunks, options);
     this._chunks.length = 0;
   }
@@ -275,9 +280,9 @@ export class BufferDataTarget extends DataTarget {
 
   protected _end(): void {
     this._buffer = Buffer.alloc(this._length);
-    var offset = 0;
-    for (var n = 0; n < this._chunks.length; n++) {
-      var chunk = this._chunks[n];
+    let offset = 0;
+    for (let n = 0; n < this._chunks.length; n++) {
+      const chunk = this._chunks[n];
       chunk.copy(this._buffer, offset); //WEB: this._buffer.set(chunk, offset);
       offset += chunk.length;
     }

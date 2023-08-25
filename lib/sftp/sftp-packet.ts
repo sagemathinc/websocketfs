@@ -12,7 +12,7 @@ export class SftpPacket {
   constructor() {}
 
   check(count: number): void {
-    var remaining = this.length - this.position;
+    const remaining = this.length - this.position;
     if (count > remaining) throw new Error("Unexpected end of packet");
   }
 
@@ -22,7 +22,7 @@ export class SftpPacket {
   }
 
   resize(size: number): void {
-    var buffer = Buffer.alloc(size);
+    const buffer = Buffer.alloc(size);
     this.buffer.copy(buffer);
     this.buffer = buffer;
     this.length = buffer.length;

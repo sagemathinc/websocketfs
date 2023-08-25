@@ -1,12 +1,12 @@
-import { SftpPacket, SftpPacketWriter, SftpPacketReader } from './sftp-packet';
-import { SftpFlags, SftpAttributes, SftpExtensions } from './sftp-misc';
-import { SftpPacketType, SftpStatusCode } from './sftp-enums';
-import { IStats, IItem, RenameFlags, IFilesystem } from './fs-api';
-import { FilesystemPlus, Task } from './fs-plus';
-import { Path } from './fs-misc';
-import { IChannel } from './channel';
-import { ILogWriter, LogHelper, LogLevel } from './util';
-import debug from 'debug';
+import { SftpPacket, SftpPacketWriter, SftpPacketReader } from "./sftp-packet";
+import { SftpFlags, SftpAttributes, SftpExtensions } from "./sftp-misc";
+import { SftpPacketType, SftpStatusCode } from "./sftp-enums";
+import { IStats, IItem, RenameFlags, IFilesystem } from "./fs-api";
+import { FilesystemPlus, Task } from "./fs-plus";
+import { Path } from "./fs-misc";
+import { IChannel } from "./channel";
+import { ILogWriter, LogHelper, LogLevel } from "./util";
+import debug from "debug";
 
 const log = debug("websocketfs:sftp-client");
 import { SftpVfsStats } from "./sftp-misc";
@@ -64,7 +64,7 @@ export class SftpHandle {
 
   toString(): string {
     let value = "0x";
-    for (var i = 0; i < this._handle.length; i++) {
+    for (let i = 0; i < this._handle.length; i++) {
       const b = this._handle[i];
       const c = b.toString(16);
       if (b < 16) {
@@ -106,7 +106,7 @@ class SftpClientCore implements IFilesystem {
   private _bytesSent: number;
 
   private getRequest(type: SftpPacketType | string): SftpPacketWriter {
-    var request = new SftpPacketWriter(this._maxWriteBlockLength + 1024);
+    const request = new SftpPacketWriter(this._maxWriteBlockLength + 1024);
 
     request.type = type;
     request.id = this._id;
@@ -221,14 +221,14 @@ class SftpClientCore implements IFilesystem {
     this._log = oldlog;
 
     // determine the log level now to speed up logging later
-    var level = LogHelper.getLevel(oldlog);
+    const level = LogHelper.getLevel(oldlog);
     this._trace = level <= LogLevel.TRACE;
 
-    var request = this.getRequest(SftpPacketType.INIT);
+    const request = this.getRequest(SftpPacketType.INIT);
 
     request.writeInt32(3); // SFTPv3
 
-    var info = { command: "init" };
+    const info = { command: "init" };
 
     log("sftp._init: sending INIT packet");
     this.execute(
@@ -258,15 +258,15 @@ class SftpClientCore implements IFilesystem {
         }
 
         while (response.length - response.position >= 4) {
-          var extensionName = response.readString();
-          var value = SftpExtensions.read(response, extensionName);
+          const extensionName = response.readString();
+          const value = SftpExtensions.read(response, extensionName);
 
           if (
             extensionName.indexOf("@openssh.com") ===
             extensionName.length - 12
           ) {
             // OpenSSH extensions may occur multiple times
-            var val = <string>this._extensions[extensionName];
+            let val = <string>this._extensions[extensionName];
             if (typeof val === "undefined") {
               val = value;
             } else {
@@ -315,10 +315,10 @@ class SftpClientCore implements IFilesystem {
 
   _process(packet: Buffer): void {
     this._bytesReceived += packet.length;
-    var response = <SftpResponse>new SftpPacketReader(packet);
+    const response = <SftpResponse>new SftpPacketReader(packet);
 
     if (log.enabled) {
-      var meta = {};
+      const meta: { [key: string]: any } = {};
       meta["session"] = this._sessionId;
       if (response.type != SftpPacketType.VERSION) {
         meta["req"] = response.id;
@@ -348,7 +348,7 @@ class SftpClientCore implements IFilesystem {
   }
 
   end(): void {
-    var host = this._host;
+    const host = this._host;
     if (host) {
       this._host = null;
       host.close();
@@ -357,11 +357,11 @@ class SftpClientCore implements IFilesystem {
   }
 
   private failRequests(code: SftpStatusCode, message: string): void {
-    var requests = this._requests;
+    const requests = this._requests;
     this._requests = [];
 
     requests.forEach((request) => {
-      var error = this.createError(code, message, request.info);
+      const error = this.createError(code, message, request.info);
       request.callback(error);
     });
   }
@@ -375,7 +375,7 @@ class SftpClientCore implements IFilesystem {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
-    var request = this.getRequest(SftpPacketType.OPEN);
+    const request = this.getRequest(SftpPacketType.OPEN);
 
     request.writeString(path);
     const flagNumber = SftpFlags.toNumber(flags);
@@ -390,9 +390,9 @@ class SftpClientCore implements IFilesystem {
 
   close(handle: any, callback: (err: Error) => any): void {
     this.checkCallback(callback);
-    var h = this.toHandle(handle);
+    const h = this.toHandle(handle);
 
-    var request = this.getRequest(SftpPacketType.CLOSE);
+    const request = this.getRequest(SftpPacketType.CLOSE);
 
     request.writeData(h);
 
@@ -411,7 +411,7 @@ class SftpClientCore implements IFilesystem {
     callback: (err: Error, buffer: Buffer, bytesRead: number) => any,
   ): void {
     this.checkCallback(callback);
-    var h = this.toHandle(handle);
+    const h = this.toHandle(handle);
     if (buffer) {
       this.checkBuffer(buffer, offset, length);
     }
@@ -428,7 +428,7 @@ class SftpClientCore implements IFilesystem {
       return;
     }
 
-    var request = this.getRequest(SftpPacketType.READ);
+    const request = this.getRequest(SftpPacketType.READ);
 
     request.writeData(h);
     request.writeInt64(position);
@@ -461,7 +461,7 @@ class SftpClientCore implements IFilesystem {
     callback: (err: Error) => any,
   ): void {
     this.checkCallback(callback);
-    var h = this.toHandle(handle);
+    const h = this.toHandle(handle);
     this.checkBuffer(buffer, offset, length);
     this.checkPosition(position);
 
@@ -475,7 +475,7 @@ class SftpClientCore implements IFilesystem {
       return;
     }
 
-    var request = this.getRequest(SftpPacketType.WRITE);
+    const request = this.getRequest(SftpPacketType.WRITE);
 
     request.writeData(h);
     request.writeUInt64(position);
@@ -499,9 +499,9 @@ class SftpClientCore implements IFilesystem {
 
   fstat(handle: any, callback: (err: Error, attrs: IStats) => any): void {
     this.checkCallback(callback);
-    var h = this.toHandle(handle);
+    const h = this.toHandle(handle);
 
-    var request = this.getRequest(SftpPacketType.FSTAT);
+    const request = this.getRequest(SftpPacketType.FSTAT);
 
     request.writeData(h);
 
@@ -515,7 +515,7 @@ class SftpClientCore implements IFilesystem {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
-    var request = this.getRequest(SftpPacketType.SETSTAT);
+    const request = this.getRequest(SftpPacketType.SETSTAT);
 
     request.writeString(path);
     this.writeStats(request, attrs);
@@ -528,9 +528,9 @@ class SftpClientCore implements IFilesystem {
 
   fsetstat(handle: any, attrs: IStats, callback: (err: Error) => any): void {
     this.checkCallback(callback);
-    var h = this.toHandle(handle);
+    const h = this.toHandle(handle);
 
-    var request = this.getRequest(SftpPacketType.FSETSTAT);
+    const request = this.getRequest(SftpPacketType.FSETSTAT);
 
     request.writeData(h);
     this.writeStats(request, attrs);
@@ -579,7 +579,7 @@ class SftpClientCore implements IFilesystem {
     this.checkCallback(callback);
     path = this.checkPath(path, "path");
 
-    var request = this.getRequest(SftpPacketType.MKDIR);
+    const request = this.getRequest(SftpPacketType.MKDIR);
 
     request.writeString(path);
     this.writeStats(request, attrs);
@@ -644,8 +644,8 @@ class SftpClientCore implements IFilesystem {
     oldPath = this.checkPath(oldPath, "oldPath");
     newPath = this.checkPath(newPath, "newPath");
 
-    var command;
-    var info = {
+    let command;
+    const info = {
       command: "rename",
       oldPath,
       newPath,
@@ -728,12 +728,12 @@ class SftpClientCore implements IFilesystem {
     callback: (err: Error) => any,
   ): void {
     this.checkCallback(callback);
-    var fh = this.toHandle(fromHandle);
-    var th = this.toHandle(toHandle);
+    const fh = this.toHandle(fromHandle);
+    const th = this.toHandle(toHandle);
     this.checkPosition(fromPosition);
     this.checkPosition(toPosition);
 
-    var request = this.getRequest(SftpExtensions.COPY_DATA);
+    const request = this.getRequest(SftpExtensions.COPY_DATA);
 
     request.writeData(fh);
     request.writeInt64(fromPosition);
@@ -757,12 +757,12 @@ class SftpClientCore implements IFilesystem {
     callback: (err: Error, hashes: Buffer, alg: string) => any,
   ): void {
     this.checkCallback(callback);
-    var h = this.toHandle(handle);
+    const h = this.toHandle(handle);
     this.checkPosition(position);
 
     //TODO: reject requests with oversize response
 
-    var request = this.getRequest(SftpExtensions.CHECK_FILE_HANDLE);
+    const request = this.getRequest(SftpExtensions.CHECK_FILE_HANDLE);
 
     request.writeData(h);
     request.writeString(alg);
@@ -850,9 +850,9 @@ class SftpClientCore implements IFilesystem {
       return;
     }
 
-    var request = this.getRequest(command);
+    const request = this.getRequest(command);
 
-    for (var i = 0; i < args.length; i++) {
+    for (let i = 0; i < args.length; i++) {
       request.writeString(args[i]);
     }
 
@@ -860,18 +860,18 @@ class SftpClientCore implements IFilesystem {
   }
 
   private readStatus(response: SftpResponse): Error | null {
-    var nativeCode = response.readInt32();
-    var message = response.readString();
+    const nativeCode = response.readInt32();
+    const message = response.readString();
     if (nativeCode == SftpStatusCode.OK) {
       return null;
     }
 
-    var info = response.info;
+    const info = response.info;
     return this.createError(nativeCode, message, info);
   }
 
   private readItem(response: SftpResponse): IItem {
-    var item = new SftpItem();
+    const item = new SftpItem();
     item.filename = response.readString();
     item.longname = response.readString();
     item.stats = new SftpAttributes(response);
@@ -883,8 +883,8 @@ class SftpClientCore implements IFilesystem {
     message: string,
     info: SftpCommandInfo,
   ) {
-    var code;
-    var errno;
+    let code;
+    let errno;
     switch (nativeCode) {
       case SftpStatusCode.EOF:
         code = "EOF";
@@ -926,19 +926,27 @@ class SftpClientCore implements IFilesystem {
         break;
     }
 
-    var command = info.command;
-    var arg = info.path || info.handle;
-    if (typeof arg === "string") arg = "'" + arg + "'";
-    else if (arg) arg = new String(arg);
-    else arg = "";
+    const command = info.command;
+    let arg = info.path || info.handle;
+    if (typeof arg === "string") {
+      arg = "'" + arg + "'";
+    } else if (arg) {
+      arg = new String(arg);
+    } else {
+      arg = "";
+    }
 
-    var error = new Error(code + ", " + command + " " + arg);
+    const error = new Error(code + ", " + command + " " + arg);
     error["errno"] = errno;
     error["code"] = code;
 
-    for (var name in info) {
-      if (name == "command") continue;
-      if (info.hasOwnProperty(name)) error[name] = info[name];
+    for (let name in info) {
+      if (name == "command") {
+        continue;
+      }
+      if (info.hasOwnProperty(name)) {
+        error[name] = info[name];
+      }
     }
 
     error["nativeCode"] = nativeCode;
@@ -952,7 +960,7 @@ class SftpClientCore implements IFilesystem {
     callback: Function,
   ): boolean {
     if (response.type == SftpPacketType.STATUS) {
-      var error = this.readStatus(response);
+      const error = this.readStatus(response);
       if (error != null) {
         callback(error);
         return false;
@@ -1011,7 +1019,7 @@ class SftpClientCore implements IFilesystem {
       return;
     }
 
-    var handle = response.readData(true);
+    const handle = response.readData(true);
 
     callback(null, new SftpHandle(handle, this));
   }
@@ -1024,10 +1032,12 @@ class SftpClientCore implements IFilesystem {
       return;
     }
 
-    var count = response.readInt32();
-    if (count != 1) throw new Error("Invalid response");
+    const count = response.readInt32();
+    if (count != 1) {
+      throw new Error("Invalid response");
+    }
 
-    var path = response.readString();
+    const path = response.readString();
 
     callback(null, path);
   }
@@ -1059,9 +1069,11 @@ class SftpClientCore implements IFilesystem {
       }
     }
 
-    var data = response.readData(false);
+    const data = response.readData(false);
 
-    if (data.length > length) throw new Error("Received too much data");
+    if (data.length > length) {
+      throw new Error("Received too much data");
+    }
 
     length = data.length;
     if (length == 0) {
@@ -1080,7 +1092,7 @@ class SftpClientCore implements IFilesystem {
         return;
       }
 
-      var request = this.getRequest(SftpPacketType.READ);
+      const request = this.getRequest(SftpPacketType.READ);
       request.writeData(h);
       request.writeInt64(position);
       request.writeInt32(length);
@@ -1118,7 +1130,7 @@ class SftpClientCore implements IFilesystem {
     callback: (err: Error | null, items?: IItem[] | boolean) => any,
   ): void {
     if (response.type == SftpPacketType.STATUS) {
-      var error = this.readStatus(response);
+      const error = this.readStatus(response);
       if (error != null) {
         if (error["nativeCode"] == SftpStatusCode.EOF) {
           callback(null, false);
@@ -1132,10 +1144,10 @@ class SftpClientCore implements IFilesystem {
     if (response.type != SftpPacketType.NAME)
       throw new Error("Unexpected packet received");
 
-    var count = response.readInt32();
+    const count = response.readInt32();
 
-    var items: IItem[] = [];
-    for (var i = 0; i < count; i++) {
+    const items: IItem[] = [];
+    for (let i = 0; i < count; i++) {
       items[i] = this.readItem(response);
     }
 
@@ -1149,8 +1161,8 @@ class SftpClientCore implements IFilesystem {
     if (!this.checkResponse(response, SftpPacketType.EXTENDED_REPLY, callback))
       return;
 
-    var alg = response.readString();
-    var hashes = response.readData(false);
+    const alg = response.readString();
+    const hashes = response.readData(false);
 
     callback(null, hashes, alg);
   }
@@ -1178,7 +1190,7 @@ export class SftpClient extends FilesystemPlus {
   private _bound: boolean = false;
 
   constructor(local: IFilesystem) {
-    var sftp = new SftpClientCore();
+    const sftp = new SftpClientCore();
     super(sftp, local);
   }
 
@@ -1253,7 +1265,7 @@ export class SftpClient extends FilesystemPlus {
   }
 
   end(): void {
-    var sftp = <SftpClientCore>this._fs;
+    const sftp = this._fs as SftpClientCore;
     sftp.end();
     this.emit("close", null);
   }

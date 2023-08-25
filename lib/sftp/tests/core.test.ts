@@ -19,7 +19,7 @@ async function initTmp() {
   fs.mkdirSync(Path.join(tmp, "full"));
   fs.mkdirSync(Path.join(tmp, "full/subdir01"));
 
-  for (var n = 0; n < 200; n++) {
+  for (let n = 0; n < 200; n++) {
     fs.writeFileSync(
       Path.join(tmp, "full", "file" + n + "-quite-long-name.txt"),
       "This is a sample file number " + n,
@@ -113,8 +113,8 @@ function error(
   try {
     assert.ok(err, "Error expected");
 
-    var actualCode = err["code"];
-    var actualDescription = err["description"];
+    const actualCode = err["code"];
+    const actualDescription = err["description"];
 
     assert.equal(
       actualCode,
@@ -158,10 +158,10 @@ function equalStats(attrs: IStats, stats: fs.Stats): void {
   assert.equal(attrs.gid, stats.gid, "gid mismatch");
 }
 
-var wrongPath = "ENOENT";
+const wrongPath = "ENOENT";
 
-var getFileName = (function () {
-  var n = 1;
+const getFileName = (function () {
+  let n = 1;
   return function () {
     return "file" + n++ + ".txt";
   };
@@ -169,16 +169,16 @@ var getFileName = (function () {
 
 describe("Basic Tests", function () {
   it("flags", () => {
-    for (var flags = 0; flags < 64; flags++) {
-      var aflags = SftpFlags.fromNumber(flags)[0];
-      var nflags = SftpFlags.toNumber(aflags);
-      var sflags = SftpFlags.fromNumber(nflags)[0];
+    for (let flags = 0; flags < 64; flags++) {
+      const aflags = SftpFlags.fromNumber(flags)[0];
+      const nflags = SftpFlags.toNumber(aflags);
+      const sflags = SftpFlags.fromNumber(nflags)[0];
       assert.equal(aflags, sflags);
     }
   });
 
   it("callback(fail)", (done) => {
-    var message = "Simulated callback error";
+    const message = "Simulated callback error";
     client.once("error", (err) => {
       assert.equal(err.message, message, "Unexpected error message");
       done();
@@ -199,7 +199,7 @@ describe("Basic Tests", function () {
   });
 
   it("realpath(no-path)", (done) => {
-    var name = "dir000/subdir";
+    const name = "dir000/subdir";
     client.realpath(name, (err) => error(err, done, "ENOENT", wrongPath));
   });
 
@@ -219,15 +219,15 @@ describe("Basic Tests", function () {
   });
 
   it("mkdir(no-path)", (done) => {
-    var name = "dir000/subdir";
+    const name = "dir000/subdir";
     client.mkdir(name, {}, (err) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("mkdir(path)", (done) => {
-    var name = "dir001";
+    const name = "dir001";
     client.mkdir(name, {}, (err) =>
       check(err, done, () => {
-        var stats = fs.statSync(Path.join(tmp, name));
+        const stats = fs.statSync(Path.join(tmp, name));
         assert.ok(stats.isDirectory, "Directory expected");
         done();
       }),
@@ -235,18 +235,18 @@ describe("Basic Tests", function () {
   });
 
   it("rmdir(no-path)", (done) => {
-    var name = "dir000";
+    const name = "dir000";
 
     client.rmdir(name, (err) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("rmdir(path)", (done) => {
-    var name = "dir002";
+    const name = "dir002";
     fs.mkdirSync(Path.join(tmp, name));
 
     client.rmdir(name, (err) =>
       check(err, done, () => {
-        var exists = fs.existsSync(Path.join(tmp, name));
+        const exists = fs.existsSync(Path.join(tmp, name));
         assert.ok(!exists, "Directory not expected");
         done();
       }),
@@ -254,7 +254,7 @@ describe("Basic Tests", function () {
   });
 
   it("opendir(no-path)", (done) => {
-    var name = "dir000";
+    const name = "dir000";
 
     client.opendir(name, (err, _handle) =>
       error(err, done, "ENOENT", wrongPath),
@@ -262,9 +262,9 @@ describe("Basic Tests", function () {
   });
 
   it("opendir(path)/readdir/close", (done) => {
-    var name = "full";
+    const name = "full";
 
-    var list = fs.readdirSync(Path.join(tmp, name));
+    const list = fs.readdirSync(Path.join(tmp, name));
     list.push(".", "..");
 
     client.opendir(name, (err, handle) =>
@@ -278,12 +278,12 @@ describe("Basic Tests", function () {
               if (items) {
                 assert.ok(Array.isArray(items), "Not an array");
 
-                for (var i = 0; i < items.length; i++) {
-                  var item = items[i];
+                for (let i = 0; i < items.length; i++) {
+                  const item = items[i];
 
                   //console.log(JSON.stringify(item));
 
-                  var n = list.indexOf(item.filename);
+                  const n = list.indexOf(item.filename);
                   assert.ok(n >= 0, "File '" + item.filename + "' not found");
                   list.splice(n, 1);
                 }
@@ -302,16 +302,16 @@ describe("Basic Tests", function () {
   });
 
   it("rename(no-path, no-file", (done) => {
-    var name1 = "dir000/file.txt";
-    var name2 = getFileName();
+    const name1 = "dir000/file.txt";
+    const name2 = getFileName();
 
     client.rename(name1, name2, (err) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("rename(file1, no-path)", (done) => {
-    var name1 = getFileName();
-    var name2 = "dir000/file.txt";
-    var body = "This is a file.";
+    const name1 = getFileName();
+    const name2 = "dir000/file.txt";
+    const body = "This is a file.";
 
     fs.writeFileSync(Path.join(tmp, name1), body);
 
@@ -319,9 +319,9 @@ describe("Basic Tests", function () {
   });
 
   it("rename(file1, no-file)", (done) => {
-    var name1 = getFileName();
-    var name2 = getFileName();
-    var body = "This is a file.";
+    const name1 = getFileName();
+    const name2 = getFileName();
+    const body = "This is a file.";
 
     fs.writeFileSync(Path.join(tmp, name1), body);
     assert.ok(!fs.existsSync(Path.join(tmp, name2)), "File should not exist");
@@ -332,7 +332,7 @@ describe("Basic Tests", function () {
           !fs.existsSync(Path.join(tmp, name1)),
           "File should not exist",
         );
-        var body2 = fs.readFileSync(Path.join(tmp, name2), {
+        const body2 = fs.readFileSync(Path.join(tmp, name2), {
           encoding: "utf8",
         });
         assert.equal(body2, body, "File content mismatch");
@@ -342,10 +342,10 @@ describe("Basic Tests", function () {
   });
 
   it("rename(file1, file2, false)", (done) => {
-    var name1 = getFileName();
-    var name2 = getFileName();
-    var body = "This is a file.";
-    var body2 = "This is another file.";
+    const name1 = getFileName();
+    const name2 = getFileName();
+    const body = "This is a file.";
+    const body2 = "This is another file.";
 
     fs.writeFileSync(Path.join(tmp, name1), body);
     fs.writeFileSync(Path.join(tmp, name2), body2);
@@ -356,10 +356,10 @@ describe("Basic Tests", function () {
   });
 
   it("rename(file1, file2, true)", (done) => {
-    var name1 = getFileName();
-    var name2 = getFileName();
-    var body = "This is a file.";
-    var body2 = "This is another file.";
+    const name1 = getFileName();
+    const name2 = getFileName();
+    const body = "This is a file.";
+    const body2 = "This is another file.";
 
     fs.writeFileSync(Path.join(tmp, name1), body);
     fs.writeFileSync(Path.join(tmp, name2), body2);
@@ -370,7 +370,7 @@ describe("Basic Tests", function () {
           !fs.existsSync(Path.join(tmp, name1)),
           "File should not exist",
         );
-        var body3 = fs.readFileSync(Path.join(tmp, name2), {
+        const body3 = fs.readFileSync(Path.join(tmp, name2), {
           encoding: "utf8",
         });
         assert.equal(body3, body, "File content mismatch");
@@ -380,9 +380,9 @@ describe("Basic Tests", function () {
   });
 
   it("link(path1, no-path)", (done) => {
-    var name1 = getFileName();
-    var name2 = "dir000/file.txt";
-    var body = "This is a file.";
+    const name1 = getFileName();
+    const name2 = "dir000/file.txt";
+    const body = "This is a file.";
 
     fs.writeFileSync(Path.join(tmp, name1), body);
 
@@ -390,9 +390,9 @@ describe("Basic Tests", function () {
   });
 
   it("link(path1, path2)", (done) => {
-    var name1 = getFileName();
-    var name2 = getFileName();
-    var body = "This is a file.";
+    const name1 = getFileName();
+    const name2 = getFileName();
+    let body = "This is a file.";
 
     fs.writeFileSync(Path.join(tmp, name1), body);
     assert.ok(!fs.existsSync(Path.join(tmp, name2)), "File should not exist");
@@ -402,7 +402,7 @@ describe("Basic Tests", function () {
         body = "This is a changed file.";
         fs.writeFileSync(Path.join(tmp, name1), body, { flag: "r+" });
 
-        var body2 = fs.readFileSync(Path.join(tmp, name2), {
+        const body2 = fs.readFileSync(Path.join(tmp, name2), {
           encoding: "utf8",
         });
         assert.equal(body2, body, "File content mismatch");
@@ -412,14 +412,14 @@ describe("Basic Tests", function () {
   });
 
   it("unlink(no-path)", (done) => {
-    var name = getFileName();
+    const name = getFileName();
 
     client.unlink(name, (err) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("unlink(path)", (done) => {
-    var name = getFileName();
-    var body = "This is a file.";
+    const name = getFileName();
+    const body = "This is a file.";
 
     fs.writeFileSync(Path.join(tmp, name), body);
 
@@ -435,7 +435,7 @@ describe("Basic Tests", function () {
   });
 
   it("open(no-path, 'r+')", (done) => {
-    var name = getFileName();
+    const name = getFileName();
 
     client.open(name, "r+", {}, (err, _handle) =>
       error(err, done, "ENOENT", wrongPath),
@@ -443,9 +443,9 @@ describe("Basic Tests", function () {
   });
 
   it("open(path, 'r+')/read/close", (done) => {
-    var name = getFileName();
+    const name = getFileName();
 
-    var body =
+    const body =
       "0123456789" +
       "9876543210" +
       "00112233445566778899" +
@@ -455,7 +455,7 @@ describe("Basic Tests", function () {
 
     client.open(name, "r+", {}, (err, handle) =>
       check(err, done, () => {
-        var buffer = Buffer.alloc(35);
+        const buffer = Buffer.alloc(35);
         buffer.fill(0);
 
         client.read(handle, buffer, 0, 30, 10, (err) =>
@@ -464,7 +464,7 @@ describe("Basic Tests", function () {
               check(err, done, () => {
                 client.read(handle, buffer, 10, 3, 40, (err) =>
                   check(err, done, () => {
-                    var body2 = buffer.toString();
+                    const body2 = buffer.toString();
                     assert.equal(
                       body2,
                       "9876543210" + "abc" + "12233445566778899" + "ABCDE",
@@ -500,15 +500,15 @@ describe("Basic Tests", function () {
   });
 
   it("open(no-path, 'w+')/write/close", (done) => {
-    var name = getFileName();
+    const name = getFileName();
 
     client.open(name, "w+", {}, (err, handle) =>
       check(err, done, () => {
-        var stats = fs.statSync(Path.join(tmp, name));
+        const stats = fs.statSync(Path.join(tmp, name));
         assert.ok(stats.isFile, "Not a file");
         assert.equal(stats.size, 0, "Unexpected file size");
 
-        var buffer = Buffer.from(
+        const buffer = Buffer.from(
           "0123456789" +
             "9876543210" +
             "00112233445566778899" +
@@ -522,7 +522,7 @@ describe("Basic Tests", function () {
               check(err, done, () => {
                 client.write(handle, buffer, 40, 3, 10, (err) =>
                   check(err, done, () => {
-                    var body2 = fs.readFileSync(Path.join(tmp, name), {
+                    const body2 = fs.readFileSync(Path.join(tmp, name), {
                       encoding: "utf8",
                     });
                     assert.equal(
@@ -583,15 +583,15 @@ describe("Basic Tests", function () {
   });
 
   it("stat(no-path)", (done) => {
-    var name = "dir000/file.txt";
+    const name = "dir000/file.txt";
 
     client.stat(name, (err, _attrs) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("stat(path)", (done) => {
-    var name = "full/file1-quite-long-name.txt";
+    const name = "full/file1-quite-long-name.txt";
 
-    var stats = fs.statSync(Path.join(tmp, name));
+    const stats = fs.statSync(Path.join(tmp, name));
     //console.log(stats);
 
     client.stat(name, (err, attrs) =>
@@ -604,15 +604,15 @@ describe("Basic Tests", function () {
   });
 
   it("lstat(no-path)", (done) => {
-    var name = "dir000/file.txt";
+    const name = "dir000/file.txt";
 
     client.lstat(name, (err, _attrs) => error(err, done, "ENOENT", wrongPath));
   });
 
   it("lstat(path)", (done) => {
-    var name = "full/file1-quite-long-name.txt";
+    const name = "full/file1-quite-long-name.txt";
 
-    var stats = fs.statSync(Path.join(tmp, name));
+    const stats = fs.statSync(Path.join(tmp, name));
     //console.log(stats);
 
     client.lstat(name, (err, attrs) =>
@@ -625,7 +625,7 @@ describe("Basic Tests", function () {
   });
 
   it("fstat(closed-handle)", (done) => {
-    var name = "full/file2-quite-long-name.txt";
+    const name = "full/file2-quite-long-name.txt";
 
     client.open(name, "r+", {}, (err, handle) =>
       check(err, done, () => {
@@ -641,11 +641,11 @@ describe("Basic Tests", function () {
   });
 
   it("fstat(handle)", (done) => {
-    var name = "full/file2-quite-long-name.txt";
+    const name = "full/file2-quite-long-name.txt";
 
     client.open(name, "r+", {}, (err, handle) =>
       check(err, done, () => {
-        var stats = fs.statSync(Path.join(tmp, name));
+        const stats = fs.statSync(Path.join(tmp, name));
         //console.log(stats);
 
         client.fstat(handle, (err, attrs) =>
@@ -660,7 +660,7 @@ describe("Basic Tests", function () {
   });
 
   it("setstat(no-path)", (done) => {
-    var name = "dir000/file.txt";
+    const name = "dir000/file.txt";
 
     client.setstat(name, { size: 12 }, (err) =>
       error(err, done, "ENOENT", wrongPath),
@@ -668,17 +668,17 @@ describe("Basic Tests", function () {
   });
 
   it("setstat(path)", (done) => {
-    var name = getFileName();
+    const name = getFileName();
 
-    var body = "0123456789" + "0123456789" + "0123456789";
+    const body = "0123456789" + "0123456789" + "0123456789";
     fs.writeFileSync(Path.join(tmp, name), body);
 
-    var mtime = new Date(2014, 8);
-    var atime = new Date(2014, 9);
+    const mtime = new Date(2014, 8);
+    const atime = new Date(2014, 9);
 
     client.setstat(name, { size: 12, mtime: mtime, atime: atime }, (err) =>
       check(err, done, () => {
-        var stats = fs.statSync(Path.join(tmp, name));
+        const stats = fs.statSync(Path.join(tmp, name));
         //console.log(stats);
 
         assert.equal(stats.size, 12);
@@ -691,13 +691,13 @@ describe("Basic Tests", function () {
   });
 
   it("open(path)/fsetstat", (done) => {
-    var name = getFileName();
+    const name = getFileName();
 
-    var body = "0123456789" + "0123456789" + "0123456789";
+    const body = "0123456789" + "0123456789" + "0123456789";
     fs.writeFileSync(Path.join(tmp, name), body);
 
-    var mtime = new Date(2014, 8);
-    var atime = new Date(2014, 9);
+    const mtime = new Date(2014, 8);
+    const atime = new Date(2014, 9);
 
     client.open(name, "r+", {}, (err, handle) =>
       check(err, done, () => {
@@ -706,7 +706,7 @@ describe("Basic Tests", function () {
           { size: 12, mtime: mtime, atime: atime },
           (err) =>
             check(err, done, () => {
-              var stats = fs.statSync(Path.join(tmp, name));
+              const stats = fs.statSync(Path.join(tmp, name));
               //console.log(stats);
 
               assert.equal(stats.size, 12);

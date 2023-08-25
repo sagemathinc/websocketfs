@@ -165,36 +165,38 @@ export class SftpExtensions {
 
   static read(reader: SftpPacketReader, name: string): any {
     switch (name) {
-      case SftpExtensions.VENDOR:
+      case SftpExtensions.VENDOR: {
         reader = reader.readStructuredData();
-        var res = {};
+        const res = {};
         res["vendorName"] = reader.readString();
         res["productName"] = reader.readString();
         res["productVersion"] = reader.readString();
         res["productBuild"] = reader.readInt64();
         return res;
+      }
 
-      case SftpExtensions.NEWLINE3:
+      case SftpExtensions.NEWLINE3: {
         reader = reader.readStructuredData();
         return reader.readString();
+      }
 
       case SftpExtensions.SUPPORTED:
-      case SftpExtensions.SUPPORTED2:
+      case SftpExtensions.SUPPORTED2: {
         reader = reader.readStructuredData();
-        var res = {};
+        const res = {};
         res["supportedAttributeMask"] = reader.readUInt32();
         res["supportedAttributeBits"] = reader.readUInt32();
         res["supportedOpenFlags"] = reader.readUInt32();
         res["supportedAccessMask"] = reader.readUInt32();
         res["maxReadSize"] = reader.readUInt32();
 
-        var extensionCount = -1;
+        let extensionCount = -1;
         if (name === SftpExtensions.SUPPORTED2) {
           res["supportedOpenBlockVector"] = reader.readUInt16();
           res["supportedBlockVector"] = reader.readUInt16();
 
-          var attribExtensionCount = reader.readUInt32();
-          var attribExtensionNames: string[] = (res["attribExtensionsNames"] =
+          let attribExtensionCount = reader.readUInt32();
+          const attribExtensionNames: string[] = (res["attribExtensionsNames"] =
             []);
           while (--attribExtensionCount >= 0) {
             attribExtensionNames.push(reader.readString());
@@ -203,32 +205,34 @@ export class SftpExtensions {
           extensionCount = reader.readUInt32();
         }
 
-        var extensionNames: string[] = (res["extensionsNames"] = []);
+        const extensionNames: string[] = (res["extensionsNames"] = []);
         while (extensionCount !== 0 && reader.position < reader.length) {
           const name = reader.readString();
           extensionNames.push(name);
           extensionCount--;
         }
         return res;
-      case SftpExtensions.DEFAULT_FS_ATTRIBS:
+      }
+      case SftpExtensions.DEFAULT_FS_ATTRIBS: {
         reader = reader.readStructuredData();
-        var res = {};
+        const res = {};
 
-        var flags = reader.readUInt32();
+        const flags = reader.readUInt32();
         res["casePreserved"] = (flags & 1) != 0;
         res["caseSensitive"] = (flags & 2) != 0;
 
         res["illegalCharacters"] = reader.readString();
 
-        var count = reader.readUInt32();
-        var values: string[] = (res["reservedNames"] = []);
+        let count = reader.readUInt32();
+        const values: string[] = (res["reservedNames"] = []);
         while (count > 0) {
-          var name = reader.readString();
+          const name = reader.readString();
           values.push(name);
           count--;
         }
 
         return res;
+      }
     }
 
     if (SftpExtensions.isKnown(name)) {
@@ -381,7 +385,7 @@ export class SftpAttributes implements IStats {
       return;
     }
 
-    var flags = (this.flags = reader.readUInt32());
+    const flags = (this.flags = reader.readUInt32());
 
     if (flags & SftpAttributeFlags.SIZE) {
       this.size = reader.readInt64();
@@ -416,7 +420,7 @@ export class SftpAttributes implements IStats {
   }
 
   write(response: SftpPacketWriter): void {
-    var flags = this.flags;
+    const flags = this.flags;
     response.writeInt32(flags);
 
     if (flags & SftpAttributeFlags.SIZE) {

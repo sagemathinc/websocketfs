@@ -106,7 +106,7 @@ export class FileDataSource extends EventEmitter implements IDataSource {
 
         if (this.nextChunkPosition - this.expectedPosition > 0x20000) break;
 
-        var chunkSize = 0x8000;
+        const chunkSize = 0x8000;
         this._next(this.nextChunkPosition, chunkSize);
         this.nextChunkPosition += chunkSize;
       }
@@ -144,11 +144,11 @@ export class FileDataSource extends EventEmitter implements IDataSource {
 
           try {
             // prepare the chunk for the queue
-            var chunk = <IChunk>buffer.slice(0, bytesRead); //WEB: var chunk = <IChunk>buffer.subarray(0, bytesRead);
+            const chunk = <IChunk>buffer.slice(0, bytesRead);
             chunk.position = position;
 
             // insert the chunk into the appropriate position in the queue
-            var index = this.queue.length;
+            let index = this.queue.length;
             while (--index >= 0) {
               if (position > this.queue[index].position) break;
             }
@@ -246,7 +246,7 @@ export class FileDataSource extends EventEmitter implements IDataSource {
   private _close(): void {
     if (!this.handle) return;
 
-    var handle = this.handle;
+    const handle = this.handle;
     this.handle = null;
     try {
       this.fs.close(handle, (err) => {
@@ -298,7 +298,7 @@ class BlobDataSource extends EventEmitter implements IDataSource {
       this.busy = false;
 
       if (!this.finished) {
-        var chunk = Buffer.alloc(e.target.result);
+        const chunk = Buffer.alloc(e.target.result);
         if (chunk.length > 0) {
           this.queue.push(chunk);
           if (!this.readable) {
@@ -338,7 +338,7 @@ class BlobDataSource extends EventEmitter implements IDataSource {
 
       // read more data unless the queue is full
       if (this.queue.length < 4) {
-        var slice = this.blob.slice(this.pos, this.pos + 0x8000);
+        const slice = this.blob.slice(this.pos, this.pos + 0x8000);
         this.pos += slice.size;
         this.busy = true;
         this.reader.readAsArrayBuffer(slice);
@@ -360,10 +360,12 @@ class BlobDataSource extends EventEmitter implements IDataSource {
     }
 
     // get next chunk
-    var chunk = this.queue.shift();
+    const chunk = this.queue.shift();
 
     // if no more chunks are available, become unreadable
-    if (this.queue.length == 0) this.readable = false;
+    if (this.queue.length == 0) {
+      this.readable = false;
+    }
 
     return chunk ?? null;
   }
@@ -410,7 +412,7 @@ export function toDataSource(
 
   function openBlobDataSource(blob: Blob): void {
     process.nextTick(() => {
-      var source = <IDataSource>(<any>new BlobDataSource(blob, 0));
+      const source = <IDataSource>(<any>new BlobDataSource(blob, 0));
       callback(null, [source]);
     });
   }
@@ -437,15 +439,17 @@ export function toDataSource(
   }
 
   function toArrayDataSource(input: any[]): void {
-    var source = <IDataSource[]>[];
-    var array = <any[]>[];
+    const source: IDataSource[] = [];
+    const array: any[] = [];
     Array.prototype.push.apply(array, input);
     next();
 
     function next(): void {
       try {
-        var item = array.shift();
-        if (!item) return callback(null, source);
+        const item = array.shift();
+        if (!item) {
+          return callback(null, source);
+        }
 
         if (isArray(item))
           throw new Error("Unsupported array of arrays data source");
@@ -458,7 +462,9 @@ export function toDataSource(
     }
 
     function add(err: Error, src: IDataSource[]): void {
-      if (err) return callback(err);
+      if (err) {
+        return callback(err);
+      }
       Array.prototype.push.apply(source, src);
       next();
     }
@@ -468,12 +474,16 @@ export function toDataSource(
     path: string,
     callback: (err: Error | null, source?: IDataSource[]) => void,
   ): void {
-    if (!fs) throw new Error("Source file system not available");
+    if (!fs) {
+      throw new Error("Source file system not available");
+    }
 
     fs.stat(path, (err, stats) => {
-      if (err) return callback(err);
+      if (err) {
+        return callback(err);
+      }
 
-      var item = new FileDataSource(fs, path, undefined, stats, 0);
+      const item = new FileDataSource(fs, path, undefined, stats, 0);
       callback(null, [item]);
     });
   }
@@ -485,9 +495,11 @@ export function toDataSource(
       if (err) {
         return callback(err);
       }
-      if (items == null) throw Error("bug");
+      if (items == null) {
+        throw Error("bug");
+      }
 
-      var source = <IDataSource[]>[];
+      const source: IDataSource[] = [];
       items.forEach((it) => {
         const item = new FileDataSource(
           fs,

@@ -47,9 +47,9 @@ class SftpException {
   errno: number;
 
   constructor(err: NodeJS.ErrnoException) {
-    var message: string;
-    var code = SftpStatusCode.FAILURE;
-    var errno = err.errno ?? 0;
+    let message: string;
+    let code = SftpStatusCode.FAILURE;
+    const errno = err.errno ?? 0;
     // loosely based on the list from https://github.com/rvagg/node-errno/blob/master/errno.js
     // with updates besed on http://www-numi.fnal.gov/offline_software/srt_public_context/WebDocs/Errors/unix_system_errors.html
 
@@ -195,7 +195,7 @@ export class SftpServerSession {
     this._items = [];
 
     // determine the log level now to speed up logging later
-    var level = LogHelper.getLevel(oldlog);
+    const level = LogHelper.getLevel(oldlog);
     this._debug = level <= LogLevel.DEBUG;
     this._trace = level <= LogLevel.TRACE;
 
@@ -226,9 +226,10 @@ export class SftpServerSession {
       if (!emitter.emit("closedSession", this, err)) {
         if (err) {
           // prevent channel failures from crashing the server when no error handler is registered
-          var listeners = emitter.listeners("error");
-          if (listeners && listeners.length > 0)
+          const listeners = emitter.listeners("error");
+          if (listeners && listeners.length > 0) {
             emitter.emit("error", err, this);
+          }
         }
       }
     });
@@ -236,11 +237,11 @@ export class SftpServerSession {
 
   private send(response: SftpResponse): void {
     // send packet
-    var packet = response.finish();
+    const packet = response.finish();
 
     if (this._debug) {
       // logging
-      var meta = {};
+      const meta: { [key: string]: any } = {};
       meta["session"] = this._id;
       if (response.type != SftpPacketType.VERSION) {
         meta["req"] = response.id;
@@ -278,11 +279,11 @@ export class SftpServerSession {
     err: Error,
     isFatal: boolean,
   ): void {
-    var message: string;
-    var code: SftpStatusCode;
+    let message: string;
+    let code: SftpStatusCode;
 
     if (!isFatal) {
-      var error = new SftpException(err);
+      const error = new SftpException(err);
       code = error.code;
       message = error.message;
     } else {
@@ -291,10 +292,10 @@ export class SftpServerSession {
     }
 
     if (this._debug || isFatal) {
-      var meta = {
+      const meta = {
         reason: message,
         nativeCode: code,
-        err: err,
+        err,
       };
 
       if (!isFatal) {
@@ -416,11 +417,11 @@ export class SftpServerSession {
   }
 
   private writeItem(response: SftpPacketWriter, item: IItem): void {
-    var attr = new SftpAttributes();
+    const attr = new SftpAttributes();
     attr.from(item.stats);
 
-    var filename = item.filename;
-    var longname = item.longname || FileUtil.toString(filename, attr);
+    const filename = item.filename;
+    const longname = item.longname || FileUtil.toString(filename, attr);
 
     response.writeString(filename);
     response.writeString(longname);
@@ -439,10 +440,10 @@ export class SftpServerSession {
   }
 
   _process(data: Buffer): void {
-    var request = new SftpRequest(data);
+    const request = new SftpRequest(data);
 
     if (this._debug) {
-      var meta = {};
+      const meta = {};
       meta["session"] = this._id;
       if (request.type != SftpPacketType.INIT) meta["req"] = request.id;
       meta["type"] = SftpPacket.toString(request.type ?? "");
@@ -465,11 +466,9 @@ export class SftpServerSession {
       }
     }
 
-    var response = new SftpResponse();
+    const response = new SftpResponse();
 
     if (request.type == SftpPacketType.INIT) {
-      // var version = request.readInt32();
-
       response.type = SftpPacketType.VERSION;
       response.start();
 
@@ -495,12 +494,12 @@ export class SftpServerSession {
     }
     try {
       switch (request.type) {
-        case SftpPacketType.OPEN:
-          var path = request.readString();
-          var pflags = request.readInt32();
-          var attrs = new SftpAttributes(request);
+        case SftpPacketType.OPEN: {
+          const path = request.readString();
+          const pflags = request.readInt32();
+          const attrs = new SftpAttributes(request);
 
-          var modes = SftpFlags.fromNumber(pflags);
+          const modes = SftpFlags.fromNumber(pflags);
           if (modes.length == 0) {
             this.sendStatus(
               response,
@@ -511,7 +510,7 @@ export class SftpServerSession {
           }
 
           const openFile = () => {
-            var mode = modes.shift();
+            const mode = modes.shift();
             fs.open(path, mode ?? "", attrs, (err, handle) => {
               if (this.sendIfError(response, err)) {
                 return;
@@ -534,9 +533,10 @@ export class SftpServerSession {
 
           openFile();
           return;
+        }
 
-        case SftpPacketType.CLOSE:
-          var handle = request.readHandle();
+        case SftpPacketType.CLOSE: {
+          const handle = request.readHandle();
           if (handle == null) {
             throw Error("handle must not be null");
           }
@@ -547,14 +547,15 @@ export class SftpServerSession {
 
           fs.close(handle, (err) => this.sendSuccess(response, err));
           return;
+        }
 
-        case SftpPacketType.READ:
-          var handle = request.readHandle();
+        case SftpPacketType.READ: {
+          const handle = request.readHandle();
           if (handle == null) {
             throw Error("handle must not be null");
           }
-          var position = request.readInt64();
-          var count = request.readInt32();
+          const position = request.readInt64();
+          let count = request.readInt32();
           if (count > 0x8000) {
             count = 0x8000;
           }
@@ -562,7 +563,7 @@ export class SftpServerSession {
           response.type = SftpPacketType.DATA;
           response.start();
 
-          var offset = response.position + 4;
+          const offset = response.position + 4;
           response.check(4 + count);
 
           fs.read(
@@ -585,32 +586,35 @@ export class SftpServerSession {
             },
           );
           return;
+        }
 
-        case SftpPacketType.WRITE:
-          var handle = request.readHandle();
+        case SftpPacketType.WRITE: {
+          const handle = request.readHandle();
           if (handle == null) {
             throw Error("handle must not be null");
           }
-          var position = request.readUInt64();
-          var count = request.readUInt32();
-          var offset = request.position;
+          const position = request.readUInt64();
+          const count = request.readUInt32();
+          const offset = request.position;
           request.skip(count);
 
           fs.write(handle, request.buffer, offset, count, position, (err) =>
             this.sendSuccess(response, err),
           );
           return;
+        }
 
-        case SftpPacketType.LSTAT:
-          var path = request.readString();
+        case SftpPacketType.LSTAT: {
+          const path = request.readString();
 
           fs.lstat(path, (err, stats) =>
             this.sendAttribs(response, err, stats),
           );
           return;
+        }
 
-        case SftpPacketType.FSTAT:
-          var handle = request.readHandle();
+        case SftpPacketType.FSTAT: {
+          const handle = request.readHandle();
           if (handle == null) {
             throw Error("handle must not be null");
           }
@@ -618,6 +622,7 @@ export class SftpServerSession {
             this.sendAttribs(response, err, stats),
           );
           return;
+        }
 
         case SftpPacketType.STATVFS: {
           const path = request.readString();
@@ -627,25 +632,27 @@ export class SftpServerSession {
           return;
         }
 
-        case SftpPacketType.SETSTAT:
-          var path = request.readString();
-          var attrs = new SftpAttributes(request);
+        case SftpPacketType.SETSTAT: {
+          const path = request.readString();
+          const attrs = new SftpAttributes(request);
 
           fs.setstat(path, attrs, (err) => this.sendSuccess(response, err));
           return;
+        }
 
-        case SftpPacketType.FSETSTAT:
-          var handle = request.readHandle();
+        case SftpPacketType.FSETSTAT: {
+          const handle = request.readHandle();
           if (handle == null) {
             throw Error("handle must not be null");
           }
-          var attrs = new SftpAttributes(request);
+          const attrs = new SftpAttributes(request);
 
           fs.fsetstat(handle, attrs, (err) => this.sendSuccess(response, err));
           return;
+        }
 
-        case SftpPacketType.OPENDIR:
-          var path = request.readString();
+        case SftpPacketType.OPENDIR: {
+          const path = request.readString();
 
           fs.opendir(path, (err, handle) => {
             if (this.sendIfError(response, err)) {
@@ -657,6 +664,7 @@ export class SftpServerSession {
             this.sendHandle(response, handle);
           });
           return;
+        }
 
         case SftpPacketType.READDIR: {
           const handle = request.readHandle();
@@ -732,40 +740,44 @@ export class SftpServerSession {
           return;
         }
 
-        case SftpPacketType.REMOVE:
-          var path = request.readString();
+        case SftpPacketType.REMOVE: {
+          const path = request.readString();
 
           fs.unlink(path, (err) => this.sendSuccess(response, err));
           return;
+        }
 
-        case SftpPacketType.MKDIR:
-          var path = request.readString();
-          var attrs = new SftpAttributes(request);
+        case SftpPacketType.MKDIR: {
+          const path = request.readString();
+          const attrs = new SftpAttributes(request);
 
           fs.mkdir(path, attrs, (err) => this.sendSuccess(response, err));
           return;
+        }
 
-        case SftpPacketType.RMDIR:
-          var path = request.readString();
+        case SftpPacketType.RMDIR: {
+          const path = request.readString();
 
           fs.rmdir(path, (err) => {
             this.sendSuccess(response, err);
           });
           return;
-
-        case SftpPacketType.REALPATH:
-          var path = request.readString();
+        }
+        case SftpPacketType.REALPATH: {
+          const path = request.readString();
 
           fs.realpath(path, (err, resolvedPath) =>
             this.sendPath(response, err, resolvedPath),
           );
           return;
+        }
 
-        case SftpPacketType.STAT:
-          var path = request.readString();
+        case SftpPacketType.STAT: {
+          const path = request.readString();
 
           fs.stat(path, (err, stats) => this.sendAttribs(response, err, stats));
           return;
+        }
 
         case SftpPacketType.RENAME: {
           const oldPath = request.readString();
@@ -777,13 +789,14 @@ export class SftpServerSession {
           return;
         }
 
-        case SftpPacketType.READLINK:
-          var path = request.readString();
+        case SftpPacketType.READLINK: {
+          const path = request.readString();
 
           fs.readlink(path, (err, linkString) => {
             this.sendPath(response, err, linkString);
           });
           return;
+        }
 
         case SftpPacketType.SYMLINK: {
           const linkpath = request.readString();
@@ -795,34 +808,36 @@ export class SftpServerSession {
           return;
         }
 
-        case SftpExtensions.HARDLINK:
-          var oldpath = request.readString();
-          var newpath = request.readString();
+        case SftpExtensions.HARDLINK: {
+          const oldpath = request.readString();
+          const newpath = request.readString();
 
           fs.link(oldpath, newpath, (err) => this.sendSuccess(response, err));
           return;
+        }
 
-        case SftpExtensions.POSIX_RENAME:
-          var oldpath = request.readString();
-          var newpath = request.readString();
+        case SftpExtensions.POSIX_RENAME: {
+          const oldpath = request.readString();
+          const newpath = request.readString();
 
           fs.rename(oldpath, newpath, RenameFlags.OVERWRITE, (err) =>
             this.sendSuccess(response, err),
           );
           return;
+        }
 
-        case SftpExtensions.COPY_DATA:
-          var fromHandle = request.readHandle();
+        case SftpExtensions.COPY_DATA: {
+          const fromHandle = request.readHandle();
           if (fromHandle == null) {
             throw Error("fromHandle must not be null");
           }
-          var fromPosition = request.readInt64();
-          var length = request.readInt64();
-          var toHandle = request.readHandle();
+          const fromPosition = request.readInt64();
+          const length = request.readInt64();
+          const toHandle = request.readHandle();
           if (toHandle == null) {
             throw Error("toHandle must not be null");
           }
-          var toPosition = request.readInt64();
+          const toPosition = request.readInt64();
 
           fs.fcopy(
             fromHandle,
@@ -833,16 +848,17 @@ export class SftpServerSession {
             (err) => this.sendSuccess(response, err),
           );
           return;
+        }
 
-        case SftpExtensions.CHECK_FILE_HANDLE:
-          var handle = request.readHandle();
+        case SftpExtensions.CHECK_FILE_HANDLE: {
+          const handle = request.readHandle();
           if (handle == null) {
             throw Error("handle must not be null");
           }
-          var alg = request.readString();
-          var position = request.readInt64();
-          var length = request.readInt64();
-          var blockSize = request.readInt32();
+          const alg = request.readString();
+          const position = request.readInt64();
+          const length = request.readInt64();
+          const blockSize = request.readInt32();
 
           fs.fhash(
             handle,
@@ -863,13 +879,15 @@ export class SftpServerSession {
             },
           );
           return;
+        }
 
-        default:
+        default: {
           this.sendStatus(
             response,
             SftpStatusCode.OP_UNSUPPORTED,
             "Not supported",
           );
+        }
       }
     } catch (err) {
       this.sendError(response, err, true);

@@ -1,20 +1,20 @@
 # Critical
 
-- [x] Remove all auth (was: support auth, i.e., an optional symmetric key that clients must present to be allowed to mount the filesystem. This is useful for "defense in depth".). It's better to do the auth at a different level.
-
 # Code Quality
 
-- [ ] delete the "WEB" comments in code...
-- [ ] redo all logging to use the debug module
-- [ ] require require's to use static import syntax instead
-      Once this is done, we have the option of using ESM modules.
-      "module": "es2020" \(in tsconfig.json\).
-- [ ] eliminate use of `var`
+- [ ] redo logging to use the debug module
 - [ ] there are a bunch of TODO's in the code still.
 - [ ] support node v20
 
 # DONE
 
+
+- [x] Remove all auth (was: support auth, i.e., an optional symmetric key that clients must present to be allowed to mount the filesystem. This is useful for "defense in depth".). It's better to do the auth at a different level.
+- [x] delete the "WEB" comments in code...
+- [x] require require's to use static import syntax instead
+      Once this is done, we have the option of using ESM modules.
+      "module": "es2020" \(in tsconfig.json\).
+- [x] eliminate use of `var`
 - [x] make it work over the network
   - it technically does already work over a network, but I've only been using localhost for testing/demos. Need to try a real network situation.
 - [x] benchmarking and make it a bit faster, e.g., maybe support some intense levels of caching...?
@@ -37,3 +37,4 @@
 - [x] enable noUnusedLocals
 - [x] enable noUnusedParameters
 - [x] enable strictNullChecks
+

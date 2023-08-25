@@ -1119,7 +1119,7 @@ class SftpClientCore implements IFilesystem {
     if (!buffer) {
       buffer = data;
     } else {
-      data.copy(buffer, offset, 0, length); //WEB: buffer.set(data, offset);
+      data.copy(buffer, offset, 0, length);
     }
 
     callback(null, buffer, length);

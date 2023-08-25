@@ -7,7 +7,6 @@ export class Encoding {
     const encoding = (name + "").toLowerCase().replace("-", "");
     if (encoding != "utf8") {
       throw Error("Encoding not supported: " + name);
-      //TODO: support ASCII and other encodings in addition to UTF-8
     }
   }
 
@@ -45,7 +44,9 @@ export class StringEncoder {
   }
 
   constructor(value: string) {
-    if (typeof value !== "string") value = "" + value;
+    if (typeof value !== "string") {
+      value = "" + value;
+    }
     this._value = value;
   }
 

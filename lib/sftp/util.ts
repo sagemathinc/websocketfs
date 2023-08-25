@@ -156,7 +156,7 @@ export class LogHelper {
             obj = undefined;
           }
 
-          array = [names[index] + ":", util.format.apply(util, array)]; // WEB: array.push("(" + names[index] + ")");
+          array = [names[index] + ":", util.format.apply(util, array)];
 
           (<Function>console[func]).apply(console, array);
           if (obj !== null) (<Function>console[func]).call(console, obj);

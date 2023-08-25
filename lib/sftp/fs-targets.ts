@@ -283,7 +283,7 @@ export class BufferDataTarget extends DataTarget {
     let offset = 0;
     for (let n = 0; n < this._chunks.length; n++) {
       const chunk = this._chunks[n];
-      chunk.copy(this._buffer, offset); //WEB: this._buffer.set(chunk, offset);
+      chunk.copy(this._buffer, offset);
       offset += chunk.length;
     }
     this._chunks.length = 0;

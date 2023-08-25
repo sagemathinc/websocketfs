@@ -420,8 +420,6 @@ export class FilesystemPlus extends EventEmitter implements IFilesystem {
           target = new BufferDataTarget();
           break;
         case "blob":
-        // WEB: target = new BlobDataTarget(options.mimeType);
-        // WEB: break;
         default:
           throw new Error("Unsupported data kind: " + options.type);
       }

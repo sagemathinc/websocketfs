@@ -135,7 +135,7 @@ class WebSocketChannel implements IChannel {
 
   constructor(ws: WebSocket, binary: boolean, established: boolean) {
     this.ws = ws;
-    this.options = { binary: binary }; //WEB: this.binary = binary;
+    this.options = { binary };
     this.established = established;
 
     ws.on("close", (reason, description) => {
@@ -170,7 +170,7 @@ class WebSocketChannel implements IChannel {
           code = "ECONNRESET";
           break;
         case 1011:
-          message = description; //WEB: message = "Connection reset";
+          message = description;
           code = "ECONNRESET";
           break;
         case 1015:
@@ -253,9 +253,10 @@ class WebSocketChannel implements IChannel {
 
     try {
       this.ws.send(packet, this.options, (err) => {
-        //WEB: this.ws.send(packet);
-        if (err) this._close(3, err); //WEB: // removed
-      }); //WEB: // removed
+        if (err) {
+          this._close(3, err);
+        }
+      });
     } catch (err) {
       this._close(2, err);
     }

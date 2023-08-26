@@ -6,7 +6,7 @@ Some relevant docs:
 - https://filezilla-project.org/specs/draft-ietf-secsh-filexfer-02.txt
 //
 */
-import { Client as SftpClient } from "websocket-sftp/lib/sftp";
+import { Client as SftpClient, IClientOptions } from "websocket-sftp/lib/sftp";
 import { RenameFlags } from "websocket-sftp/lib/fs-api";
 import type { SftpError } from "websocket-sftp/lib/util";
 import {
@@ -18,6 +18,8 @@ import { bindMethods } from "./util";
 import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
+
+export type { IClientOptions };
 
 const log = debug("websocketfs:sftp");
 
@@ -37,9 +39,9 @@ export default class SftpFuse {
     bindMethods(this);
   }
 
-  async connect() {
+  async connect(options?: IClientOptions) {
     log("connecting to ", this.remote);
-    await callback(this.sftp.connect, this.remote, {});
+    await callback(this.sftp.connect, this.remote, options ?? {});
   }
 
   end() {

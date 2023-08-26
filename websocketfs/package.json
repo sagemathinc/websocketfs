@@ -41,7 +41,9 @@
   ],
   "dependencies": {
     "@cocalc/fuse-native": "^2.3.1",
+    "@isaacs/ttlcache": "^1.4.1",
     "awaiting": "^3.0.0",
+    "cookie": "^0.5.0",
     "debug": "^4.3.4",
     "port-get": "^1.0.0",
     "websocket-sftp": "workspace:*"

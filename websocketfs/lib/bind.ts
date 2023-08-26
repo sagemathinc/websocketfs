@@ -4,10 +4,14 @@ import debug from "debug";
 
 const log = debug("websocketfs:bind");
 
-export default async function bind(source: string, target: string) {
+export default async function bind(source: string, target: string, options?) {
   const { port, server } = await serve({ path: source });
   const remote = `ws://localhost:${port}`;
-  const { fuse, client, unmount } = await mount({ path: target, remote });
+  const { fuse, client, unmount } = await mount({
+    path: target,
+    remote,
+    ...options,
+  });
   log("mounted websocketfs on localhost:", source, "-->", target);
 
   const exitHandler = async () => {

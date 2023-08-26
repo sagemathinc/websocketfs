@@ -1,8 +1,14 @@
-# Critical
+# TODO
 
-# Code Quality
+- [ ] redo logging to use the debug module
+- [ ] caching \-\- take 2
 
-- [ ] #now redo logging to use the debug module
+```
+The default attribute cache timeout for SSHFS is 20 seconds.  You can change the default cache timeout by using the -o cache_timeout=N option, where N is the desired cache timeout in seconds2. You can also control cache timeouts for directory listing and other attributes with options such as -o cache_stat_timeout=N, -o cache_dir_timout=N, and -o cache_link_timout=N2. To disable the cache, you can use the -o cache=no option2.
+```
+
+### Lower Priority for now
+
 - [ ] support node v20
   - See https://github.com/sagemathinc/websocketfs/issues/1 
   - May be entirely an issue for unit testing.

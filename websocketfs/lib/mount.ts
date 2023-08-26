@@ -12,16 +12,33 @@ interface Options {
   // explicitly via mountOptions, overriding our non-default options.
   mountOptions?: Fuse.OPTIONS;
   connectOptions?: IClientOptions;
-  apiKey?: string; // used for
+  cacheTimeout?: number;
+  cacheStatTimeout?: number;
+  cacheDirTimeout?: number;
+  cacheLinkTimeout?: number;
 }
 
 export default async function mount(
   opts: Options,
 ): Promise<{ fuse: Fuse; client: SftpFuse; unmount: () => Promise<void> }> {
   log("mount", opts);
-  const { path, remote, connectOptions, mountOptions } = opts;
+  const {
+    path,
+    remote,
+    connectOptions,
+    mountOptions,
+    cacheTimeout,
+    cacheStatTimeout,
+    cacheDirTimeout,
+    cacheLinkTimeout,
+  } = opts;
 
-  const client = new SftpFuse(remote);
+  const client = new SftpFuse(remote, {
+    cacheTimeout,
+    cacheStatTimeout,
+    cacheDirTimeout,
+    cacheLinkTimeout,
+  });
   await client.connect(connectOptions);
   const fuse = new Fuse(path, client, {
     debug: log.enabled,

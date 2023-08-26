@@ -18,6 +18,8 @@ import { bindMethods } from "./util";
 import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
+import TTLCache from "@isaacs/ttlcache";
+import { join } from "path";
 
 export type { IClientOptions };
 
@@ -25,16 +27,31 @@ const log = debug("websocketfs:sftp");
 
 type Callback = Function;
 
+// the cache names are to match with sshfs options.
+
+interface Options {
+  // caching is disabled unless explicitly enabled until it is more finished
+  cacheTimeout?: number; // used for anything not explicitly specified
+  cacheStatTimeout?: number; // in seconds (to match sshfs)
+  cacheDirTimeout?: number; // NOT implemented yet
+  cacheLinkTimeout?: number; // NOT implemented yet
+}
+
 export default class SftpFuse {
   private remote: string;
   private sftp: SftpClient;
   private data: {
     [fd: number]: { buffer: Buffer; position: number }[];
   } = {};
+  private attrCache: TTLCache<string, any> | null = null;
 
-  constructor(remote: string) {
+  constructor(remote: string, options: Options = {}) {
     this.remote = remote;
     this.sftp = new SftpClient();
+    const { cacheTimeout = 0, cacheStatTimeout } = options;
+    if (cacheStatTimeout ?? cacheTimeout) {
+      this.attrCache = new TTLCache({ ttl: cacheStatTimeout ?? cacheTimeout });
+    }
     bindMethods(this.sftp);
     bindMethods(this);
   }
@@ -72,8 +89,15 @@ export default class SftpFuse {
 
   getattr(path: string, cb) {
     log("getattr", path);
+    if (this.attrCache?.has(path)) {
+      const { errno, attr } = this.attrCache.get(path);
+      cb(errno ?? 0, attr);
+      return;
+    }
+    log("getattr -- not using cache", path);
     this.sftp.lstat(path, (err, attr) => {
       if (err) {
+        this.processAttr(path, err);
         fuseError(cb)(err);
       } else {
         // console.log({ path, attr });
@@ -81,22 +105,46 @@ export default class SftpFuse {
         // is what sshfs does.  This isn't necessarily correct, but it's what
         // we do, e.g., ctime should change if you change file permissions, but
         // won't in this case.  We could put ctime in the metadata though.
-        cb(0, processAttr(attr));
+        cb(0, this.processAttr(path, err, attr));
       }
     });
   }
 
   fgetattr(path: string, fd: number, cb) {
     log("fgetattr", { path, fd });
+    if (this.attrCache?.has(path)) {
+      const { errno, attr } = this.attrCache.get(path);
+      cb(errno ?? 0, attr);
+      return;
+    }
     const handle = this.sftp.fileDescriptorToHandle(fd);
     this.sftp.fstat(handle, (err, attr) => {
       if (err) {
+        this.processAttr(path, err);
         fuseError(cb)(err);
       } else {
         // see comment about ctime above.
-        cb(0, processAttr(attr));
+        cb(0, this.processAttr(path, err, attr));
       }
     });
+  }
+
+  private processAttr(path: string, err, attr?) {
+    if (attr == null) {
+      if (this.attrCache != null) {
+        this.attrCache.set(path, { errno: getErrno(err) });
+      }
+      return;
+    }
+    attr = {
+      ...attr,
+      ctime: attr.mtime,
+      blocks: attr.metadata?.blocks ?? 0,
+    };
+    if (this.attrCache != null) {
+      this.attrCache.set(path, { attr });
+    }
+    return attr;
   }
 
   async flush(path: string, fd: number, cb) {
@@ -108,6 +156,7 @@ export default class SftpFuse {
       return;
     }
     delete this.data[fd];
+    this.attrCache?.delete(path);
     try {
       while (data.length > 0) {
         let { buffer, position } = data.shift()!;
@@ -157,6 +206,14 @@ export default class SftpFuse {
         throw Error("readdir fail");
       }
       const filenames = items.map(({ filename }) => filename);
+      if (this.attrCache != null) {
+        for (const { filename, stats, longname } of items) {
+          try {
+            stats.blocks = parseInt(longname.split(" ")[0]);
+          } catch (_) {}
+          this.attrCache.set(join(path, filename), { attr: stats });
+        }
+      }
       cb(0, filenames);
     } catch (err) {
       log("readdir - error", err);
@@ -168,6 +225,7 @@ export default class SftpFuse {
   // we want later for speed purposes, right?
   truncate(path: string, size: number, cb) {
     log("truncate", { path, size });
+    this.attrCache?.delete(path);
     this.sftp.setstat(path, { size }, fuseError(cb));
   }
 
@@ -196,6 +254,7 @@ export default class SftpFuse {
 
   chmod(path: string, mode: number, cb) {
     log("chmod", { path, mode });
+    this.attrCache?.delete(path);
     this.sftp.setstat(path, { mode }, fuseError(cb));
   }
 
@@ -218,6 +277,7 @@ export default class SftpFuse {
     if (typeof flags == "number") {
       flags = convertOpenFlags(flags);
     }
+    this.attrCache?.delete(path);
     this.sftp.open(path, flags, {}, (err, handle) => {
       if (err) {
         fuseError(cb)(err);
@@ -303,6 +363,7 @@ export default class SftpFuse {
   ) {
     //log("write", { path, fd, buffer: buffer.toString(), length, position });
     log("write", { path, fd, length, position });
+    this.attrCache?.delete(path);
     if (this.data[fd] == null) {
       this.data[fd] = [
         { buffer: Buffer.from(buffer.slice(0, length)), position },
@@ -369,70 +430,72 @@ export default class SftpFuse {
 
   unlink(path: string, cb: Callback) {
     log("unlink", path);
+    this.attrCache?.delete(path);
     this.sftp.unlink(path, fuseError(cb));
   }
 
   rename(src: string, dest: string, cb: Callback) {
     log("rename", { src, dest });
+    this.attrCache?.delete(src);
+    this.attrCache?.delete(dest);
     // @ts-ignore
     this.sftp.rename(src, dest, RenameFlags.OVERWRITE, fuseError(cb));
   }
 
   link(src: string, dest: string, cb: Callback) {
     log("link", { src, dest });
+    this.attrCache?.delete(src);
+    this.attrCache?.delete(dest);
     this.sftp.link(src, dest, fuseError(cb));
   }
 
   symlink(src: string, dest: string, cb: Callback) {
     log("symlink", { src, dest });
+    this.attrCache?.delete(src);
+    this.attrCache?.delete(dest);
     this.sftp.symlink(src, dest, fuseError(cb));
   }
 
   mkdir(path: string, mode: number, cb: Callback) {
     log("mkdir", { path, mode });
+    this.attrCache?.delete(path);
     this.sftp.mkdir(path, { mode }, fuseError(cb));
   }
 
   rmdir(path: string, cb: Callback) {
     log("rmdir", { path });
+    this.attrCache?.delete(path);
     this.sftp.rmdir(path, fuseError(cb));
   }
+}
+
+function getErrno(err: SftpError): number {
+  if (err.description != null) {
+    const e = Fuse[err.description];
+    if (e != null) {
+      return e;
+    }
+  }
+  if (err.code != null) {
+    const errno = Fuse[err.code];
+    if (errno) {
+      return errno;
+    }
+    if (err.errno != null) {
+      return -Math.abs(err.errno);
+    }
+  }
+  console.warn("err.code and err.errno not set -- ", err);
+  return Fuse.ENOSYS;
 }
 
 function fuseError(cb) {
   return (err: SftpError, ...args) => {
     // console.log("response -- ", { err, args });
     if (err) {
-      if (err.description != null) {
-        const e = Fuse[err.description];
-        if (e != null) {
-          cb(e);
-          return;
-        }
-      }
-      if (err.code != null) {
-        const errno = Fuse[err.code];
-        if (errno) {
-          cb(errno);
-          return;
-        }
-        if (err.errno != null) {
-          cb(-Math.abs(err.errno));
-          return;
-        }
-      }
-      console.warn("err.code and err.errno not set -- ", err);
-      cb(Fuse.ENOSYS);
+      cb(getErrno(err));
     } else {
       cb(0, ...args);
     }
-  };
-}
-
-function processAttr(attr) {
-  return {
-    ...attr,
-    ctime: attr.mtime,
-    blocks: attr.metadata?.blocks ?? 0,
   };
 }

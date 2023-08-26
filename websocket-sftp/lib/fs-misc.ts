@@ -309,9 +309,9 @@ export class FileUtil {
     const nlink =
       typeof (<any>stats).nlink === "undefined" ? 1 : (<any>stats).nlink;
 
-    return (
-      perms + " " + nlink + " user group " + len + " " + date + " " + filename
-    );
+    const blocks = stats.blocks;
+    // ATTN: we include blocks like "ls -ls", and so we can use this to cache blocks in the client attrs.
+    return `${blocks} ${perms} ${nlink} user group ${len} ${date} ${filename}`;
   }
 
   static fail(

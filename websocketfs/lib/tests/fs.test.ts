@@ -16,7 +16,7 @@ beforeAll(async () => {
   // Create temporary directories
   dir1 = await tmp.dir({ unsafeCleanup: true });
   dir2 = await tmp.dir({ unsafeCleanup: true });
-  fuse = await bind(dir1.path, dir2.path);
+  fuse = await bind(dir1.path, dir2.path, { cacheTimeout: 0 });
   target = dir2.path;
 });
 

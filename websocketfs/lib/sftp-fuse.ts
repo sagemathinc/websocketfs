@@ -19,7 +19,7 @@ import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
 import TTLCache from "@isaacs/ttlcache";
-import { join } from "path";
+import { dirname, join } from "path";
 
 export type { IClientOptions };
 
@@ -44,13 +44,17 @@ export default class SftpFuse {
     [fd: number]: { buffer: Buffer; position: number }[];
   } = {};
   private attrCache: TTLCache<string, any> | null = null;
+  private dirCache: TTLCache<string, string[]> | null = null;
 
   constructor(remote: string, options: Options = {}) {
     this.remote = remote;
     this.sftp = new SftpClient();
-    const { cacheTimeout = 0, cacheStatTimeout } = options;
+    const { cacheTimeout = 0, cacheStatTimeout, cacheDirTimeout } = options;
     if (cacheStatTimeout ?? cacheTimeout) {
       this.attrCache = new TTLCache({ ttl: cacheStatTimeout ?? cacheTimeout });
+    }
+    if (cacheDirTimeout ?? cacheTimeout) {
+      this.dirCache = new TTLCache({ ttl: cacheDirTimeout ?? cacheTimeout });
     }
     bindMethods(this.sftp);
     bindMethods(this);
@@ -156,7 +160,7 @@ export default class SftpFuse {
       return;
     }
     delete this.data[fd];
-    this.attrCache?.delete(path);
+    this.clearCache(path);
     try {
       while (data.length > 0) {
         let { buffer, position } = data.shift()!;
@@ -191,6 +195,10 @@ export default class SftpFuse {
 
   async readdir(path: string, cb) {
     log("readdir", path);
+    if (this.dirCache?.has(path)) {
+      cb(0, this.dirCache.get(path));
+      return;
+    }
     try {
       let handle, items;
       try {
@@ -198,7 +206,10 @@ export default class SftpFuse {
         log("readdir - opendir got a handle", handle._handle);
         items = await callback(this.sftp.readdir, handle);
       } finally {
-        await callback(this.sftp.close, handle);
+        // do not block on this.
+        this.sftp.close(handle, (err) => {
+          log("WARNING: error closing dir", err);
+        });
       }
       //log("readdir - items", items);
       // todo: cache attrs from items (?)
@@ -214,6 +225,7 @@ export default class SftpFuse {
           this.attrCache.set(join(path, filename), { attr: stats });
         }
       }
+      this.dirCache?.set(path, filenames);
       cb(0, filenames);
     } catch (err) {
       log("readdir - error", err);
@@ -225,7 +237,7 @@ export default class SftpFuse {
   // we want later for speed purposes, right?
   truncate(path: string, size: number, cb) {
     log("truncate", { path, size });
-    this.attrCache?.delete(path);
+    this.clearCache(path);
     this.sftp.setstat(path, { size }, fuseError(cb));
   }
 
@@ -277,7 +289,7 @@ export default class SftpFuse {
     if (typeof flags == "number") {
       flags = convertOpenFlags(flags);
     }
-    this.attrCache?.delete(path);
+    this.clearCache(path);
     this.sftp.open(path, flags, {}, (err, handle) => {
       if (err) {
         fuseError(cb)(err);
@@ -363,7 +375,7 @@ export default class SftpFuse {
   ) {
     //log("write", { path, fd, buffer: buffer.toString(), length, position });
     log("write", { path, fd, length, position });
-    this.attrCache?.delete(path);
+    this.clearCache(path);
     if (this.data[fd] == null) {
       this.data[fd] = [
         { buffer: Buffer.from(buffer.slice(0, length)), position },
@@ -430,42 +442,54 @@ export default class SftpFuse {
 
   unlink(path: string, cb: Callback) {
     log("unlink", path);
-    this.attrCache?.delete(path);
+    this.clearCache(path);
     this.sftp.unlink(path, fuseError(cb));
   }
 
   rename(src: string, dest: string, cb: Callback) {
     log("rename", { src, dest });
-    this.attrCache?.delete(src);
-    this.attrCache?.delete(dest);
+    this.clearCache(src);
+    this.clearCache(dest);
+    this.dirCache?.delete(dirname(src));
+    this.dirCache?.delete(dirname(dest));
     // @ts-ignore
     this.sftp.rename(src, dest, RenameFlags.OVERWRITE, fuseError(cb));
   }
 
   link(src: string, dest: string, cb: Callback) {
     log("link", { src, dest });
-    this.attrCache?.delete(src);
-    this.attrCache?.delete(dest);
+    this.clearCache(src);
+    this.clearCache(dest);
+    this.dirCache?.delete(dirname(src));
+    this.dirCache?.delete(dirname(dest));
     this.sftp.link(src, dest, fuseError(cb));
   }
 
   symlink(src: string, dest: string, cb: Callback) {
     log("symlink", { src, dest });
-    this.attrCache?.delete(src);
-    this.attrCache?.delete(dest);
+    this.clearCache(src);
+    this.clearCache(dest);
     this.sftp.symlink(src, dest, fuseError(cb));
   }
 
   mkdir(path: string, mode: number, cb: Callback) {
     log("mkdir", { path, mode });
-    this.attrCache?.delete(path);
+    this.clearCache(path);
     this.sftp.mkdir(path, { mode }, fuseError(cb));
   }
 
   rmdir(path: string, cb: Callback) {
     log("rmdir", { path });
-    this.attrCache?.delete(path);
+    this.clearCache(path);
     this.sftp.rmdir(path, fuseError(cb));
+  }
+
+  private clearCache(path: string) {
+    this.attrCache?.delete(path);
+    if (this.dirCache != null) {
+      this.dirCache?.delete(path);
+      this.dirCache?.delete(dirname(path));
+    }
   }
 }
 

@@ -1,11 +1,7 @@
 # TODO
 
 - [ ] redo logging to use the debug module
-- [ ] caching \-\- take 2
-
-```
-The default attribute cache timeout for SSHFS is 20 seconds.  You can change the default cache timeout by using the -o cache_timeout=N option, where N is the desired cache timeout in seconds2. You can also control cache timeouts for directory listing and other attributes with options such as -o cache_stat_timeout=N, -o cache_dir_timout=N, and -o cache_link_timout=N2. To disable the cache, you can use the -o cache=no option2.
-```
+- [ ] more caching beyond what sshfs does?
 
 ### Lower Priority for now
 
@@ -15,6 +11,11 @@ The default attribute cache timeout for SSHFS is 20 seconds.  You can change the
 
 # DONE
 
+
+- [x] caching \-\- take 2 \-\- implement at least the api of sshfs.
+```
+The default attribute cache timeout for SSHFS is 20 seconds.  You can change the default cache timeout by using the -o cache_timeout=N option, where N is the desired cache timeout in seconds2. You can also control cache timeouts for directory listing and other attributes with options such as -o cache_stat_timeout=N, -o cache_dir_timout=N, and -o cache_link_timout=N2. To disable the cache, you can use the -o cache=no option2.
+```
 - [x] there are a bunch of TODO's in the code still -- read them; delete ones that aren't relevant or address, or leave ones that may matter later.  Result: most of the worrisome ones are in copy functions that FUSE doesn't use.
 - [x] Remove all auth (was: support auth, i.e., an optional symmetric key that clients must present to be allowed to mount the filesystem. This is useful for "defense in depth".). It's better to do the auth at a different level.
 - [x] delete the "WEB" comments in code...

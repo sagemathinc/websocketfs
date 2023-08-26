@@ -30,11 +30,11 @@ type Callback = Function;
 // the cache names are to match with sshfs options.
 
 interface Options {
-  // caching is disabled unless explicitly enabled until it is more finished
-  cacheTimeout?: number; // used for anything not explicitly specified
+  // cacheTimeout -- used for anything not explicitly specified; defaults to 20s, same as sshfs.  In seconds!
+  cacheTimeout?: number;
   cacheStatTimeout?: number; // in seconds (to match sshfs)
-  cacheDirTimeout?: number; // NOT implemented yet
-  cacheLinkTimeout?: number; // NOT implemented yet
+  cacheDirTimeout?: number;
+  cacheLinkTimeout?: number;
 }
 
 export default class SftpFuse {
@@ -45,16 +45,46 @@ export default class SftpFuse {
   } = {};
   private attrCache: TTLCache<string, any> | null = null;
   private dirCache: TTLCache<string, string[]> | null = null;
+  private linkCache: TTLCache<string, string> | null = null;
 
   constructor(remote: string, options: Options = {}) {
     this.remote = remote;
     this.sftp = new SftpClient();
-    const { cacheTimeout = 0, cacheStatTimeout, cacheDirTimeout } = options;
+    const {
+      cacheTimeout = 20,
+      cacheStatTimeout,
+      cacheDirTimeout,
+      cacheLinkTimeout,
+    } = options;
     if (cacheStatTimeout ?? cacheTimeout) {
-      this.attrCache = new TTLCache({ ttl: cacheStatTimeout ?? cacheTimeout });
+      log(
+        "enabling attrCache with timeout",
+        cacheStatTimeout ?? cacheTimeout,
+        "seconds",
+      );
+      this.attrCache = new TTLCache({
+        ttl: (cacheStatTimeout ?? cacheTimeout) * 1000,
+      });
     }
     if (cacheDirTimeout ?? cacheTimeout) {
-      this.dirCache = new TTLCache({ ttl: cacheDirTimeout ?? cacheTimeout });
+      log(
+        "enabling dirCache with timeout",
+        cacheDirTimeout ?? cacheTimeout,
+        "seconds",
+      );
+      this.dirCache = new TTLCache({
+        ttl: (cacheDirTimeout ?? cacheTimeout) * 1000,
+      });
+    }
+    if (cacheLinkTimeout ?? cacheTimeout) {
+      log(
+        "enabling linkCache with timeout",
+        cacheLinkTimeout ?? cacheTimeout,
+        "seconds",
+      );
+      this.linkCache = new TTLCache({
+        ttl: (cacheLinkTimeout ?? cacheTimeout) * 1000,
+      });
     }
     bindMethods(this.sftp);
     bindMethods(this);
@@ -248,7 +278,16 @@ export default class SftpFuse {
 
   readlink(path, cb) {
     log("readlink", path);
-    this.sftp.readlink(path, fuseError(cb));
+    if (this.linkCache?.has(path)) {
+      cb(0, this.linkCache.get(path));
+      return;
+    }
+    this.sftp.readlink(path, (err, target) => {
+      if (this.linkCache != null) {
+        this.linkCache.set(path, target);
+      }
+      fuseError(cb)(err, target);
+    });
   }
 
   // We purposely do NOT implement chown, since it traditionally doesn't

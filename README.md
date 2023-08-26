@@ -4,11 +4,13 @@
 
 [![Install, build and run tests](https://github.com/sagemathinc/websocketfs/actions/workflows/test-all.yml/badge.svg)](https://github.com/sagemathinc/websocketfs/actions/workflows/test-all.yml)
 
-This project is not done. See [the todo](./TODO.md).
+## Status
+
+This project is mostly finished. See [the todo](./TODO.md).  All the main functionality and unit testing is done, and the code is in pretty good modern shape.  We are mainly thinking about ways to enable caching that go beyond what sshfs does, in order to provide better speed for certain applications...
 
 ## Quickstart
 
-So far we have only implemented running on localhost, but it is now _MOSTLY WORKING_, and the speed is not so bad either, for some benchmarks...
+You can try this out on localhost very easily as illustrated below.  
 
 From NPM
 
@@ -65,6 +67,16 @@ TODO.md    lib       pnpm-lock.yaml  websocketfs.term
 
 You can do `ls -l`, and read and write files, etc.
 
+### Cacheing
+
+Stat, directory listing, and link caching is on by default with a timeout of 20 seconds. This is the same as sshfs.  To disable it:
+
+```sh
+z = await require('.').bind(process.env.HOME, '/tmp/mnt', {cacheTimeout:0});
+```
+
+You can set cacheTimeout to a value in seconds, or 0 to disable.  You can also explicitly set cacheStatTimeout, cacheDirTimeout, and cacheLinkTimeout, just like with sshfs.
+
 ## Nodejs 20 Support
 
 Do NOT try to run both the client and server in the same nodejs
@@ -72,7 +84,7 @@ process, since [it will deadlock](https://github.com/sagemathinc/websocketfs/iss
 This is not something you would want to do except maybe for
 unit testing.
 
-### A Note about Fuse
+### Building Fuse
 
 To install or build, you need to have the fuse C library
 available:
@@ -107,10 +119,11 @@ You can install the module `websocket-sftp` alone, which doesn't depend
 on fuse-native, and provides the client and server for communicating over
 sftp, but not the FUSE bindings.
 
-## Background
+## Background and Motivation
 
 I wish there was something like sshfs, but entirely over a websocket that doesn't use ssh at all. I found this [ancient and forgotten project from 8 years ago](https://github.com/lukaaash/vfs/tree/master), then rewrote it to not use sshfs at all and instead use libfuse2 bindings to nodejs. It is going to be like what sshfs provides, except entirely 100% using Typescript/Nodejs \+ a websocket for the transport and fuse bindings. This could also be extended to work in browser \(for WebAssembly with WASI\), providing basically "sshfs for the browser". The real work to make this possible is in [this also ancient forgotten implementation of the entire sftp protocol](https://github.com/lukaaash/sftp-ws) in Typescript from 8 years ago, as explained in [this blogpost](https://lukas.pokorny.eu/sftp-over-websockets/).
 
 I've been working on this for a few days, and have got a pretty good understanding of the sftp\-ws codebase, rewrote much of it to support many modern strict typescript settings, fixed several subtle bugs, etc. I've also written a lot of new unit tests.
 
 Anyway, I so far have a pretty good proof of concept of this working. The actual work feels similar to what was involved in building https://cowasm.org/ , but easier, since it's javascript instead of massive amounts of decades old C.
+

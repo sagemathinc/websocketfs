@@ -6,7 +6,7 @@
 
 ## Status
 
-This project is mostly finished. See [the todo](./TODO.md).  All the main functionality and unit testing is done, and the code is in pretty good modern shape.  We are mainly thinking about ways to enable caching that go beyond what sshfs does, in order to provide better speed for certain applications...
+This project is mostly finished. See [the todo](./TODO.md).  All the main functionality and unit testing is done, and the code is in pretty good modern shape.  We are mainly thinking about ways to enable caching that go beyond what sshfs does, in order to provide better speed for certain applications.
 
 ## Quickstart
 

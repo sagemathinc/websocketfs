@@ -1,6 +1,6 @@
-import assert from "assert";
 import * as SFTP from "../sftp";
 import getPort from "port-get";
+import { callback } from "awaiting";
 
 let port;
 
@@ -14,9 +14,9 @@ async function startServer(): Promise<SFTP.Server> {
   return server;
 }
 
-function startClient(): SFTP.Client {
+async function startClient() {
   const client = new SFTP.Client();
-  client.connect(`ws://localhost:${port}`);
+  await callback(client.connect.bind(client), `ws://localhost:${port}`);
   return client;
 }
 
@@ -26,22 +26,8 @@ beforeAll(async () => {
 });
 
 describe("Server Tests", () => {
-  it("bad_root", (done) => {
-    const client = startClient();
-
-    client.on("ready", () => {
-      done(new Error("Connection attempt should fail"));
-      server.end();
-    });
-
-    client.on("error", (err) => {
-      try {
-        assert.equal(err.message, "Unable to access file system");
-        done();
-      } catch (err) {
-        done(err);
-      }
-      server.end();
-    });
+  it("tests creating a server with a bad root directory", async () => {
+    await expect(startClient()).rejects.toThrow("Unable to access file system");
+    server.end();
   });
 });

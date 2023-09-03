@@ -75,12 +75,12 @@ export class WebSocketChannelFactory {
     );
 
     channel.on("close", (err) => {
+      log("websocket close", err);
       if (didOpen) {
         // makes no sense to call callback at this point, since we already
         // did with the successful open above!
         return;
       }
-      log("websocket close", err);
       callback(err ?? new Error("Connection closed"));
     });
   }
@@ -97,7 +97,6 @@ export class WebSocketChannelFactory {
 TODO: Weirdness warning!  This WebSocketChannel is NOT an event emitter.  When
 something does .on(event) it steals the listener.  It's very weird.
 */
-
 
 class WebSocketChannel implements IChannel {
   private ws: WebSocket;
@@ -152,6 +151,7 @@ class WebSocketChannel implements IChannel {
     this.established = established;
 
     ws.on("close", (reason, description) => {
+      log("WebSocketChannel: ws.on.close", reason);
       let message = "Connection failed";
       let code = "EFAILURE";
       switch (reason) {

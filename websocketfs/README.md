@@ -14,7 +14,7 @@ You can try this out on localhost very easily as illustrated below.
 
 From NPM
 
-```sh
+```js
 pnpm install websocketfs
 require('websocketfs').serve({path, port, host})
 
@@ -23,6 +23,32 @@ require('websocketfs').serve({path, port, host})
 require('websocketfs').mount({path, remote:'ws://host:port'})
 
 ```
+
+More concretely:
+
+```js
+# In your first terminal
+require('websocketfs').serve({path:process.env.HOME, port:'3456', host:'localhost'})
+```
+
+```js
+# In your second terminal
+await require('websocketfs').mount({path:'/tmp/mnt', remote:'ws://localhost:3456'})
+```
+
+Now /tmp/mnt should show the same files as your home directory. Note the ws://localhost:3456 filesystem below. 
+
+```sh
+/tmp/mnt$ df -h /tmp/mnt
+Filesystem           Size  Used Avail Use% Mounted on
+ws://localhost:3456  189G  155G   25G  87% /tmp/mnt
+```
+
+## Authentication
+
+There is currently no authentication as part of websocketfs.  You have to do any auth at a different level, e.g., a proxy server.
+
+### Script to do a bind mount over websocketfs
 
 You can also run a script to do bind on localhost as a demo:
 
@@ -118,3 +144,4 @@ _I'm developing this for Linux._
 You can install the module `websocket-sftp` alone, which doesn't depend
 on fuse-native, and provides the client and server for communicating over
 sftp, but not the FUSE bindings.
+

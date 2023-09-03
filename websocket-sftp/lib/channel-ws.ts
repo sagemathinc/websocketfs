@@ -34,8 +34,10 @@ export class WebSocketChannelFactory {
     const ws = new WebSocket(address, options);
     log("create channel");
     const channel = new WebSocketChannel(ws, true, false);
+    let didOpen = false;
 
     ws.on("open", () => {
+      didOpen = true;
       log("websocket on open");
       channel._init();
       callback(null, channel);
@@ -73,6 +75,11 @@ export class WebSocketChannelFactory {
     );
 
     channel.on("close", (err) => {
+      if (didOpen) {
+        // makes no sense to call callback at this point, since we already
+        // did with the successful open above!
+        return;
+      }
       log("websocket close", err);
       callback(err ?? new Error("Connection closed"));
     });
@@ -86,6 +93,12 @@ export class WebSocketChannelFactory {
   }
 }
 
+/*
+TODO: Weirdness warning!  This WebSocketChannel is NOT an event emitter.  When
+something does .on(event) it steals the listener.  It's very weird.
+*/
+
+
 class WebSocketChannel implements IChannel {
   private ws: WebSocket;
   private options: any;
@@ -93,16 +106,16 @@ class WebSocketChannel implements IChannel {
   private closed: boolean;
   private onclose: ((err: Error) => void) | null;
 
-  on(event: string, listener: Function): IChannel {
+  on(event: string, listener): IChannel {
     if (typeof listener !== "function")
       throw new Error("Listener must be a function");
 
     switch (event) {
       case "message":
-        this.onmessage(<any>listener);
+        this.onmessage(listener);
         break;
       case "close":
-        this.onclose = <any>listener;
+        this.onclose = listener;
         break;
       default:
         break;
@@ -201,8 +214,9 @@ class WebSocketChannel implements IChannel {
           break;
       }
 
-      if (typeof err.code !== "undefined" && typeof err.errno === "undefined")
+      if (typeof err.code !== "undefined" && typeof err.errno === "undefined") {
         err.errno = code;
+      }
 
       this._close(0, err);
     });
@@ -224,7 +238,7 @@ class WebSocketChannel implements IChannel {
     }
 
     if (typeof onclose === "function") {
-      process.nextTick(() => onclose?.(err));
+      onclose(err);
     } else {
       if (err) {
         throw err;

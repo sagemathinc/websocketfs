@@ -336,7 +336,7 @@ class SftpClientCore implements IFilesystem {
       }
     }
 
-    // @ts-ignore -- id is sometimes null in the unit tests during init, 
+    // @ts-ignore -- id is sometimes null in the unit tests during init,
     // so this needs to be supported
     const request = this._requests[response.id];
     if (request == null) {
@@ -1258,7 +1258,9 @@ export class SftpClient extends FilesystemPlus {
 
       if (!this.emit("close", err)) {
         // if an error occured and no close handler is available, raise an error
-        if (err) this.emit("error", err);
+        if (err) {
+          this.emit("error", err);
+        }
       }
     });
   }

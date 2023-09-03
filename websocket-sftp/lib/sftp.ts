@@ -7,8 +7,7 @@ import { SafeFilesystem } from "./fs-safe";
 import * as local from "./fs-local";
 import * as api from "./fs-api";
 import { Task } from "./fs-plus";
-import { FileUtil } from "./fs-misc";
-import { CloseReason, IChannel as IChannel0 } from "./channel";
+import { IChannel as IChannel0 } from "./channel";
 import { WebSocketChannelFactory } from "./channel-ws";
 import * as channel_ws from "./channel-ws";
 import * as channel_stream from "./channel-stream";
@@ -271,48 +270,30 @@ module SFTP {
           sessionInfo,
         );
 
-        fs.stat(".", (err, attrs) => {
-          try {
-            if (!err && !FileUtil.isDirectory(attrs ?? {})) {
-              err = new Error("Not a directory");
-            }
+        const factory = new WebSocketChannelFactory();
+        const channel = factory.bind(ws);
 
-            if (err) {
-              const message = "Unable to access file system";
-              log(message, { root: virtualRoot });
-              ws.close(CloseReason.UNEXPECTED_CONDITION, message);
-              callback?.(err);
-              return;
-            }
+        const socket = ws.upgradeReq.connection;
+        const info = {
+          clientAddress: socket.remoteAddress,
+          clientPort: socket.remotePort,
+          clientFamily: socket.remoteFamily,
+          serverAddress: socket.localAddress,
+          serverPort: socket.localPort,
+        };
 
-            const factory = new WebSocketChannelFactory();
-            const channel = factory.bind(ws);
-
-            const socket = ws.upgradeReq.connection;
-            const info = {
-              clientAddress: socket.remoteAddress,
-              clientPort: socket.remotePort,
-              clientFamily: socket.remoteFamily,
-              serverAddress: socket.localAddress,
-              serverPort: socket.localPort,
-            };
-
-            const session = new SftpServerSession(
-              channel,
-              fs,
-              this,
-              this._log,
-              info,
-            );
-            this.emit("startedSession", this);
-            (<any>ws).session = session;
-            callback?.(null, session);
-          } catch (err) {
-            callback?.(err);
-          }
-        });
+        const session = new SftpServerSession(
+          channel,
+          fs,
+          this,
+          this._log,
+          info,
+        );
+        this.emit("startedSession", this);
+        (<any>ws).session = session;
+        callback?.(null, session);
       } catch (err) {
-        process.nextTick(() => callback?.(err));
+        callback?.(err);
       }
     }
   }

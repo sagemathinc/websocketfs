@@ -33,7 +33,7 @@ require('websocketfs').serve({path:process.env.HOME, port:'3456', host:'localhos
 
 ```js
 # In your second terminal
-await require('websocketfs').mount({path:'/tmp/mnt', remote:'ws://localhost:3456'})
+require('websocketfs').mount({path:'/tmp/mnt', remote:'ws://localhost:3456'})
 ```
 
 Now /tmp/mnt should show the same files as your home directory. Note the ws://localhost:3456 filesystem below. 

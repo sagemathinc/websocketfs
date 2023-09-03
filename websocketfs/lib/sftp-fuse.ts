@@ -29,7 +29,7 @@ type Callback = Function;
 
 type State = "init" | "connecting" | "ready" | "closed";
 
-const MAX_RECONNECT_DELAY_MS = 15000;
+const MAX_RECONNECT_DELAY_MS = 7500;
 const RECONNECT_DELAY_GROW = 1.3;
 
 // the cache names are to match with sshfs options.

@@ -45,13 +45,19 @@ export default async function mount(
     force: true,
     mkdir: true,
     fsname: remote,
-    autoUnmount: true,
+    autoUnmount: true, // doesn't seem to work, hence the process exit hook below.
     ...mountOptions,
   });
   await callback(fuse.mount.bind(fuse));
   const unmount = async () => {
+    log("unmounting", opts);
     await callback(fuse.unmount.bind(fuse));
     client.end();
   };
+  process.once("exit", (code) => {
+    log("fuse unmount on exit");
+    fuse.unmount(() => {});
+    process.exit(code);
+  });
   return { fuse, client, unmount };
 }

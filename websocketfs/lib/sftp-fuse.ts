@@ -13,7 +13,7 @@ import {
   MAX_WRITE_BLOCK_LENGTH,
   MAX_READ_BLOCK_LENGTH,
 } from "websocket-sftp/lib/sftp-client";
-import { callback } from "awaiting";
+import { callback, delay } from "awaiting";
 import { bindMethods } from "./util";
 import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
@@ -23,9 +23,11 @@ import { dirname, join } from "path";
 
 export type { IClientOptions };
 
-const log = debug("websocketfs:sftp");
+const log = debug("websocketfs:sftp-fuse");
 
 type Callback = Function;
+
+type State = "init" | "connecting" | "ready" | "closed";
 
 // the cache names are to match with sshfs options.
 
@@ -38,6 +40,7 @@ interface Options {
 }
 
 export default class SftpFuse {
+  private state: State = "init";
   private remote: string;
   private sftp: SftpClient;
   private data: {
@@ -46,10 +49,10 @@ export default class SftpFuse {
   private attrCache: TTLCache<string, any> | null = null;
   private dirCache: TTLCache<string, string[]> | null = null;
   private linkCache: TTLCache<string, string> | null = null;
+  private connectOptions?: IClientOptions;
 
   constructor(remote: string, options: Options = {}) {
     this.remote = remote;
-    this.sftp = new SftpClient();
     const {
       cacheTimeout = 20,
       cacheStatTimeout,
@@ -86,18 +89,52 @@ export default class SftpFuse {
         ttl: (cacheLinkTimeout ?? cacheTimeout) * 1000,
       });
     }
-    bindMethods(this.sftp);
     bindMethods(this);
   }
 
+  async handleConnectionClose(err) {
+    log("connection closed", err);
+    delete this.sftp;
+    this.state = "init";
+    while (true) {
+      await delay(1000);
+      try {
+        await this.connect(this.connectOptions);
+        log("successfully connected!");
+        return;
+      } catch (err) {
+        log("failed to connect", err);
+      }
+    }
+  }
+
   async connect(options?: IClientOptions) {
-    log("connecting to ", this.remote);
-    await callback(this.sftp.connect, this.remote, options ?? {});
+    if (this.state != "init") {
+      throw Error(
+        `can only connect when in init state, but state is ${this.state}`,
+      );
+    }
+    try {
+      this.state = "connecting";
+      this.connectOptions = options;
+      log("connecting to ", this.remote);
+      const sftp = new SftpClient();
+      bindMethods(sftp);
+      await callback(sftp.connect, this.remote, options ?? {});
+      sftp.on("close", this.handleConnectionClose);
+      this.sftp = sftp;
+      this.state = "ready";
+    } catch (err) {
+      this.state = "init";
+      throw err;
+    }
   }
 
   end() {
     log("ending connection to", this.remote);
-    this.sftp.end();
+    this.sftp?.end();
+    delete this.sftp;
+    this.state = "closed";
   }
 
   //
@@ -115,13 +152,23 @@ export default class SftpFuse {
   //     cb(0);
   //   }
 
+  private isNotReady(cb) {
+    if (this.state != "ready") {
+      cb(Fuse.ENOSYS);
+      return true;
+    }
+    return false;
+  }
+
   statfs(path: string, cb) {
+    if (this.isNotReady(cb)) return;
     // this gets called, e.g., when you do "df"
     log("statfs", path);
     this.sftp.statvfs(path, fuseError(cb));
   }
 
   getattr(path: string, cb) {
+    if (this.isNotReady(cb)) return;
     log("getattr", path);
     if (this.attrCache?.has(path)) {
       const { errno, attr } = this.attrCache.get(path);
@@ -145,6 +192,7 @@ export default class SftpFuse {
   }
 
   fgetattr(path: string, fd: number, cb) {
+    if (this.isNotReady(cb)) return;
     log("fgetattr", { path, fd });
     if (this.attrCache?.has(path)) {
       const { errno, attr } = this.attrCache.get(path);
@@ -182,6 +230,7 @@ export default class SftpFuse {
   }
 
   async flush(path: string, fd: number, cb) {
+    if (this.isNotReady(cb)) return;
     let data = this.data[fd];
     log("flush", { path, fd, packets: data?.length ?? 0 });
     if (data == null) {
@@ -224,6 +273,7 @@ export default class SftpFuse {
   }
 
   async readdir(path: string, cb) {
+    if (this.isNotReady(cb)) return;
     log("readdir", path);
     if (this.dirCache?.has(path)) {
       cb(0, this.dirCache.get(path));
@@ -266,17 +316,20 @@ export default class SftpFuse {
   // TODO: truncate doesn't seem to be in sftp spec... but we can add anything
   // we want later for speed purposes, right?
   truncate(path: string, size: number, cb) {
+    if (this.isNotReady(cb)) return;
     log("truncate", { path, size });
     this.clearCache(path);
     this.sftp.setstat(path, { size }, fuseError(cb));
   }
 
   ftruncate(path: string, fd: number, size: number, cb) {
+    if (this.isNotReady(cb)) return;
     log("ftruncate", { path, fd, size });
     this.truncate(path, size, cb);
   }
 
   readlink(path, cb) {
+    if (this.isNotReady(cb)) return;
     log("readlink", path);
     if (this.linkCache?.has(path)) {
       cb(0, this.linkCache.get(path));
@@ -304,6 +357,7 @@ export default class SftpFuse {
   }
 
   chmod(path: string, mode: number, cb) {
+    if (this.isNotReady(cb)) return;
     log("chmod", { path, mode });
     this.attrCache?.delete(path);
     this.sftp.setstat(path, { mode }, fuseError(cb));
@@ -324,6 +378,7 @@ export default class SftpFuse {
   // removexattr(path, name, cb)
 
   open(path: string, flags: string | number, cb) {
+    if (this.isNotReady(cb)) return;
     log("open", { path, flags });
     if (typeof flags == "number") {
       flags = convertOpenFlags(flags);
@@ -370,6 +425,7 @@ export default class SftpFuse {
     pos: number,
     cb: Callback,
   ) {
+    if (this.isNotReady(cb)) return;
     log("read", { path, fd, len, pos });
     const handle = this.sftp.fileDescriptorToHandle(fd);
     log("read - open got a handle", handle._handle);
@@ -413,6 +469,7 @@ export default class SftpFuse {
     cb: Callback,
   ) {
     //log("write", { path, fd, buffer: buffer.toString(), length, position });
+    if (this.isNotReady(cb)) return;
     log("write", { path, fd, length, position });
     this.clearCache(path);
     if (this.data[fd] == null) {
@@ -463,29 +520,34 @@ export default class SftpFuse {
   }
 
   release(path: string, fd: number, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("release", { path, fd });
     const handle = this.sftp.fileDescriptorToHandle(fd);
     this.sftp.close(handle, fuseError(cb));
   }
 
   releasedir(path, fd, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("releasedir", { path, fd });
     const handle = this.sftp.fileDescriptorToHandle(fd);
     this.sftp.close(handle, fuseError(cb));
   }
 
   create(path: string, mode: number, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("create", { path, mode });
     this.open(path, "w", cb);
   }
 
   unlink(path: string, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("unlink", path);
     this.clearCache(path);
     this.sftp.unlink(path, fuseError(cb));
   }
 
   rename(src: string, dest: string, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("rename", { src, dest });
     this.clearCache(src);
     this.clearCache(dest);
@@ -496,6 +558,7 @@ export default class SftpFuse {
   }
 
   link(src: string, dest: string, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("link", { src, dest });
     this.clearCache(src);
     this.clearCache(dest);
@@ -505,6 +568,7 @@ export default class SftpFuse {
   }
 
   symlink(src: string, dest: string, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("symlink", { src, dest });
     this.clearCache(src);
     this.clearCache(dest);
@@ -512,12 +576,14 @@ export default class SftpFuse {
   }
 
   mkdir(path: string, mode: number, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("mkdir", { path, mode });
     this.clearCache(path);
     this.sftp.mkdir(path, { mode }, fuseError(cb));
   }
 
   rmdir(path: string, cb: Callback) {
+    if (this.isNotReady(cb)) return;
     log("rmdir", { path });
     this.clearCache(path);
     this.sftp.rmdir(path, fuseError(cb));

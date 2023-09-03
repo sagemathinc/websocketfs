@@ -8,7 +8,7 @@ import { IChannel } from "./channel";
 import { ILogWriter, LogHelper, LogLevel } from "./util";
 import debug from "debug";
 
-const log = debug("websocketfs:sftp-client");
+const log = debug("websocket-sftp:sftp-client");
 import { SftpVfsStats } from "./sftp-misc";
 
 export const MAX_WRITE_BLOCK_LENGTH = 1024 * 1024;
@@ -1219,13 +1219,15 @@ export class SftpClient extends FilesystemPlus {
   protected _bind(
     channel: IChannel,
     options: any,
-    callback: (err: Error | null) => void,
+    callback: undefined | ((err: Error | null) => void),
   ): void {
     log("_bind");
     const sftp = this._fs as SftpClientCore;
 
     if (this._bound) {
-      throw Error("Already bound");
+      callback?.(Error("Already bound"));
+      callback = undefined;
+      return;
     }
     this._bound = true;
 
@@ -1237,9 +1239,11 @@ export class SftpClient extends FilesystemPlus {
       if (err) {
         sftp.end();
         this._bound = false;
-        callback(err);
+        callback?.(err);
+        callback = undefined;
       } else {
-        callback(null);
+        callback?.(null);
+        callback = undefined;
         this.emit("ready");
       }
     });
@@ -1253,6 +1257,12 @@ export class SftpClient extends FilesystemPlus {
     });
 
     channel.on("close", (err) => {
+      if (callback != null) {
+        // callback will be null if init finished
+        callback?.(err);
+        callback = undefined;
+        return;
+      }
       sftp.end();
       this._bound = false;
 

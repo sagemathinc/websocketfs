@@ -20,7 +20,7 @@ import {
 import type { WebSocket } from "ws";
 import debug from "debug";
 
-const log = debug("websocketfs:sftp");
+const log = debug("websocketfs-sftp:sftp");
 
 module SFTP {
   export interface IStats extends api.IStats {}

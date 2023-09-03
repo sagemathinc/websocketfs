@@ -12,6 +12,7 @@ interface Options {
   // explicitly via mountOptions, overriding our non-default options.
   mountOptions?: Fuse.OPTIONS;
   connectOptions?: IClientOptions;
+  reconnect?: boolean;
   cacheTimeout?: number;
   cacheStatTimeout?: number;
   cacheDirTimeout?: number;
@@ -27,6 +28,7 @@ export default async function mount(
     remote,
     connectOptions,
     mountOptions,
+    reconnect,
     cacheTimeout,
     cacheStatTimeout,
     cacheDirTimeout,
@@ -35,6 +37,7 @@ export default async function mount(
 
   const client = new SftpFuse(remote, {
     cacheTimeout,
+    reconnect,
     cacheStatTimeout,
     cacheDirTimeout,
     cacheLinkTimeout,

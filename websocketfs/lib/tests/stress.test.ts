@@ -23,7 +23,10 @@ let dir1, dir2, fuse, target;
 beforeAll(async () => {
   dir1 = await tmp.dir({ unsafeCleanup: true });
   dir2 = await tmp.dir({ unsafeCleanup: true });
-  fuse = await bind(dir1.path, dir2.path, { cacheTimeout: 0 });
+  fuse = await bind(dir1.path, dir2.path, {
+    cacheTimeout: 0,
+    reconnect: false,
+  });
   target = dir2.path;
 });
 

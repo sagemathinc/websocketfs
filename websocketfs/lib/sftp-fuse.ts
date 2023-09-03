@@ -29,6 +29,9 @@ type Callback = Function;
 
 type State = "init" | "connecting" | "ready" | "closed";
 
+const MAX_RECONNECT_DELAY_MS = 15000;
+const RECONNECT_DELAY_GROW = 1.3;
+
 // the cache names are to match with sshfs options.
 
 interface Options {
@@ -37,6 +40,9 @@ interface Options {
   cacheStatTimeout?: number; // in seconds (to match sshfs)
   cacheDirTimeout?: number;
   cacheLinkTimeout?: number;
+  // reconnect -- defaults to true; if true, automatically reconnects
+  // to server when connection breaks.
+  reconnect?: boolean;
 }
 
 export default class SftpFuse {
@@ -50,6 +56,7 @@ export default class SftpFuse {
   private dirCache: TTLCache<string, string[]> | null = null;
   private linkCache: TTLCache<string, string> | null = null;
   private connectOptions?: IClientOptions;
+  private reconnect: boolean;
 
   constructor(remote: string, options: Options = {}) {
     this.remote = remote;
@@ -58,6 +65,7 @@ export default class SftpFuse {
       cacheStatTimeout,
       cacheDirTimeout,
       cacheLinkTimeout,
+      reconnect = true,
     } = options;
     if (cacheStatTimeout ?? cacheTimeout) {
       log(
@@ -89,21 +97,30 @@ export default class SftpFuse {
         ttl: (cacheLinkTimeout ?? cacheTimeout) * 1000,
       });
     }
+    this.reconnect = reconnect;
     bindMethods(this);
   }
 
   async handleConnectionClose(err) {
     log("connection closed", err);
+    // @ts-ignore
     delete this.sftp;
     this.state = "init";
+    if (!this.reconnect) {
+      return;
+    }
+    let d = 1000;
     while (true) {
-      await delay(1000);
+      await delay(d);
       try {
         await this.connect(this.connectOptions);
         log("successfully connected!");
         return;
       } catch (err) {
         log("failed to connect", err);
+        if (d <= MAX_RECONNECT_DELAY_MS) {
+          d = Math.min(MAX_RECONNECT_DELAY_MS, d * RECONNECT_DELAY_GROW);
+        }
       }
     }
   }
@@ -133,6 +150,7 @@ export default class SftpFuse {
   end() {
     log("ending connection to", this.remote);
     this.sftp?.end();
+    // @ts-ignore
     delete this.sftp;
     this.state = "closed";
   }

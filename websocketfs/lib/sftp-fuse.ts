@@ -172,7 +172,7 @@ export default class SftpFuse {
 
   private isNotReady(cb) {
     if (this.state != "ready") {
-      cb(Fuse.ENOSYS);
+      cb(Fuse.ENOTCONN);
       return true;
     }
     return false;

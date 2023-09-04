@@ -113,7 +113,7 @@ export default class SftpFuse {
     while (true) {
       await delay(d);
       try {
-        await this.connect(this.connectOptions);
+        await this.connectToServer();
         log("successfully connected!");
         return;
       } catch (err) {
@@ -125,7 +125,16 @@ export default class SftpFuse {
     }
   }
 
-  async connect(options?: IClientOptions) {
+  async connect(options?:IClientOptions) {
+    this.connectOptions = options;
+    try {
+      await this.connectToServer();
+    } catch(err) {
+      this.handleConnectionClose(err);
+    }
+  }
+
+  private async connectToServer() {
     if (this.state != "init") {
       throw Error(
         `can only connect when in init state, but state is ${this.state}`,
@@ -133,11 +142,10 @@ export default class SftpFuse {
     }
     try {
       this.state = "connecting";
-      this.connectOptions = options;
       log("connecting to ", this.remote);
       const sftp = new SftpClient();
       bindMethods(sftp);
-      await callback(sftp.connect, this.remote, options ?? {});
+      await callback(sftp.connect, this.remote, this.connectOptions ?? {});
       sftp.on("close", this.handleConnectionClose);
       this.sftp = sftp;
       this.state = "ready";

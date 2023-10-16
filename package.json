@@ -4,5 +4,10 @@
     "test": "pnpm --filter=* test",
     "clean": "pnpm --filter=* clean",
     "test-all": "pnpm --filter=* clean && pnpm install && pnpm --filter=* build && pnpm --filter=* test"
+  },
+  "pnpm": {
+    "overrides": {
+      "@babel/traverse@<7.23.2": ">=7.23.2"
+    }
   }
 }

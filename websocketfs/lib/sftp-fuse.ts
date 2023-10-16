@@ -125,11 +125,11 @@ export default class SftpFuse {
     }
   }
 
-  async connect(options?:IClientOptions) {
+  async connect(options?: IClientOptions) {
     this.connectOptions = options;
     try {
       await this.connectToServer();
-    } catch(err) {
+    } catch (err) {
       this.handleConnectionClose(err);
     }
   }
@@ -203,6 +203,7 @@ export default class SftpFuse {
     }
     log("getattr -- not using cache", path);
     this.sftp.lstat(path, (err, attr) => {
+      // log("getattr -- lstat", { path, err, attr });
       if (err) {
         this.processAttr(path, err);
         fuseError(cb)(err);
@@ -290,11 +291,13 @@ export default class SftpFuse {
 
   fsync(path: string, dataSync: boolean, fd: number, cb: Callback) {
     log("fsync", { path, dataSync, fd });
-    cb(0);
+    // Docs: "If dataSync is nonzero, only data, not metadata, needs to be flushed."
+    this.flush(path, fd, cb);
   }
 
   fsyncdir(path: string, dataSync: boolean, fd: number, cb: Callback) {
-    log("fsyncdir", { path, dataSync, fd });
+    // TODO. Docs "Like fsync but for directories".
+    log("fsyncdir - (not implemented)", { path, dataSync, fd });
     cb(0);
   }
 
@@ -373,12 +376,12 @@ export default class SftpFuse {
   // mean much for sshfs/fuse, and we don't want it to (everything gets mapped)
   // for our application to cocalc.
   chown(path: string, uid: number, gid: number, cb) {
-    log("chown", { path, uid, gid });
+    log("chown -- not implemented", { path, uid, gid });
     cb(0);
   }
 
   utimens(path, atime, mtime, cb) {
-    log("utimens", { path, atime, mtime });
+    log("utimens-- not implemented", { path, atime, mtime });
     cb(0);
   }
 
@@ -451,8 +454,8 @@ export default class SftpFuse {
     pos: number,
     cb: Callback,
   ) {
-    if (this.isNotReady(cb)) return;
     log("read", { path, fd, len, pos });
+    if (this.isNotReady(cb)) return;
     const handle = this.sftp.fileDescriptorToHandle(fd);
     log("read - open got a handle", handle._handle);
     // We *must* read in chunks of size at most MAX_READ_BLOCK_LENGTH,

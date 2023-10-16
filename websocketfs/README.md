@@ -93,7 +93,7 @@ TODO.md    lib       pnpm-lock.yaml  websocketfs.term
 
 You can do `ls -l`, and read and write files, etc.
 
-### Cacheing
+## Cacheing
 
 Stat, directory listing, and link caching is on by default with a timeout of 20 seconds. This is the same as sshfs.  To disable it:
 

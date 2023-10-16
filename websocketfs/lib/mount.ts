@@ -10,6 +10,7 @@ interface Options {
   remote: string; // e.g., websocket server -- ws://localhost:4389
   // NOTE: we change some options from the defaults, but you can set anything
   // explicitly via mountOptions, overriding our non-default options.
+  // One is that we set the uid and gid of the client user by default.
   mountOptions?: Fuse.OPTIONS;
   connectOptions?: IClientOptions;
   reconnect?: boolean;
@@ -49,6 +50,8 @@ export default async function mount(
     mkdir: true,
     fsname: remote,
     autoUnmount: true, // doesn't seem to work, hence the process exit hook below.
+    uid: process.getuid?.(),
+    gid: process.getgid?.(),
     ...mountOptions,
   });
   await callback(fuse.mount.bind(fuse));

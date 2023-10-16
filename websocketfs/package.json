@@ -41,7 +41,7 @@
     }
   ],
   "dependencies": {
-    "@cocalc/fuse-native": "^2.3.1",
+    "@cocalc/fuse-native": "^2.4.0",
     "@isaacs/ttlcache": "^1.4.1",
     "awaiting": "^3.0.0",
     "cookie": "^0.5.0",

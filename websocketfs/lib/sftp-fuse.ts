@@ -285,7 +285,15 @@ export default class SftpFuse {
       }
       cb(0);
     } catch (err) {
-      fuseError(cb)(err);
+      if (err.errno == -2) {
+        // sometimes this happens when flush after fd
+        // is no longer available.  Not sure why. E.g., when starting sage.
+        // so we log it but make it non-fatal.
+        log("flush", err);
+        cb(0);
+      } else {
+        fuseError(cb)(err);
+      }
     }
   }
 

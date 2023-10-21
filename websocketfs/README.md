@@ -27,12 +27,12 @@ require('websocketfs').mount({path, remote:'ws://host:port'})
 More concretely:
 
 ```js
-# In your first terminal
+// In your first terminal
 require('websocketfs').serve({path:process.env.HOME, port:'3456', host:'localhost'})
 ```
 
 ```js
-# In your second terminal
+// In your second terminal
 require('websocketfs').mount({path:'/tmp/mnt', remote:'ws://localhost:3456'})
 ```
 

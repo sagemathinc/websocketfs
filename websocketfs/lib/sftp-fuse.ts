@@ -20,6 +20,7 @@ import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
 import TTLCache from "@isaacs/ttlcache";
 import { dirname, join } from "path";
+import { open } from "fs/promises";
 
 export type { IClientOptions };
 
@@ -40,6 +41,7 @@ interface Options {
   cacheStatTimeout?: number; // in seconds (to match sshfs)
   cacheDirTimeout?: number;
   cacheLinkTimeout?: number;
+  readTracking?: { path: string; timeout?: number; update?: number };
   // reconnect -- defaults to true; if true, automatically reconnects
   // to server when connection breaks.
   reconnect?: boolean;
@@ -55,6 +57,8 @@ export default class SftpFuse {
   private attrCache: TTLCache<string, any> | null = null;
   private dirCache: TTLCache<string, string[]> | null = null;
   private linkCache: TTLCache<string, string> | null = null;
+  private readTracking: TTLCache<string, boolean> | null = null;
+  private readTrackingInterval: ReturnType<typeof setInterval> | null = null;
   private connectOptions?: IClientOptions;
   private reconnect: boolean;
 
@@ -66,6 +70,7 @@ export default class SftpFuse {
       cacheDirTimeout,
       cacheLinkTimeout,
       reconnect = true,
+      readTracking,
     } = options;
     if (cacheStatTimeout ?? cacheTimeout) {
       log(
@@ -97,9 +102,30 @@ export default class SftpFuse {
         ttl: (cacheLinkTimeout ?? cacheTimeout) * 1000,
       });
     }
+    if (readTracking) {
+      this.initReadTracking(readTracking);
+    }
     this.reconnect = reconnect;
     bindMethods(this);
   }
+
+  private initReadTracking = ({ path, timeout = 15, update = 5 }) => {
+    if (timeout < 1) {
+      throw Error("readTracking timeoutMs must be at least 1 second");
+    }
+    log("enabling read tracking");
+    const ttl = timeout * 1000;
+    this.readTracking = new TTLCache({ ttl });
+    this.readTrackingInterval = setInterval(async () => {
+      if (this.readTracking == null) return;
+      log("writing out read tracking");
+      const out = await open(path, "w");
+      for (const x of this.readTracking.keys()) {
+        await out.write(x + "\n");
+      }
+      await out.close();
+    }, update * 1000);
+  };
 
   async handleConnectionClose(err) {
     log("connection closed", err);
@@ -160,6 +186,9 @@ export default class SftpFuse {
     this.sftp?.end();
     // @ts-ignore
     delete this.sftp;
+    if (this.readTrackingInterval) {
+      clearInterval(this.readTrackingInterval);
+    }
     this.state = "closed";
   }
 
@@ -464,6 +493,7 @@ export default class SftpFuse {
   ) {
     log("read", { path, fd, len, pos });
     if (this.isNotReady(cb)) return;
+    this.readTracking?.set(path, true);
     const handle = this.sftp.fileDescriptorToHandle(fd);
     log("read - open got a handle", handle._handle);
     // We *must* read in chunks of size at most MAX_READ_BLOCK_LENGTH,

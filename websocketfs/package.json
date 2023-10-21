@@ -1,6 +1,6 @@
 {
   "name": "websocketfs",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "description": "Like sshfs, but over a WebSocket",
   "main": "./dist/lib/index.js",
   "scripts": {
@@ -12,12 +12,7 @@
     "test": "pnpm exec jest dist",
     "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
-  "files": [
-    "dist/**",
-    "bin/**",
-    "README.md",
-    "package.json"
-  ],
+  "files": ["dist/**", "bin/**", "README.md", "package.json"],
   "engines": {
     "node": ">=0.16.0"
   },
@@ -49,12 +44,7 @@
     "port-get": "^1.0.0",
     "websocket-sftp": "workspace:*"
   },
-  "keywords": [
-    "sftp",
-    "server",
-    "client",
-    "ws"
-  ],
+  "keywords": ["sftp", "server", "client", "ws"],
   "license": "MIT",
   "repository": {
     "type": "git",

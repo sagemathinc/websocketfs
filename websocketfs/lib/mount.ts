@@ -18,6 +18,9 @@ interface Options {
   cacheStatTimeout?: number;
   cacheDirTimeout?: number;
   cacheLinkTimeout?: number;
+  // write out to path all files explicitly read in the last timeout seconds.
+  // path is updated once every update seconds.
+  readTracking?: { path: string; timeout?: number; update?: number };
 }
 
 export default async function mount(
@@ -34,6 +37,7 @@ export default async function mount(
     cacheStatTimeout,
     cacheDirTimeout,
     cacheLinkTimeout,
+    readTracking,
   } = opts;
 
   const client = new SftpFuse(remote, {
@@ -42,6 +46,7 @@ export default async function mount(
     cacheStatTimeout,
     cacheDirTimeout,
     cacheLinkTimeout,
+    readTracking,
   });
   await client.connect(connectOptions);
   const fuse = new Fuse(path, client, {

@@ -21,6 +21,11 @@ interface Options {
   // write out to path all files explicitly read in the last timeout seconds.
   // path is updated once every update seconds.
   readTracking?: { path: string; timeout?: number; update?: number };
+  // Any stat to a path that starts with hidePath gets an instant
+  // response that the the path does not exists, instead of having to
+  // possibly use sftp. This is absolute according to the mount, i.e.,
+  // if you want .unionfs* at the top to be ignored, then use '/.unionfs'.
+  hidePath?: string;
 }
 
 export default async function mount(
@@ -38,6 +43,7 @@ export default async function mount(
     cacheDirTimeout,
     cacheLinkTimeout,
     readTracking,
+    hidePath,
   } = opts;
 
   const client = new SftpFuse(remote, {
@@ -47,6 +53,7 @@ export default async function mount(
     cacheDirTimeout,
     cacheLinkTimeout,
     readTracking,
+    hidePath,
   });
   await client.connect(connectOptions);
   const fuse = new Fuse(path, client, {

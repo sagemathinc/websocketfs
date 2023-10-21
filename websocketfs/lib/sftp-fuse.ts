@@ -45,6 +45,7 @@ interface Options {
   // reconnect -- defaults to true; if true, automatically reconnects
   // to server when connection breaks.
   reconnect?: boolean;
+  hidePath?: string;
 }
 
 export default class SftpFuse {
@@ -61,6 +62,7 @@ export default class SftpFuse {
   private readTrackingInterval: ReturnType<typeof setInterval> | null = null;
   private connectOptions?: IClientOptions;
   private reconnect: boolean;
+  private hidePath?: string;
 
   constructor(remote: string, options: Options = {}) {
     this.remote = remote;
@@ -71,7 +73,9 @@ export default class SftpFuse {
       cacheLinkTimeout,
       reconnect = true,
       readTracking,
+      hidePath,
     } = options;
+    this.hidePath = hidePath;
     if (cacheStatTimeout ?? cacheTimeout) {
       log(
         "enabling attrCache with timeout",
@@ -225,6 +229,10 @@ export default class SftpFuse {
   getattr(path: string, cb) {
     if (this.isNotReady(cb)) return;
     log("getattr", path);
+    if (this.hidePath != null && path.startsWith(this.hidePath)) {
+      cb(-2);
+      return;
+    }
     if (this.attrCache?.has(path)) {
       const { errno, attr } = this.attrCache.get(path);
       cb(errno ?? 0, attr);
@@ -270,6 +278,7 @@ export default class SftpFuse {
   private processAttr(path: string, err, attr?) {
     if (attr == null) {
       if (this.attrCache != null) {
+        console.log({ errno: getErrno(err) });
         this.attrCache.set(path, { errno: getErrno(err) });
       }
       return;

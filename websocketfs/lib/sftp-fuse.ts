@@ -375,8 +375,9 @@ export default class SftpFuse {
         for (const { filename, stats, longname } of items) {
           try {
             stats.blocks = parseInt(longname.split(" ")[0]);
-          } catch (_) {}
-          this.attrCache.set(join(path, filename), { attr: stats });
+          } catch (err) {}
+          const attr = { ...stats, ctime: stats.mtime };
+          this.attrCache.set(join(path, filename), { attr });
         }
       }
       this.dirCache?.set(path, filenames);

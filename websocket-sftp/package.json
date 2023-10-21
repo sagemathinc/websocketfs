@@ -1,6 +1,6 @@
 {
   "name": "websocket-sftp",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "The sftp protocol, over a WebSocket",
   "main": "./dist/lib/sftp.js",
   "exports": {
@@ -16,7 +16,11 @@
     "test": "pnpm exec jest dist",
     "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
-  "files": ["dist/**", "README.md", "package.json"],
+  "files": [
+    "dist/**",
+    "README.md",
+    "package.json"
+  ],
   "engines": {
     "node": ">=0.16.0"
   },
@@ -43,7 +47,12 @@
     "port-get": "^1.0.0",
     "ws": "^8.13.0"
   },
-  "keywords": ["sftp", "server", "client", "ws"],
+  "keywords": [
+    "sftp",
+    "server",
+    "client",
+    "ws"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

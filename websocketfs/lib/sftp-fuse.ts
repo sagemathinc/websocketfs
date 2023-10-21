@@ -278,7 +278,6 @@ export default class SftpFuse {
   private processAttr(path: string, err, attr?) {
     if (attr == null) {
       if (this.attrCache != null) {
-        console.log({ errno: getErrno(err) });
         this.attrCache.set(path, { errno: getErrno(err) });
       }
       return;

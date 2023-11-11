@@ -354,11 +354,22 @@ export default class SftpFuse {
       return;
     }
     try {
-      let handle, items;
+      let handle;
+      let items: any[] = [];
       try {
         handle = await callback(this.sftp.opendir, path);
         log("readdir - opendir got a handle", handle._handle);
-        items = await callback(this.sftp.readdir, handle);
+        // We read repeatedly chunks of files from the backend until done.
+        // (Usually 64 files are sent, but looking at the source code if the names
+        // are really long, then I think less could be, so assuming that less than
+        // 64 means we are done may be a bad optimization to make!).
+        while (true) {
+          const nextItems = await callback(this.sftp.readdir, handle);
+          if (typeof nextItems == "boolean" || nextItems.length == 0) {
+            break;
+          }
+          items = items.concat(nextItems);
+        }
       } finally {
         // do not block on this.
         this.sftp.close(handle, (err) => {
@@ -367,9 +378,6 @@ export default class SftpFuse {
       }
       //log("readdir - items", items);
       // todo: cache attrs from items (?)
-      if (typeof items == "boolean") {
-        throw Error("readdir fail");
-      }
       const filenames = items.map(({ filename }) => filename);
       if (this.attrCache != null) {
         for (const { filename, stats, longname } of items) {

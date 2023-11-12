@@ -41,7 +41,13 @@ interface Options {
   cacheStatTimeout?: number; // in seconds (to match sshfs)
   cacheDirTimeout?: number;
   cacheLinkTimeout?: number;
-  readTracking?: { path: string; timeout?: number; update?: number };
+  readTracking?: {
+    path: string;
+    // these are in SECONDS (not ms)!
+    timeout?: number; // clear entries read this long ago
+    update?: number; // update the track every this many seconds
+    modified?: number; // ignore files that were *modified* this recently
+  };
   // reconnect -- defaults to true; if true, automatically reconnects
   // to server when connection breaks.
   reconnect?: boolean;
@@ -60,6 +66,7 @@ export default class SftpFuse {
   private linkCache: TTLCache<string, string> | null = null;
   private readTracking: TTLCache<string, boolean> | null = null;
   private readTrackingInterval: ReturnType<typeof setInterval> | null = null;
+  private readTrackingModified: number = 0;
   private connectOptions?: IClientOptions;
   private reconnect: boolean;
   private hidePath?: string;
@@ -113,13 +120,19 @@ export default class SftpFuse {
     bindMethods(this);
   }
 
-  private initReadTracking = ({ path, timeout = 15, update = 5 }) => {
+  private initReadTracking = ({
+    path,
+    timeout = 15,
+    update = 5,
+    modified = 0,
+  }) => {
     if (timeout < 1) {
       throw Error("readTracking timeoutMs must be at least 1 second");
     }
     log("enabling read tracking");
     const ttl = timeout * 1000;
     this.readTracking = new TTLCache({ ttl });
+    this.readTrackingModified = modified;
     this.readTrackingInterval = setInterval(async () => {
       if (this.readTracking == null) return;
       log("writing out read tracking");
@@ -435,8 +448,10 @@ export default class SftpFuse {
   }
 
   utimens(path, atime, mtime, cb) {
-    log("utimens-- not implemented", { path, atime, mtime });
-    cb(0);
+    log("utimens ", { path, atime, mtime });
+    // not really ns level precision!
+    this.clearCache(path);
+    this.sftp.setstat(path, { atime, mtime }, fuseError(cb));
   }
 
   chmod(path: string, mode: number, cb) {
@@ -460,12 +475,35 @@ export default class SftpFuse {
   // listxattr(path, cb)
   // removexattr(path, name, cb)
 
+  private trackRead = (path: string) => {
+    if (this.readTracking == null || this.attrCache == null) {
+      return;
+    }
+    if (!this.readTrackingModified) {
+      // always track -- don't worry about mtime
+      this.readTracking.set(path, true);
+    }
+
+    // only track if at least this.readTrackingModified seconds old.
+    const x = this.attrCache.get(path)?.attr;
+    if (x == null) {
+      return;
+    }
+    if (Date.now() - x.mtime.valueOf() <= 1000 * this.readTrackingModified) {
+      // ignore this -- it was changed too recently
+      this.readTracking.delete(path);
+    } else {
+      this.readTracking.set(path, true);
+    }
+  };
+
   open(path: string, flags: string | number, cb) {
     if (this.isNotReady(cb)) return;
     log("open", { path, flags });
     if (typeof flags == "number") {
       flags = convertOpenFlags(flags);
     }
+    this.trackRead(path); // must be before clearing cache, since it uses cache
     this.clearCache(path);
     this.sftp.open(path, flags, {}, (err, handle) => {
       if (err) {
@@ -510,7 +548,7 @@ export default class SftpFuse {
   ) {
     log("read", { path, fd, len, pos });
     if (this.isNotReady(cb)) return;
-    this.readTracking?.set(path, true);
+
     const handle = this.sftp.fileDescriptorToHandle(fd);
     log("read - open got a handle", handle._handle);
     // We *must* read in chunks of size at most MAX_READ_BLOCK_LENGTH,
@@ -555,6 +593,7 @@ export default class SftpFuse {
     //log("write", { path, fd, buffer: buffer.toString(), length, position });
     if (this.isNotReady(cb)) return;
     log("write", { path, fd, length, position });
+    this.readTracking?.delete(path);
     this.clearCache(path);
     if (this.data[fd] == null) {
       this.data[fd] = [

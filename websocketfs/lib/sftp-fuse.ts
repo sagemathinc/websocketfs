@@ -177,6 +177,7 @@ export default class SftpFuse {
           // it hasn't changed so nothing to do
           return;
         }
+        const start = Date.now();
         lastMtimeMs = mtimeMs;
         let content = await readFile(metadataFile);
         if (metadataFile.endsWith(".lz4")) {
@@ -185,6 +186,7 @@ export default class SftpFuse {
         this.metadataFileContents = content.toString().split("\0\0");
         this.metadataFileContents.sort();
         lastSuccess = Date.now();
+        log("metadataFile: updated in ", Date.now() - start, "ms");
       } catch (err) {
         log(
           "metadataFile: not reading -- ",
@@ -437,7 +439,6 @@ export default class SftpFuse {
     ) {
       // we are using the metadata file cache instead of sftp to
       // compute all file metadata.
-      const t = Date.now();
       try {
         let i = binarySearch(this.metadataFileContents, path, (value, find) => {
           const path = "/" + value.split("\0")[0];
@@ -450,6 +451,7 @@ export default class SftpFuse {
           return 0;
         });
         if (i != -1) {
+          log("readdir", path, " -- using metadataFile data");
           const filenames: string[] = [];
           const pathDir = path == "/" ? path : path + "/";
           i += 1;

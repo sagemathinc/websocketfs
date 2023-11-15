@@ -34,7 +34,7 @@ interface Options {
   // Here all of mtime, atime, blocks, size are decimal numbers, which may have a fractional part,
   // and mode is a string like in ls.  E.g., this find command does it (ignoring hidden files)::
   //
-  //        find * -printf "%p\0%T@ %A@ %b %s %M\0\0" | lz4 > .meta.lz4 && mv .meta.lz4 > meta.lz4
+  //       mkdir -p /tmp/meta; find * -printf "%p\0%T@ %A@ %b %s %M\0\0" | lz4 > .meta.lz4 && mv .meta.lz4  /tmp/meta/meta.lz4
   //
   // If metadataFile ends in .lz4 it is assumed to be lz4 compressed and gets automatically decompressed.
   // If there are files metadataFile.patch.[n] (with n an integer), then they are diff-match-patch patches

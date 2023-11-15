@@ -14,7 +14,7 @@ import {
   MAX_READ_BLOCK_LENGTH,
 } from "websocket-sftp/lib/sftp-client";
 import { callback, delay } from "awaiting";
-import { bindMethods } from "./util";
+import { bindMethods, symbolicToMode } from "./util";
 import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
@@ -164,7 +164,7 @@ export default class SftpFuse {
     }
     let lastSuccess = 0;
     let lastMtimeMs = 0;
-    this.metadataFileInterval = setInterval(async () => {
+    const update = async () => {
       // try to read the file.  It's fine it doesn't exist.
       try {
         const { mtimeMs } = await stat(metadataFile);
@@ -180,21 +180,10 @@ export default class SftpFuse {
         lastMtimeMs = mtimeMs;
         let content = await readFile(metadataFile);
         if (metadataFile.endsWith(".lz4")) {
-          const t = Date.now();
           content = decode(content);
-          console.log("decode", Date.now() - t);
         }
-        let t = Date.now();
         this.metadataFileContents = content.toString().split("\0\0");
-        console.log(
-          "time to split",
-          Date.now() - t,
-          "  of length ",
-          this.metadataFileContents.length,
-        );
-        t = Date.now();
         this.metadataFileContents.sort();
-        console.log("time to sort", Date.now() - t);
         lastSuccess = Date.now();
       } catch (err) {
         log(
@@ -208,7 +197,9 @@ export default class SftpFuse {
           delete this.metadataFileContents;
         }
       }
-    }, METADATA_FILE_INTERVAL_MS);
+    };
+    this.metadataFileInterval = setInterval(update, METADATA_FILE_INTERVAL_MS);
+    update();
   };
 
   async handleConnectionClose(err) {
@@ -374,7 +365,6 @@ export default class SftpFuse {
     if (this.attrCache != null) {
       this.attrCache.set(path, { attr });
     }
-    console.log(attr);
     return attr;
   }
 
@@ -439,7 +429,12 @@ export default class SftpFuse {
       return;
     }
 
-    if (this.metadataFileContents != null && !path.startsWith(".")) {
+    if (
+      this.metadataFileContents != null &&
+      this.attrCache != null &&
+      this.dirCache != null &&
+      !path.startsWith(".")
+    ) {
       // we are using the metadata file cache instead of sftp to
       // compute all file metadata.
       const t = Date.now();
@@ -454,9 +449,9 @@ export default class SftpFuse {
           }
           return 0;
         });
-        console.log("located ", i, " in time ", Date.now() - t);
         if (i != -1) {
           const filenames: string[] = [];
+          const pathDir = path == "/" ? path : path + "/";
           i += 1;
           while (i < this.metadataFileContents.length) {
             const v = this.metadataFileContents[i].split("\0");
@@ -465,20 +460,34 @@ export default class SftpFuse {
               // definitely done.
               break;
             }
-            if (name.startsWith(path + "/")) {
-              const filename = name.slice((path + "/").length);
+            if (name.startsWith(pathDir)) {
+              const filename = name.slice(pathDir.length);
               if (!filename.includes("/")) {
                 filenames.push(filename);
-                console.log({ filename, data: v[1] });
+                const data = v[1].split(" ");
+                const mtime = new Date(parseFloat(data[0]) * 1000);
+                const attr = {
+                  mtime,
+                  atime: new Date(parseFloat(data[1]) * 1000),
+                  ctime: mtime,
+                  blocks: parseInt(data[2]),
+                  size: parseInt(data[3]),
+                  mode: symbolicToMode(data[4]),
+                  flags: 0,
+                  uid: 0,
+                  gid: 0,
+                };
+                this.attrCache.set(join(path, filename), { attr });
               }
             }
             i += 1;
           }
+          this.dirCache.set(path, filenames);
           cb(0, filenames);
           return;
         }
       } catch (err) {
-        console.log("search error", err);
+        log("readdir search error", err);
       }
     }
 

@@ -28,3 +28,34 @@ export function bindMethods<T extends object>(
   }
   return obj;
 }
+
+const PERMISSIONS = {
+  r: 4,
+  w: 2,
+  x: 1,
+  "-": 0,
+} as const;
+
+export function symbolicToMode(symbolic): number {
+  // Remove the 'd' at the beginning if it exists
+  let mode;
+  if (symbolic.charAt(0) === "d") {
+    mode = "40";
+  } else {
+    mode = "100";
+  }
+  symbolic = symbolic.slice(1);
+  const parts = symbolic.split("");
+
+  let n = 0;
+  for (let i = 0; i < parts.length; i++) {
+    const permission = parts[i];
+    n += PERMISSIONS[permission];
+    if (i % 3 == 2) {
+      mode += `${n}`;
+      n = 0;
+    }
+  }
+
+  return parseInt(mode, 8);
+}

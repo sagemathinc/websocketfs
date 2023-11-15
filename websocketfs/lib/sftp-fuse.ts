@@ -20,7 +20,8 @@ import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
 import TTLCache from "@isaacs/ttlcache";
 import { dirname, join } from "path";
-import { open } from "fs/promises";
+import { open, stat, readFile } from "fs/promises";
+import { decode } from "lz4";
 
 export type { IClientOptions };
 
@@ -32,6 +33,8 @@ type State = "init" | "connecting" | "ready" | "closed";
 
 const MAX_RECONNECT_DELAY_MS = 7500;
 const RECONNECT_DELAY_GROW = 1.3;
+
+const METADATA_FILE_INTERVAL_MS = 3000;
 
 // the cache names are to match with sshfs options.
 
@@ -48,6 +51,7 @@ interface Options {
     update?: number; // update the track every this many seconds
     modified?: number; // ignore files that were *modified* this recently
   };
+  metadataFile?: string;
   // reconnect -- defaults to true; if true, automatically reconnects
   // to server when connection breaks.
   reconnect?: boolean;
@@ -70,6 +74,8 @@ export default class SftpFuse {
   private connectOptions?: IClientOptions;
   private reconnect: boolean;
   private hidePath?: string;
+  private metadataFileContents?: string;
+  private metadataFileInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(remote: string, options: Options = {}) {
     this.remote = remote;
@@ -80,6 +86,7 @@ export default class SftpFuse {
       cacheLinkTimeout,
       reconnect = true,
       readTracking,
+      metadataFile,
       hidePath,
     } = options;
     this.hidePath = hidePath;
@@ -116,6 +123,9 @@ export default class SftpFuse {
     if (readTracking) {
       this.initReadTracking(readTracking);
     }
+    if (metadataFile) {
+      this.initMetadataFile(metadataFile, 1000 * cacheTimeout);
+    }
     this.reconnect = reconnect;
     bindMethods(this);
   }
@@ -142,6 +152,52 @@ export default class SftpFuse {
       }
       await out.close();
     }, update * 1000);
+  };
+
+  private initMetadataFile = (metadataFile: string, cacheTimeoutMs) => {
+    if (!metadataFile || !cacheTimeoutMs) {
+      log(
+        "initMetadataFile: not enabling since metadataFile and cacheTimeoutMs are not BOTH set.",
+      );
+      return;
+    }
+    let lastSuccess = 0;
+    let lastMtimeMs = 0;
+    this.metadataFileInterval = setInterval(async () => {
+      // try to read the file.  It's fine it doesn't exist.
+      try {
+        const { mtimeMs } = await stat(metadataFile);
+        if (Date.now() - mtimeMs >= cacheTimeoutMs) {
+          log("metadataFile: older than cache timeout -- not using");
+          delete this.metadataFileContents;
+          return;
+        }
+        if (mtimeMs == lastMtimeMs) {
+          // it hasn't changed so nothing to do
+          return;
+        }
+        lastMtimeMs = mtimeMs;
+        let content = await readFile(metadataFile);
+        if (metadataFile.endsWith(".lz4")) {
+          const t = Date.now();
+          content = decode(content);
+          console.log("decode", Date.now() - t);
+        }
+        this.metadataFileContents = content.toString("utf8");
+        lastSuccess = Date.now();
+      } catch (err) {
+        log(
+          "metadataFile: not reading -- ",
+          err.code == "ENOENT" ? `no file '${metadataFile}'` : err,
+        );
+        if (Date.now() - lastSuccess >= cacheTimeoutMs) {
+          // expire the metadataFile cache contents.
+          // NOTE: this could take slightly longer than cacheTimeoutMs, depending
+          // on METADATA_FILE_INTERVAL_MS, but for my application I don't care.
+          delete this.metadataFileContents;
+        }
+      }
+    }, METADATA_FILE_INTERVAL_MS);
   };
 
   async handleConnectionClose(err) {
@@ -206,6 +262,10 @@ export default class SftpFuse {
     if (this.readTrackingInterval) {
       clearInterval(this.readTrackingInterval);
     }
+    if (this.metadataFileInterval) {
+      clearInterval(this.metadataFileInterval);
+    }
+
     this.state = "closed";
   }
 
@@ -303,6 +363,7 @@ export default class SftpFuse {
     if (this.attrCache != null) {
       this.attrCache.set(path, { attr });
     }
+    console.log(attr);
     return attr;
   }
 
@@ -362,6 +423,7 @@ export default class SftpFuse {
   async readdir(path: string, cb) {
     if (this.isNotReady(cb)) return;
     log("readdir", path);
+    console.log("readdir", { metadataFileContents: this.metadataFileContents });
     if (this.dirCache?.has(path)) {
       cb(0, this.dirCache.get(path));
       return;
@@ -386,7 +448,9 @@ export default class SftpFuse {
       } finally {
         // do not block on this.
         this.sftp.close(handle, (err) => {
-          log("WARNING: error closing dir", err);
+          if (err) {
+            log("WARNING: error closing dir", err);
+          }
         });
       }
       //log("readdir - items", items);

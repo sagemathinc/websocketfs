@@ -18,21 +18,31 @@ interface Options {
   cacheStatTimeout?: number;
   cacheDirTimeout?: number;
   cacheLinkTimeout?: number;
+
+  // Read Tracking
   // write out to path all files explicitly read in the last timeout seconds.
   // path is updated once every update seconds.
   readTracking?: { path: string; timeout?: number; update?: number };
+
+  // Metadata
   // If the metadataFile file path is given, we poll it for modification every few seconds.
   // If it changes, the file is read into memory and used to provide ALL directory and
   // file stat information until cacheTimeout or the file is udpated.
-  // The format of metadataFile alternates with one file path then one line of stat info about it:
-  //    [filename-relative-to-mount-point] (with NO leading /.!)
-  //    [mtime in seconds] [atime in seconds] [number of 512-byte blocks] [size] [mode in octal]
+  // The format of metadataFile is as follows with a NULL character beetween the filename and the metadata.
+  //    [filename-relative-to-mount-point-no-leading-/.]\0[mtime in seconds] [atime in seconds] [number of 512-byte blocks] [size] [mode in octal]\0\0
+  // This file is not assumed sorted by filename.
   // Here all of mtime, atime, blocks, size are decimal numbers, which may have a fractional part,
-  // and mode is in base 8.  E.g., this find command does it:
-  //        find . -printf "%p\n%T@ %A@ %b %s 0%m\n"
-  // If metadataFile ends in .lz4 it is assumed to be lz4 compressed and gets automatically decompressed.
+  // and mode is in base 8.  E.g., this find command does it (ignoring hidden files)::
   //
+  //        find * -printf "%p\0%T@ %A@ %b %s 0%m\0\0" | lz4 > .meta.lz4 && mv .meta.lz4 > meta.lz4
+  //
+  // If metadataFile ends in .lz4 it is assumed to be lz4 compressed and gets automatically decompressed.
+  // If there are files metadataFile.patch.[n] (with n an integer), then they are diff-match-patch patches
+  // in the internal cocalc compressed format, that should be applied in order to metadataFile to get
+  // the current version of the file.  This is needed to dramatically reduce bandwidth usage.
+  // The patch files can optionally end in .lz4.
   metadataFile?: string;
+
   // Any stat to a path that starts with hidePath gets an instant
   // response that the the path does not exists, instead of having to
   // possibly use sftp. This is absolute according to the mount, i.e.,

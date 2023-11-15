@@ -59,6 +59,9 @@ importers:
       awaiting:
         specifier: ^3.0.0
         version: 3.0.0
+      binarysearch:
+        specifier: ^1.0.1
+        version: 1.0.1
       cookie:
         specifier: ^0.5.0
         version: 0.5.0
@@ -1083,6 +1086,10 @@ packages:
 
   /base64-js@1.5.1:
     resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
+
+  /binarysearch@1.0.1:
+    resolution: {integrity: sha512-FqhwdeXh1ZSAS/YpJ6lD9+SMf8JodCibe7c51Z9L1zAjHKUDTBisQgdmpfaL+m1qHvwAHnSLR8d9UHc79Hr34g==}
+    dev: false
 
   /bindings@1.5.0:
     resolution: {integrity: sha512-p2q/t/mhvuOj/UeLlV6566GD/guowlr0hHxClI0W9m7MWYkL1F0hLo+0Aexs9HSPCtR1SXQ0TD3MMKrXZajbiQ==}

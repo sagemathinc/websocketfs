@@ -22,6 +22,7 @@ import TTLCache from "@isaacs/ttlcache";
 import { dirname, join } from "path";
 import { open, stat, readFile } from "fs/promises";
 import { decode } from "lz4";
+import binarySearch from "binarysearch";
 
 export type { IClientOptions };
 
@@ -74,7 +75,7 @@ export default class SftpFuse {
   private connectOptions?: IClientOptions;
   private reconnect: boolean;
   private hidePath?: string;
-  private metadataFileContents?: string;
+  private metadataFileContents?: string[];
   private metadataFileInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(remote: string, options: Options = {}) {
@@ -183,7 +184,17 @@ export default class SftpFuse {
           content = decode(content);
           console.log("decode", Date.now() - t);
         }
-        this.metadataFileContents = content.toString("utf8");
+        let t = Date.now();
+        this.metadataFileContents = content.toString().split("\0\0");
+        console.log(
+          "time to split",
+          Date.now() - t,
+          "  of length ",
+          this.metadataFileContents.length,
+        );
+        t = Date.now();
+        this.metadataFileContents.sort();
+        console.log("time to sort", Date.now() - t);
         lastSuccess = Date.now();
       } catch (err) {
         log(
@@ -423,11 +434,54 @@ export default class SftpFuse {
   async readdir(path: string, cb) {
     if (this.isNotReady(cb)) return;
     log("readdir", path);
-    console.log("readdir", { metadataFileContents: this.metadataFileContents });
     if (this.dirCache?.has(path)) {
       cb(0, this.dirCache.get(path));
       return;
     }
+
+    if (this.metadataFileContents != null && !path.startsWith(".")) {
+      // we are using the metadata file cache instead of sftp to
+      // compute all file metadata.
+      const t = Date.now();
+      try {
+        let i = binarySearch(this.metadataFileContents, path, (value, find) => {
+          const path = "/" + value.split("\0")[0];
+          if (path < find) {
+            return -1;
+          }
+          if (path > find) {
+            return 1;
+          }
+          return 0;
+        });
+        console.log("located ", i, " in time ", Date.now() - t);
+        if (i != -1) {
+          const filenames: string[] = [];
+          i += 1;
+          while (i < this.metadataFileContents.length) {
+            const v = this.metadataFileContents[i].split("\0");
+            const name = "/" + v[0];
+            if (!name.startsWith(path)) {
+              // definitely done.
+              break;
+            }
+            if (name.startsWith(path + "/")) {
+              const filename = name.slice((path + "/").length);
+              if (!filename.includes("/")) {
+                filenames.push(filename);
+                console.log({ filename, data: v[1] });
+              }
+            }
+            i += 1;
+          }
+          cb(0, filenames);
+          return;
+        }
+      } catch (err) {
+        console.log("search error", err);
+      }
+    }
+
     try {
       let handle;
       let items: any[] = [];

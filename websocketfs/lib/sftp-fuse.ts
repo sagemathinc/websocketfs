@@ -14,15 +14,14 @@ import {
   MAX_READ_BLOCK_LENGTH,
 } from "websocket-sftp/lib/sftp-client";
 import { callback, delay } from "awaiting";
-import { bindMethods, symbolicToMode } from "./util";
+import { bindMethods } from "./util";
 import { convertOpenFlags } from "./flags";
 import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
 import TTLCache from "@isaacs/ttlcache";
 import { dirname, join } from "path";
-import { open, stat, readFile } from "fs/promises";
-import { decode } from "lz4";
-import binarySearch from "binarysearch";
+import { open } from "fs/promises";
+import { MetadataFile } from "./metadata-file";
 
 export type { IClientOptions };
 
@@ -34,8 +33,6 @@ type State = "init" | "connecting" | "ready" | "closed";
 
 const MAX_RECONNECT_DELAY_MS = 7500;
 const RECONNECT_DELAY_GROW = 1.3;
-
-const METADATA_FILE_INTERVAL_MS = 3000;
 
 // the cache names are to match with sshfs options.
 
@@ -75,8 +72,7 @@ export default class SftpFuse {
   private connectOptions?: IClientOptions;
   private reconnect: boolean;
   private hidePath?: string;
-  private metadataFileContents?: string[];
-  private metadataFileInterval: ReturnType<typeof setInterval> | null = null;
+  private meta?: MetadataFile;
 
   constructor(remote: string, options: Options = {}) {
     this.remote = remote;
@@ -125,7 +121,14 @@ export default class SftpFuse {
       this.initReadTracking(readTracking);
     }
     if (metadataFile) {
-      this.initMetadataFile(metadataFile, 1000 * cacheTimeout);
+      if (this.attrCache != null && this.dirCache != null && cacheTimeout) {
+        this.meta = new MetadataFile({
+          metadataFile,
+          cacheTimeout,
+          attrCache: this.attrCache,
+          dirCache: this.dirCache,
+        });
+      }
     }
     this.reconnect = reconnect;
     bindMethods(this);
@@ -153,55 +156,6 @@ export default class SftpFuse {
       }
       await out.close();
     }, update * 1000);
-  };
-
-  private initMetadataFile = (metadataFile: string, cacheTimeoutMs) => {
-    if (!metadataFile || !cacheTimeoutMs) {
-      log(
-        "initMetadataFile: not enabling since metadataFile and cacheTimeoutMs are not BOTH set.",
-      );
-      return;
-    }
-    let lastSuccess = 0;
-    let lastMtimeMs = 0;
-    const update = async () => {
-      // try to read the file.  It's fine it doesn't exist.
-      try {
-        const { mtimeMs } = await stat(metadataFile);
-        if (Date.now() - mtimeMs >= cacheTimeoutMs) {
-          log("metadataFile: older than cache timeout -- not using");
-          delete this.metadataFileContents;
-          return;
-        }
-        if (mtimeMs == lastMtimeMs) {
-          // it hasn't changed so nothing to do
-          return;
-        }
-        const start = Date.now();
-        lastMtimeMs = mtimeMs;
-        let content = await readFile(metadataFile);
-        if (metadataFile.endsWith(".lz4")) {
-          content = decode(content);
-        }
-        this.metadataFileContents = content.toString().split("\0\0");
-        this.metadataFileContents.sort();
-        lastSuccess = Date.now();
-        log("metadataFile: updated in ", Date.now() - start, "ms");
-      } catch (err) {
-        log(
-          "metadataFile: not reading -- ",
-          err.code == "ENOENT" ? `no file '${metadataFile}'` : err,
-        );
-        if (Date.now() - lastSuccess >= cacheTimeoutMs) {
-          // expire the metadataFile cache contents.
-          // NOTE: this could take slightly longer than cacheTimeoutMs, depending
-          // on METADATA_FILE_INTERVAL_MS, but for my application I don't care.
-          delete this.metadataFileContents;
-        }
-      }
-    };
-    this.metadataFileInterval = setInterval(update, METADATA_FILE_INTERVAL_MS);
-    update();
   };
 
   async handleConnectionClose(err) {
@@ -266,10 +220,7 @@ export default class SftpFuse {
     if (this.readTrackingInterval) {
       clearInterval(this.readTrackingInterval);
     }
-    if (this.metadataFileInterval) {
-      clearInterval(this.metadataFileInterval);
-    }
-
+    this.meta?.close();
     this.state = "closed";
   }
 
@@ -315,7 +266,7 @@ export default class SftpFuse {
       cb(errno ?? 0, attr);
       return;
     }
-    log("getattr -- not using cache", path);
+    log("getattr -- cache miss", path);
     this.sftp.lstat(path, (err, attr) => {
       // log("getattr -- lstat", { path, err, attr });
       if (err) {
@@ -431,65 +382,11 @@ export default class SftpFuse {
       return;
     }
 
-    if (
-      this.metadataFileContents != null &&
-      this.attrCache != null &&
-      this.dirCache != null &&
-      !path.startsWith(".")
-    ) {
-      // we are using the metadata file cache instead of sftp to
-      // compute all file metadata.
+    if (this.meta?.isReady() && !path.startsWith(".")) {
       try {
-        let i = binarySearch(this.metadataFileContents, path, (value, find) => {
-          const path = "/" + value.split("\0")[0];
-          if (path < find) {
-            return -1;
-          }
-          if (path > find) {
-            return 1;
-          }
-          return 0;
-        });
-        if (i != -1) {
-          log("readdir", path, " -- using metadataFile data");
-          const filenames: string[] = [];
-          const pathDir = path == "/" ? path : path + "/";
-          i += 1;
-          while (i < this.metadataFileContents.length) {
-            const v = this.metadataFileContents[i].split("\0");
-            const name = "/" + v[0];
-            if (!name.startsWith(path)) {
-              // definitely done.
-              break;
-            }
-            if (name.startsWith(pathDir)) {
-              const filename = name.slice(pathDir.length);
-              if (!filename.includes("/")) {
-                filenames.push(filename);
-                const data = v[1].split(" ");
-                const mtime = new Date(parseFloat(data[0]) * 1000);
-                const attr = {
-                  mtime,
-                  atime: new Date(parseFloat(data[1]) * 1000),
-                  ctime: mtime,
-                  blocks: parseInt(data[2]),
-                  size: parseInt(data[3]),
-                  mode: symbolicToMode(data[4]),
-                  flags: 0,
-                  uid: 0,
-                  gid: 0,
-                };
-                this.attrCache.set(join(path, filename), { attr });
-              }
-            }
-            i += 1;
-          }
-          this.dirCache.set(path, filenames);
-          cb(0, filenames);
-          return;
-        }
+        cb(0, this.meta.readdir(path));
       } catch (err) {
-        log("readdir search error", err);
+        log("readdir error using metadata file cache:", err);
       }
     }
 

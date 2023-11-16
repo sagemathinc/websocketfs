@@ -15,16 +15,13 @@ export class MetadataFile {
   private metadataFile: string;
   private metadataFileContents: string[];
   private metadataFileInterval?: ReturnType<typeof setInterval>;
-  private cacheTimeoutMs: number;
-  private lastSuccess: number = 0;
   private lastMtimeMs: number = 0;
   private state: "init" | "ready" | "expired" | "closed" = "init";
 
-  constructor({ metadataFile, cacheTimeout, attrCache, dirCache }) {
+  constructor({ metadataFile, attrCache, dirCache }) {
     this.metadataFile = metadataFile;
     this.attrCache = attrCache;
     this.dirCache = dirCache;
-    this.cacheTimeoutMs = cacheTimeout * 1000;
     this.init();
   }
 
@@ -48,14 +45,6 @@ export class MetadataFile {
     // try to read the file.  It's fine it doesn't exist.
     try {
       const { mtimeMs } = await stat(this.metadataFile);
-      if (Date.now() - mtimeMs >= this.cacheTimeoutMs) {
-        log(
-          `metadataFile: '${this.metadataFile}' is older than cache timeout -- not loading`,
-        );
-        this.state = "expired";
-        this.metadataFileContents = [];
-        return;
-      }
       if (mtimeMs <= this.lastMtimeMs) {
         // it hasn't changed so nothing to do
         return;
@@ -68,7 +57,6 @@ export class MetadataFile {
       }
       this.metadataFileContents = content.toString().split("\0\0");
       this.metadataFileContents.sort();
-      this.lastSuccess = Date.now();
       this.state = "ready";
       log(
         `metadataFile: "${this.metadataFile}" is NEW -- parsed in `,
@@ -78,15 +66,15 @@ export class MetadataFile {
     } catch (err) {
       log(
         "metadataFile: not reading -- ",
-        err.code == "ENOENT" ? `no file '${this.metadataFile}'` : err,
+        err.code == "ENOENT"
+          ? `no file '${this.metadataFile}' -- disabling metadata file cache`
+          : err,
       );
-      if (Date.now() - this.lastSuccess >= this.cacheTimeoutMs) {
-        // expire the metadataFile cache contents.
-        // NOTE: this could take slightly longer than cacheTimeoutMs, depending
-        // on METADATA_FILE_INTERVAL_MS, but for my application I don't care.
-        this.state = "expired";
-        this.metadataFileContents = [];
-      }
+      // expire the metadataFile cache contents.
+      // NOTE: this could take slightly longer than cacheTimeoutMs, depending
+      // on METADATA_FILE_INTERVAL_MS, but for my application I don't care.
+      this.state = "expired";
+      this.metadataFileContents = [];
     }
   };
 

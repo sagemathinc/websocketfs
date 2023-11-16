@@ -27,10 +27,10 @@ interface Options {
   // Metadata
   // If the metadataFile file path is given, we poll it for modification every few seconds.
   // If it changes, the file is read into memory and used to provide ALL directory and
-  // file stat information until cacheTimeout or the file is udpated.
+  // file stat information until the file is updated.  If it is deleted, caching stops.
   // The format of metadataFile is as follows with a NULL character beetween the filename and the metadata.
   //    [filename-relative-to-mount-point-no-leading-/.]\0[mtime in seconds] [atime in seconds] [number of 512-byte blocks] [size] [symbolic mode string]\0\0
-  // This file is not assumed sorted by filename.
+  // This file is *not* assumed to be sorted (it's a 1-line file, so hard to sort in unix anyways).
   // Here all of mtime, atime, blocks, size are decimal numbers, which may have a fractional part,
   // and mode is a string like in ls.  E.g., this find command does it (ignoring hidden files)::
   //

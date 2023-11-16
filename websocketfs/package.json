@@ -1,6 +1,6 @@
 {
   "name": "websocketfs",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "Like sshfs, but over a WebSocket",
   "main": "./dist/lib/index.js",
   "scripts": {

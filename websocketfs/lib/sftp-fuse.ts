@@ -125,7 +125,6 @@ export default class SftpFuse {
       if (this.attrCache != null && this.dirCache != null && cacheTimeout) {
         this.meta = new MetadataFile({
           metadataFile,
-          cacheTimeout,
           attrCache: this.attrCache,
           dirCache: this.dirCache,
         });
@@ -267,7 +266,7 @@ export default class SftpFuse {
       cb(errno ?? 0, attr);
       return;
     }
-    if (!path.startsWith("/.") && this.meta?.isReady()) {
+    if (path != "/" && !path.startsWith("/.") && this.meta?.isReady()) {
       const { errno, attr } = this.meta.getattr(path);
       cb(errno ?? 0, attr);
       return;
@@ -298,7 +297,7 @@ export default class SftpFuse {
       cb(errno ?? 0, attr);
       return;
     }
-    if (!path.startsWith("/.") && this.meta?.isReady()) {
+    if (path != "/" && !path.startsWith("/.") && this.meta?.isReady()) {
       const { errno, attr } = this.meta.getattr(path);
       cb(errno ?? 0, attr);
       return;
@@ -394,7 +393,7 @@ export default class SftpFuse {
       cb(0, this.dirCache.get(path));
       return;
     }
-    if (!path.startsWith("/.") && this.meta?.isReady()) {
+    if (path != "/" && !path.startsWith("/.") && this.meta?.isReady()) {
       try {
         cb(0, this.meta.readdir(path));
       } catch (err) {

@@ -9,7 +9,7 @@
     "build": "pnpm exec tsc",
     "clean": "rm -rf dist node_modules",
     "prettier-all": "pnpm exec prettier -w .",
-    "test": "pnpm exec jest dist",
+    "test": "pnpm exec jest --forceExit dist",
     "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
   "files": [

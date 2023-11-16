@@ -36,7 +36,7 @@ interface Options {
   //
   //       mkdir -p /tmp/meta; find * -printf "%p\0%T@ %A@ %b %s %M\0\0" | lz4 > .meta.lz4 && mv .meta.lz4  /tmp/meta/meta.lz4
   //
-  // If metadataFile ends in .lz4 it is assumed to be lz4 compressed and gets automatically decompressed.
+  // PATCHES: (This does not exist yet!) If metadataFile ends in .lz4 it is assumed to be lz4 compressed and gets automatically decompressed.
   // If there are files metadataFile.patch.[n] (with n an integer), then they are diff-match-patch patches
   // in the internal cocalc compressed format, that should be applied in order to metadataFile to get
   // the current version of the file.  This is needed to dramatically reduce bandwidth usage.

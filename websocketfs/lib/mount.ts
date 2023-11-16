@@ -32,9 +32,10 @@ interface Options {
   //    [filename-relative-to-mount-point-no-leading-/.]\0[mtime in seconds] [atime in seconds] [number of 512-byte blocks] [size] [symbolic mode string]\0\0
   // This file is *not* assumed to be sorted (it's a 1-line file, so hard to sort in unix anyways).
   // Here all of mtime, atime, blocks, size are decimal numbers, which may have a fractional part,
-  // and mode is a string like in ls.  E.g., this find command does it (ignoring hidden files)::
+  // and mode is a string like in ls.  E.g., this find command does it (ignoring hidden files).
+  // Y2K alert -- note the %.10T truncates times to integers, and will I guess fail a few hundred years from now.
   //
-  //       mkdir -p /tmp/meta; find * -printf "%p\0%T@ %A@ %b %s %M\0\0" | lz4 > .meta.lz4 && mv .meta.lz4  /tmp/meta/meta.lz4
+  //       mkdir -p /tmp/meta; find * -printf "%p\0%.10T@ %.10A@ %b %s %M\0\0" | lz4 > .meta.lz4 && mv .meta.lz4  /tmp/meta/meta.lz4
   //
   // PATCHES: (This does not exist yet!) If metadataFile ends in .lz4 it is assumed to be lz4 compressed and gets automatically decompressed.
   // If there are files metadataFile.patch.[n] (with n an integer), then they are diff-match-patch patches

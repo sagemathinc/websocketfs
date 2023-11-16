@@ -110,10 +110,13 @@ export class MetadataFile {
       return { errno: -2 };
     }
     const data = v[1].split(" ");
-    const mtime = new Date(parseFloat(data[0]) * 1000);
+    // note that we intentionally use parseInt and throw away info
+    // that might be in the file.  This is for consistency with
+    // the non-cached version of things.
+    const mtime = new Date(parseInt(data[0]) * 1000);
     const attr = {
       mtime,
-      atime: new Date(parseFloat(data[1]) * 1000),
+      atime: new Date(parseInt(data[1]) * 1000),
       ctime: mtime,
       blocks: parseInt(data[2]),
       size: parseInt(data[3]),

@@ -41,6 +41,8 @@ export function symbolicToMode(symbolic): number {
   let mode;
   if (symbolic.charAt(0) === "d") {
     mode = "40";
+  } else if (symbolic.charAt(0) === "l") {
+    mode = "120";
   } else {
     mode = "100";
   }

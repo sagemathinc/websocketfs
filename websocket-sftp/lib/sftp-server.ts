@@ -13,12 +13,13 @@ import { IChannel } from "./channel";
 import { SftpPacketType, SftpStatusCode } from "./sftp-enums";
 import debug from "debug";
 import { SftpVfsStats } from "./sftp-misc";
+import { MAX_READ_BLOCK_LENGTH } from "./sftp-client";
 
 const log = debug("websocketfs:sftp-server");
 
 class SftpResponse extends SftpPacketWriter {
   constructor() {
-    super(34000);
+    super(MAX_READ_BLOCK_LENGTH + 1000);
   }
 }
 
@@ -557,8 +558,8 @@ export class SftpServerSession {
           }
           const position = request.readInt64();
           let count = request.readInt32();
-          if (count > 0x8000) {
-            count = 0x8000;
+          if (count > MAX_READ_BLOCK_LENGTH) {
+            count = MAX_READ_BLOCK_LENGTH;
           }
 
           response.type = SftpPacketType.DATA;

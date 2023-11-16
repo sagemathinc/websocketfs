@@ -267,7 +267,7 @@ export default class SftpFuse {
       cb(errno ?? 0, attr);
       return;
     }
-    if (this.meta?.isReady()) {
+    if (!path.startsWith("/.") && this.meta?.isReady()) {
       const { errno, attr } = this.meta.getattr(path);
       cb(errno ?? 0, attr);
       return;
@@ -298,7 +298,7 @@ export default class SftpFuse {
       cb(errno ?? 0, attr);
       return;
     }
-    if (this.meta?.isReady()) {
+    if (!path.startsWith("/.") && this.meta?.isReady()) {
       const { errno, attr } = this.meta.getattr(path);
       cb(errno ?? 0, attr);
       return;
@@ -394,7 +394,7 @@ export default class SftpFuse {
       cb(0, this.dirCache.get(path));
       return;
     }
-    if (this.meta?.isReady() && !path.startsWith(".")) {
+    if (!path.startsWith("/.") && this.meta?.isReady()) {
       try {
         cb(0, this.meta.readdir(path));
       } catch (err) {

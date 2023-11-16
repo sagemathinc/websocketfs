@@ -117,7 +117,10 @@ export class MetadataFile {
   };
 
   private cacheAttrs = (i: number) => {
-    const v = this.metadataFileContents[i].split("\0");
+    const v = this.metadataFileContents[i]?.split("\0");
+    if (v == null || v.length <= 1) {
+      return { errno: -2 };
+    }
     const data = v[1].split(" ");
     const mtime = new Date(parseFloat(data[0]) * 1000);
     const attr = {

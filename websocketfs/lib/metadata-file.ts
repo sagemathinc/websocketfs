@@ -3,9 +3,9 @@ import { stat, readFile } from "fs/promises";
 import { decode } from "lz4";
 import binarySearch from "binarysearch";
 import { symbolicToMode } from "./util";
-import { join } from "path";
 
 const log = debug("websocketfs:metadata-file");
+const log_cache = debug("cache");
 
 const METADATA_FILE_INTERVAL_MS = 3000;
 
@@ -99,22 +99,60 @@ export class MetadataFile {
     }
   };
 
+  private find = (path: string): number => {
+    return binarySearch(
+      this.metadataFileContents,
+      path,
+      (value: string, find: string) => {
+        const name = "/" + value.split("\0")[0];
+        if (name < find) {
+          return -1;
+        }
+        if (name > find) {
+          return 1;
+        }
+        return 0;
+      },
+    );
+  };
+
+  private cacheAttrs = (i: number) => {
+    const v = this.metadataFileContents[i].split("\0");
+    const data = v[1].split(" ");
+    const mtime = new Date(parseFloat(data[0]) * 1000);
+    const attr = {
+      mtime,
+      atime: new Date(parseFloat(data[1]) * 1000),
+      ctime: mtime,
+      blocks: parseInt(data[2]),
+      size: parseInt(data[3]),
+      mode: symbolicToMode(data[4]),
+      flags: 0,
+      uid: 0,
+      gid: 0,
+    };
+    this.attrCache.set("/" + v[0], { attr });
+    return { attr };
+  };
+
+  getattr = (path: string): { errno?: number; attr? } => {
+    const i = this.find(path);
+    if (i == -1) {
+      // error -- no such file
+      return { errno: -2 };
+    } else {
+      return this.cacheAttrs(i);
+    }
+  };
+
   readdir = (path: string) => {
     if (!this.isReady()) {
       throw Error("MetadataFile is not ready");
     }
     log("readdir", path);
-    let i = binarySearch(this.metadataFileContents, path, (value, find) => {
-      const path = "/" + value.split("\0")[0];
-      if (path < find) {
-        return -1;
-      }
-      if (path > find) {
-        return 1;
-      }
-      return 0;
-    });
+    let i = this.find(path);
     if (i == -1) {
+      log_cache("readdir ", path, " WORKED");
       log("readdir", path, " -- does not exist");
       return [];
     }
@@ -125,32 +163,20 @@ export class MetadataFile {
       const v = this.metadataFileContents[i].split("\0");
       const name = "/" + v[0];
       if (!name.startsWith(path)) {
-        // definitely done.
+        // done.
         break;
       }
       if (name.startsWith(pathDir)) {
         const filename = name.slice(pathDir.length);
         if (!filename.includes("/")) {
           filenames.push(filename);
-          const data = v[1].split(" ");
-          const mtime = new Date(parseFloat(data[0]) * 1000);
-          const attr = {
-            mtime,
-            atime: new Date(parseFloat(data[1]) * 1000),
-            ctime: mtime,
-            blocks: parseInt(data[2]),
-            size: parseInt(data[3]),
-            mode: symbolicToMode(data[4]),
-            flags: 0,
-            uid: 0,
-            gid: 0,
-          };
-          this.attrCache.set(join(path, filename), { attr });
+          this.cacheAttrs(i);
         }
       }
       i += 1;
     }
     this.dirCache.set(path, filenames);
+    log_cache("readdir ", path, " WORKED");
     return filenames;
   };
 }

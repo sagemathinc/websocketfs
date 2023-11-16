@@ -26,6 +26,7 @@ import { MetadataFile } from "./metadata-file";
 export type { IClientOptions };
 
 const log = debug("websocketfs:sftp-fuse");
+const log_cache = debug("cache");
 
 type Callback = Function;
 
@@ -266,6 +267,12 @@ export default class SftpFuse {
       cb(errno ?? 0, attr);
       return;
     }
+    if (this.meta?.isReady()) {
+      const { errno, attr } = this.meta.getattr(path);
+      cb(errno ?? 0, attr);
+      return;
+    }
+    log_cache("getattr -- cache miss", path);
     log("getattr -- cache miss", path);
     this.sftp.lstat(path, (err, attr) => {
       // log("getattr -- lstat", { path, err, attr });
@@ -291,6 +298,12 @@ export default class SftpFuse {
       cb(errno ?? 0, attr);
       return;
     }
+    if (this.meta?.isReady()) {
+      const { errno, attr } = this.meta.getattr(path);
+      cb(errno ?? 0, attr);
+      return;
+    }
+    log_cache("fgetattr -- cache miss", path);
     const handle = this.sftp.fileDescriptorToHandle(fd);
     this.sftp.fstat(handle, (err, attr) => {
       if (err) {
@@ -381,7 +394,6 @@ export default class SftpFuse {
       cb(0, this.dirCache.get(path));
       return;
     }
-
     if (this.meta?.isReady() && !path.startsWith(".")) {
       try {
         cb(0, this.meta.readdir(path));
@@ -389,6 +401,7 @@ export default class SftpFuse {
         log("readdir error using metadata file cache:", err);
       }
     }
+    log_cache("readdir -- cache miss", path);
 
     try {
       let handle;

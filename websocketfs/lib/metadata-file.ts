@@ -2,18 +2,18 @@ import debug from "debug";
 import { stat, readFile } from "fs/promises";
 import binarySearch from "binarysearch";
 import { symbolicToMode, readFileLz4 } from "./util";
+import { watch } from "chokidar";
+import { delay } from "awaiting";
 
 const log = debug("websocketfs:metadata-file");
 const log_cache = debug("cache");
-
-const METADATA_FILE_INTERVAL_MS = 3000;
 
 export class MetadataFile {
   private attrCache;
   private dirCache;
   private metadataFile: string;
   private metadataFileContents: string[];
-  private metadataFileInterval?: ReturnType<typeof setInterval>;
+  private watcher?;
   private lastMtimeMs: number = 0;
   private state: "init" | "ready" | "expired" | "closed" = "init";
 
@@ -28,14 +28,19 @@ export class MetadataFile {
     return this.state == "ready";
   };
 
-  private init = () => {
-    if (this.metadataFileInterval) {
-      throw Error("bug -- do not call init more than once");
+  private init = async () => {
+    // We keep trying util we succesfully
+    // read the file once.
+    while (!(await this.update())) {
+      await delay(3000);
     }
-    this.metadataFileInterval = setInterval(
-      this.update,
-      METADATA_FILE_INTERVAL_MS,
-    );
+    // Only after reading the file, do we setup the watcher.
+    // Why? Because we might want to put the file itself inside
+    // of the websocketfs filesystem, and if we try to watch too
+    // soon then it doesn't work.  Subtle.
+    this.watcher = watch(this.metadataFile);
+    this.watcher.on("change", this.update);
+    this.watcher.on("add", this.update);
     this.state = "expired";
     this.update();
   };
@@ -45,9 +50,9 @@ export class MetadataFile {
     try {
       const { mtimeMs } = await stat(this.metadataFile);
       if (mtimeMs <= this.lastMtimeMs) {
-        log("metadataFile:", this.metadataFile, "watching for changes");
+        log("metadataFile:", this.metadataFile, "- no change");
         // it hasn't changed so nothing to do
-        return;
+        return false;
       }
       const start = Date.now();
       this.lastMtimeMs = mtimeMs;
@@ -69,25 +74,24 @@ export class MetadataFile {
         Date.now() - start,
         "ms",
       );
+      return true;
     } catch (err) {
       log(
         "metadataFile:",
         this.metadataFile,
         " - non-fatal issue reading - ",
         err.code == "ENOENT"
-          ? `no file '${this.metadataFile}' -- NOT updating metadata file cache (will try again soon)`
+          ? `no file '${this.metadataFile}' -- NOT updating`
           : err,
       );
+      return false;
     }
   };
 
   close = () => {
     this.state = "closed";
     this.metadataFileContents = [];
-    if (this.metadataFileInterval) {
-      clearInterval(this.metadataFileInterval);
-      delete this.metadataFileInterval;
-    }
+    this.watcher?.close();
   };
 
   private find = (path: string): number => {

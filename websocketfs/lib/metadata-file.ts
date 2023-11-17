@@ -1,8 +1,7 @@
 import debug from "debug";
 import { stat, readFile } from "fs/promises";
-import { decode } from "lz4";
 import binarySearch from "binarysearch";
-import { symbolicToMode } from "./util";
+import { symbolicToMode, readFileLz4 } from "./util";
 
 const log = debug("websocketfs:metadata-file");
 const log_cache = debug("cache");
@@ -46,6 +45,7 @@ export class MetadataFile {
     try {
       const { mtimeMs } = await stat(this.metadataFile);
       if (mtimeMs <= this.lastMtimeMs) {
+        log("metadataFile:", this.metadataFile, "watching for changes");
         // it hasn't changed so nothing to do
         return;
       }
@@ -53,28 +53,31 @@ export class MetadataFile {
       this.lastMtimeMs = mtimeMs;
       let content = await readFile(this.metadataFile);
       if (this.metadataFile.endsWith(".lz4")) {
-        content = decode(content);
+        // We use a stream instead of blocking and using
+        // lz4's decode because there  is a HUGE bug in
+        // the sync api of lz4 --
+        //    https://github.com/pierrec/node-lz4/issues/117
+        content = await readFileLz4(this.metadataFile);
       }
       this.metadataFileContents = content.toString().split("\0\0");
       this.metadataFileContents.sort();
       this.state = "ready";
       log(
-        `metadataFile: "${this.metadataFile}" is NEW -- parsed in `,
+        "metadataFile:",
+        this.metadataFile,
+        `CHANGED - ${this.metadataFileContents.length} files - parsed in `,
         Date.now() - start,
         "ms",
       );
     } catch (err) {
       log(
-        "metadataFile: not reading -- ",
+        "metadataFile:",
+        this.metadataFile,
+        " - non-fatal issue reading - ",
         err.code == "ENOENT"
-          ? `no file '${this.metadataFile}' -- disabling metadata file cache`
+          ? `no file '${this.metadataFile}' -- NOT updating metadata file cache (will try again soon)`
           : err,
       );
-      // expire the metadataFile cache contents.
-      // NOTE: this could take slightly longer than cacheTimeoutMs, depending
-      // on METADATA_FILE_INTERVAL_MS, but for my application I don't care.
-      this.state = "expired";
-      this.metadataFileContents = [];
     }
   };
 

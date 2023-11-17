@@ -2,6 +2,9 @@
 Various utilities
 
 */
+import { createDecoderStream } from "lz4";
+import { createReadStream } from "fs";
+import { PassThrough } from "stream";
 
 // See cocalc's packages/util/misc for comments
 function getMethods(obj: object): string[] {
@@ -60,4 +63,22 @@ export function symbolicToMode(symbolic): number {
   }
 
   return parseInt(mode, 8);
+}
+
+export async function readFileLz4(path: string): Promise<Buffer> {
+  const decoder = createDecoderStream();
+  const input = createReadStream(path);
+  const output = new PassThrough();
+  input.pipe(decoder).pipe(output);
+
+  const chunks: Buffer[] = [];
+  const waitForFinish = new Promise((resolve, reject) => {
+    output.on("finish", resolve);
+    output.on("error", reject);
+    output.on("data", (chunk) => {
+      chunks.push(chunk);
+    });
+  });
+  await waitForFinish;
+  return Buffer.concat(chunks);
 }

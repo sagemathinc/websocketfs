@@ -6,7 +6,7 @@ import { symbolicToMode, readFileLz4 } from "./util";
 const log = debug("websocketfs:metadata-file");
 const log_cache = debug("cache");
 
-const METADATA_FILE_INTERVAL_MS = 3000;
+const METADATA_FILE_INTERVAL_MS = 2500;
 
 export class MetadataFile {
   private attrCache;
@@ -45,7 +45,7 @@ export class MetadataFile {
     try {
       const { mtimeMs } = await stat(this.metadataFile);
       if (mtimeMs <= this.lastMtimeMs) {
-        log("metadataFile:", this.metadataFile, "watching for changes");
+        //log("metadataFile:", this.metadataFile, "watching for changes");
         // it hasn't changed so nothing to do
         return;
       }

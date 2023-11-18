@@ -73,6 +73,7 @@ export async function readFileLz4(path: string): Promise<Buffer> {
 
   const chunks: Buffer[] = [];
   const waitForFinish = new Promise((resolve, reject) => {
+    decoder.on("error", reject);
     output.on("finish", resolve);
     output.on("error", reject);
     output.on("data", (chunk) => {

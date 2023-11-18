@@ -20,8 +20,8 @@ import Fuse from "@cocalc/fuse-native";
 import debug from "debug";
 import TTLCache from "@isaacs/ttlcache";
 import { dirname, join } from "path";
-import { open } from "fs/promises";
 import { MetadataFile } from "./metadata-file";
+import ReadTracking from "./read-tracking";
 
 export type { IClientOptions };
 
@@ -43,13 +43,7 @@ interface Options {
   cacheStatTimeout?: number; // in seconds (to match sshfs)
   cacheDirTimeout?: number;
   cacheLinkTimeout?: number;
-  readTracking?: {
-    path: string;
-    // these are in SECONDS (not ms)!
-    timeout?: number; // clear entries read this long ago
-    update?: number; // update the track every this many seconds
-    modified?: number; // ignore files that were *modified* this recently
-  };
+  readTrackingFile?: string;
   metadataFile?: string;
   // reconnect -- defaults to true; if true, automatically reconnects
   // to server when connection breaks.
@@ -67,13 +61,11 @@ export default class SftpFuse {
   private attrCache: TTLCache<string, any> | null = null;
   private dirCache: TTLCache<string, string[]> | null = null;
   private linkCache: TTLCache<string, string> | null = null;
-  private readTracking: TTLCache<string, boolean> | null = null;
-  private readTrackingInterval: ReturnType<typeof setInterval> | null = null;
-  private readTrackingModified: number = 0;
   private connectOptions?: IClientOptions;
   private reconnect: boolean;
   private hidePath?: string;
   private meta?: MetadataFile;
+  private readTracking?: ReadTracking;
 
   constructor(remote: string, options: Options = {}) {
     this.remote = remote;
@@ -83,7 +75,7 @@ export default class SftpFuse {
       cacheDirTimeout,
       cacheLinkTimeout,
       reconnect = true,
-      readTracking,
+      readTrackingFile,
       metadataFile,
       hidePath,
     } = options;
@@ -118,8 +110,8 @@ export default class SftpFuse {
         ttl: (cacheLinkTimeout ?? cacheTimeout) * 1000,
       });
     }
-    if (readTracking) {
-      this.initReadTracking(readTracking);
+    if (readTrackingFile) {
+      this.readTracking = new ReadTracking(readTrackingFile);
     }
     if (metadataFile) {
       if (this.attrCache != null && this.dirCache != null && cacheTimeout) {
@@ -133,30 +125,6 @@ export default class SftpFuse {
     this.reconnect = reconnect;
     bindMethods(this);
   }
-
-  private initReadTracking = ({
-    path,
-    timeout = 15,
-    update = 5,
-    modified = 0,
-  }) => {
-    if (timeout < 1) {
-      throw Error("readTracking timeoutMs must be at least 1 second");
-    }
-    log("enabling read tracking");
-    const ttl = timeout * 1000;
-    this.readTracking = new TTLCache({ ttl });
-    this.readTrackingModified = modified;
-    this.readTrackingInterval = setInterval(async () => {
-      if (this.readTracking == null) return;
-      log("writing out read tracking");
-      const out = await open(path, "w");
-      for (const x of this.readTracking.keys()) {
-        await out.write(x + "\n");
-      }
-      await out.close();
-    }, update * 1000);
-  };
 
   async handleConnectionClose(err) {
     log("connection closed", err);
@@ -217,9 +185,6 @@ export default class SftpFuse {
     this.sftp?.end();
     // @ts-ignore
     delete this.sftp;
-    if (this.readTrackingInterval) {
-      clearInterval(this.readTrackingInterval);
-    }
     this.meta?.close();
     this.state = "closed";
   }
@@ -513,25 +478,11 @@ export default class SftpFuse {
   // listxattr(path, cb)
   // removexattr(path, name, cb)
 
-  private trackRead = (path: string) => {
-    if (this.readTracking == null || this.attrCache == null) {
-      return;
-    }
-    if (!this.readTrackingModified) {
-      // always track -- don't worry about mtime
-      this.readTracking.set(path, true);
-    }
-
-    // only track if at least this.readTrackingModified seconds old.
-    const x = this.attrCache.get(path)?.attr;
-    if (x == null) {
-      return;
-    }
-    if (Date.now() - x.mtime.valueOf() <= 1000 * this.readTrackingModified) {
-      // ignore this -- it was changed too recently
-      this.readTracking.delete(path);
-    } else {
-      this.readTracking.set(path, true);
+  private trackRead = async (filename: string) => {
+    try {
+      await this.readTracking?.trackRead(filename);
+    } catch (err) {
+      log("trackRead error -- ", filename, err);
     }
   };
 
@@ -631,7 +582,6 @@ export default class SftpFuse {
     //log("write", { path, fd, buffer: buffer.toString(), length, position });
     if (this.isNotReady(cb)) return;
     log("write", { path, fd, length, position });
-    this.readTracking?.delete(path);
     this.clearCache(path);
     if (this.data[fd] == null) {
       this.data[fd] = [

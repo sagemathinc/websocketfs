@@ -20,9 +20,11 @@ interface Options {
   cacheLinkTimeout?: number;
 
   // Read Tracking
-  // write out to path all files explicitly read in the last timeout seconds.
-  // path is updated once every update seconds.
-  readTracking?: { path: string; timeout?: number; update?: number };
+  // write out filenames of files that were explicitly read to this file
+  // separated by nulls (and it is null terminated).  A file is added no more
+  // than once.  Delete the file to reset things.  The leading slash is
+  // removed from the filenames, so they are relative to the mount point.
+  readTrackingFile?: string;
 
   // Metadata
   // If the metadataFile file path is given, we poll it for modification every few seconds.
@@ -65,7 +67,7 @@ export default async function mount(
     cacheStatTimeout,
     cacheDirTimeout,
     cacheLinkTimeout,
-    readTracking,
+    readTrackingFile,
     metadataFile,
     hidePath,
   } = opts;
@@ -76,7 +78,7 @@ export default async function mount(
     cacheStatTimeout,
     cacheDirTimeout,
     cacheLinkTimeout,
-    readTracking,
+    readTrackingFile,
     metadataFile,
     hidePath,
   });

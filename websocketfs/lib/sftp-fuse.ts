@@ -44,6 +44,7 @@ interface Options {
   cacheDirTimeout?: number;
   cacheLinkTimeout?: number;
   readTrackingFile?: string;
+  readTrackingExclude?: string[];
   metadataFile?: string;
   // reconnect -- defaults to true; if true, automatically reconnects
   // to server when connection breaks.
@@ -76,6 +77,7 @@ export default class SftpFuse {
       cacheLinkTimeout,
       reconnect = true,
       readTrackingFile,
+      readTrackingExclude = [],
       metadataFile,
       hidePath,
     } = options;
@@ -111,7 +113,10 @@ export default class SftpFuse {
       });
     }
     if (readTrackingFile) {
-      this.readTracking = new ReadTracking(readTrackingFile);
+      this.readTracking = new ReadTracking(
+        readTrackingFile,
+        readTrackingExclude,
+      );
     }
     if (metadataFile) {
       if (this.attrCache != null && this.dirCache != null && cacheTimeout) {

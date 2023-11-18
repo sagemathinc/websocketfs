@@ -15,9 +15,21 @@ const log = debug("websocketfs:read-tracking");
 export default class ReadTracking {
   private readTrackingFile: string;
   private history = new Set<string>();
+  private excludeHidden: boolean;
+  private excludePaths: string[];
 
-  constructor(readTrackingFile) {
+  constructor(readTrackingFile: string, readTrackingExclude: string[]) {
     this.readTrackingFile = readTrackingFile;
+    this.excludeHidden = readTrackingExclude.includes(".*");
+    this.excludePaths = readTrackingExclude
+      .filter((pattern) => pattern != ".*")
+      .map((pattern) => {
+        if (!pattern.endsWith("/")) {
+          return pattern + "/";
+        } else {
+          return pattern;
+        }
+      });
     this.init();
   }
 
@@ -30,7 +42,11 @@ export default class ReadTracking {
   };
 
   trackRead = async (filename: string) => {
-    log(`fileWasRead`, { filename });
+    filename = filename.slice(1);
+    if (this.isExcluded(filename)) {
+      return;
+    }
+    log(`trackRead`, { filename });
     try {
       await stat(this.readTrackingFile);
     } catch (_) {
@@ -40,7 +56,19 @@ export default class ReadTracking {
     if (this.history.has(filename)) {
       return;
     }
-    await appendFile(this.readTrackingFile, `${filename.slice(1)}\0`);
+    await appendFile(this.readTrackingFile, `${filename}\0`);
     this.history.add(filename);
+  };
+
+  private isExcluded = (filename: string) => {
+    if (this.excludeHidden && filename.startsWith(".")) {
+      return true;
+    }
+    for (const pattern of this.excludePaths) {
+      if (filename.startsWith(pattern)) {
+        return true;
+      }
+    }
+    return false;
   };
 }

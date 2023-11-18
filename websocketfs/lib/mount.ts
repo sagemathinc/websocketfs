@@ -20,11 +20,19 @@ interface Options {
   cacheLinkTimeout?: number;
 
   // Read Tracking
-  // write out filenames of files that were explicitly read to this file
-  // separated by nulls (and it is null terminated).  A file is added no more
-  // than once.  Delete the file to reset things.  The leading slash is
-  // removed from the filenames, so they are relative to the mount point.
+  // Write out filenames of files that were explicitly read to readTrackingFile
+  // terminated by NULL, like the --null option to tar expects:
+  //    readTrackingFile
+  // A file is added no more than once until readTrackingFile is deleted.  Delete
+  // readTrackingFile to reset the processs.
+  // The leading slash is removed from the filenames, so they are relative to
+  // the mount point.
   readTrackingFile?: string;
+  // exclude given top level directories from tracking, e.g.,
+  //    ['scratch', 'tmp']
+  // would exclude scratch and tmp.  We also allow ['.*'] to mean "exclude
+  // all top level hidden directories".
+  readTrackingExclude?: string[];
 
   // Metadata
   // If the metadataFile file path is given, we poll it for modification every few seconds.
@@ -68,6 +76,7 @@ export default async function mount(
     cacheDirTimeout,
     cacheLinkTimeout,
     readTrackingFile,
+    readTrackingExclude,
     metadataFile,
     hidePath,
   } = opts;
@@ -79,6 +88,7 @@ export default async function mount(
     cacheDirTimeout,
     cacheLinkTimeout,
     readTrackingFile,
+    readTrackingExclude,
     metadataFile,
     hidePath,
   });

@@ -41,7 +41,7 @@
     }
   ],
   "dependencies": {
-    "@cocalc/fuse-native": "^2.4.0",
+    "@cocalc/fuse-native": "^2.4.1",
     "@isaacs/ttlcache": "^1.4.1",
     "awaiting": "^3.0.0",
     "binarysearch": "^1.0.1",

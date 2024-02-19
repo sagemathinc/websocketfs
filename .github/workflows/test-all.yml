@@ -16,8 +16,8 @@ jobs:
       matrix:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
         # NOTE: 20.x does not work yet for us!
+        # We only support 18.x
         node-version:
-          - "16.x"
           - "18.x"
 
     steps:

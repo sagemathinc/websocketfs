@@ -730,7 +730,9 @@ function getErrno(err: SftpError): number {
       return -Math.abs(err.errno);
     }
   }
-  console.warn("err.code and err.errno not set -- ", err);
+  // In some cases this can happen a lot and swamp the output, so only uncomment
+  // for debugging and testing!
+  // console.warn("err.code and err.errno not set -- ", err);
   return Fuse.ENOSYS;
 }
 

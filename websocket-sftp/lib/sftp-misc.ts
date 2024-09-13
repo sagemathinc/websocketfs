@@ -460,7 +460,7 @@ export class SftpAttributes implements IStats {
 
       if (typeof stats.size !== "undefined") {
         flags |= SftpAttributeFlags.SIZE;
-        this.size = stats.size | 0;
+        this.size = stats.size ?? 0;
       }
 
       if (

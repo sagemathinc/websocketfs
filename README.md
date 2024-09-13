@@ -10,6 +10,8 @@ I wish there was something like sshfs, but entirely over a websocket that doesn'
 
 - [websocketfs: Like sshfs, but over a WebSocket](./websocketfs)
 
+- NPM: https://www.npmjs.com/package/websocketfs
+
 To try this out, check out the readme for the websocketfs package.
  
  

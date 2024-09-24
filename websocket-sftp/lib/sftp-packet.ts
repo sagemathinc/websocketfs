@@ -161,18 +161,17 @@ export class SftpPacketReader extends SftpPacket {
   }
 
   readInt64(): number {
-    const hi = this.readInt32();
-    const lo = this.readUInt32();
-
-    const value = hi * 0x100000000 + lo;
-    return value;
+    this.check(8);
+    const value = this.buffer.readBigInt64BE(this.position);
+    this.position += 8;
+    return Number(value);
   }
 
   readUInt64(): number {
-    const hi = this.readUInt32();
-    const lo = this.readUInt32();
-    const value = hi * 0x100000000 + lo;
-    return value;
+    this.check(8);
+    const value = this.buffer.readBigUint64BE(this.position);
+    this.position += 8;
+    return Number(value);
   }
 
   readString(): string {
@@ -271,17 +270,15 @@ export class SftpPacketWriter extends SftpPacket {
   }
 
   writeInt64(value: number): void {
-    const hi = (value / 0x100000000) | 0;
-    const lo = (value & 0xffffffff) | 0;
-    this.writeInt32(hi);
-    this.writeInt32(lo);
+    this.check(8);
+    this.buffer.writeBigInt64BE(BigInt(value), this.position);
+    this.position += 8;
   }
 
   writeUInt64(value: number): void {
-    const hi = (value / 0x100000000) | 0;
-    const lo = (value & 0xffffffff) | 0;
-    this.writeUInt32(hi);
-    this.writeUInt32(lo);
+    this.check(8);
+    this.buffer.writeBigUInt64BE(BigInt(value), this.position);
+    this.position += 8;
   }
 
   writeString(value: string): void {

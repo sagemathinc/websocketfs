@@ -14,4 +14,6 @@ I wish there was something like sshfs, but entirely over a websocket that doesn'
 
 To try this out, check out the readme for the websocketfs package.
  
- 
+## Related Projects
+
+- [webfuse](https://github.com/falk-werner/webfuse) is a different approach to mounting a FUSE filesystem using websockets as the transport.  It's a C++ program that proxies an arbitrary FUSE filesystem over a WebSocket connection.   In contrast, websocketfs is two Javascript libraries (both a client and a server) that use the sshfs protocol to make a filesystem on one machine mountable over the network on another machine.   There is an overlap where the two libraries could accomplish the same goal, so if you're interested in websocketfs, you might also want to investigate webfuse.

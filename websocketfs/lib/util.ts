@@ -2,9 +2,8 @@
 Various utilities
 
 */
-import { createDecoderStream } from "lz4";
-import { createReadStream } from "fs";
-import { PassThrough } from "stream";
+import { compressFrame, decompressFrame } from "lz4-napi";
+import { readFile, writeFile } from "fs/promises";
 
 // See cocalc's packages/util/misc for comments
 function getMethods(obj: object): string[] {
@@ -66,20 +65,11 @@ export function symbolicToMode(symbolic): number {
 }
 
 export async function readFileLz4(path: string): Promise<Buffer> {
-  const decoder = createDecoderStream();
-  const input = createReadStream(path);
-  const output = new PassThrough();
-  input.pipe(decoder).pipe(output);
+  const content = await readFile(path);
+  return await decompressFrame(content);
+}
 
-  const chunks: Buffer[] = [];
-  const waitForFinish = new Promise((resolve, reject) => {
-    decoder.on("error", reject);
-    output.on("finish", resolve);
-    output.on("error", reject);
-    output.on("data", (chunk) => {
-      chunks.push(chunk);
-    });
-  });
-  await waitForFinish;
-  return Buffer.concat(chunks);
+export async function writeFileLz4(path: string, contents: string) {
+  const compressed = await compressFrame(Buffer.from(contents));
+  await writeFile(path, compressed);
 }

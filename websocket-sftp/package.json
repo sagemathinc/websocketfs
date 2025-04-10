@@ -16,11 +16,7 @@
     "test": "pnpm exec jest dist",
     "test-all": "pnpm clean && pnpm install && pnpm build && pnpm test"
   },
-  "files": [
-    "dist/**",
-    "README.md",
-    "package.json"
-  ],
+  "files": ["dist/**", "README.md", "package.json"],
   "engines": {
     "node": ">=0.16.0"
   },
@@ -47,12 +43,7 @@
     "port-get": "^1.0.0",
     "ws": "^8.18.0"
   },
-  "keywords": [
-    "sftp",
-    "server",
-    "client",
-    "ws"
-  ],
+  "keywords": ["sftp", "server", "client", "ws"],
   "license": "MIT",
   "repository": {
     "type": "git",

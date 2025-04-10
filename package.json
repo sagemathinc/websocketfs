@@ -8,6 +8,11 @@
   "pnpm": {
     "overrides": {
       "@babel/traverse@<7.23.2": ">=7.23.2"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@cocalc/fuse-native",
+      "@wwa/statvfs",
+      "lz4"
+    ]
   }
 }

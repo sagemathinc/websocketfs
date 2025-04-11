@@ -1,10 +1,7 @@
 import fs from "fs";
 import { IFilesystem, IItem, IStats, RenameFlags } from "./fs-api";
 import { FileUtil, Path } from "./fs-misc";
-// note that this is in node.js v 18.15 and later
-// as (fs/promises).statvfs (they are both wrapping
-// the same uv_fs_statfs).
-import { statvfs } from "@wwa/statvfs";
+import { statfs } from "node:fs/promises";
 import type { StatFs } from "./fs-api";
 import debug from "debug";
 
@@ -407,7 +404,7 @@ export class LocalFilesystem implements IFilesystem {
   ): Promise<void> {
     path = this.checkPath(path, "path");
     try {
-      callback(null, await statvfs(path));
+      callback(null, await statfs(path));
     } catch (err) {
       callback(err);
     }

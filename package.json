@@ -13,10 +13,6 @@
       "@babel/helpers@<7.26.10": ">=7.26.10",
       "tar-fs@>=2.0.0 <2.1.2": ">=2.1.2"
     },
-    "onlyBuiltDependencies": [
-      "@cocalc/fuse-native",
-      "@wwa/statvfs",
-      "lz4"
-    ]
+    "onlyBuiltDependencies": ["@cocalc/fuse-native"]
   }
 }

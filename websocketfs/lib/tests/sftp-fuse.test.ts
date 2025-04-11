@@ -1,10 +1,9 @@
 import * as tmp from "tmp-promise";
 import bind from "../bind";
-import fs from "fs/promises";
+import fs, { statfs } from "fs/promises";
 import path from "path";
 import { execFile } from "child_process";
 import { callback } from "awaiting";
-import { statvfs } from "@wwa/statvfs";
 
 let dir1, dir2, fuse, source, target;
 
@@ -208,8 +207,8 @@ describe("Simple tests of each of the FUSE operations...", () => {
 
 describe("stat the filesystem (what df uses)", () => {
   it("stats the filesystem from fuse and native and get same thing (except type, which should differ)", async () => {
-    const statsTarget = await statvfs(target);
-    const statsSource = await statvfs(source);
+    const statsTarget = await statfs(target);
+    const statsSource = await statfs(source);
     expect(statsTarget.type == statsSource.type).toBe(false);
     statsTarget.type = statsSource.type = 0;
     // free space can change slightly as a function of time.

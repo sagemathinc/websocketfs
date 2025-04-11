@@ -7,7 +7,11 @@
   },
   "pnpm": {
     "overrides": {
-      "@babel/traverse@<7.23.2": ">=7.23.2"
+      "@babel/traverse@<7.23.2": ">=7.23.2",
+      "cookie@<0.7.0": ">=0.7.0",
+      "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5",
+      "@babel/helpers@<7.26.10": ">=7.26.10",
+      "tar-fs@>=2.0.0 <2.1.2": ">=2.1.2"
     },
     "onlyBuiltDependencies": [
       "@cocalc/fuse-native",
